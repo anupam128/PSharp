@@ -34,7 +34,7 @@
         <h1>
 <a id="p" class="anchor" href="#p" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>P#</h1>
 
-<p>A toolkit for <strong>building</strong>, <strong>analyzing</strong> and <strong>systematically testing</strong> asynchronous software, such as web-services and distributed systems.</p>
+<p>A toolkit for <strong>building</strong>, <strong>analyzing</strong> and <strong>systematically testing</strong> asynchronous reactive software, such as web-services and distributed systems.</p>
 
 <h2>
 <a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
@@ -61,7 +61,7 @@
 <h2>
 <a id="how-to-use" class="anchor" href="#how-to-use" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to use</h2>
 
-<p>A good way to start is by reading the <a href="https://cdn.rawgit.com/p-org/PSharp/master/Docs/Manual/out/manual.pdf">manual</a> (which is quite outdated right now, a new version will get released soon, but in the meantime please feel free to contact the P# dev team with specific questions).</p>
+<p>A good way to start is by reading the <a href="https://github.com/p-org/PSharp/blob/master/Docs/Manual/manual.pdf">manual</a> (which is not feature complete yet, but please also feel free to contact the P# dev team with specific questions).</p>
 
 <h2>
 <a id="compilation" class="anchor" href="#compilation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Compilation</h2>
@@ -77,7 +77,9 @@
 
 <p>To compile only a specific project in the solution use the option <code>/p:${PROJECT_NAME}</code>.</p>
 
-<p>To only compile for testing use the option <code>/t:testing</code>.</p>
+<p>To compile as a library (dll) use the option <code>/t:lib</code>.</p>
+
+<p>To compile for testing use the option <code>/t:test</code>.</p>
 
 <h2>
 <a id="systematic-testing" class="anchor" href="#systematic-testing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Systematic testing</h2>
@@ -90,8 +92,6 @@
 <p>Where ${DLL_PATH} is the path to your P# program and ${DLL_NAME} is the name of your P# program.</p>
 
 <p>You can optionally give the number of testing iterations to perform using <code>/i:value</code>.</p>
-
-<p>To enable liveness checking use the option <code>/liveness</code>.</p>
 
 <h2>
 <a id="options" class="anchor" href="#options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Options</h2>
@@ -115,7 +115,9 @@
 
 <ul>
 <li>
-<strong><a href="https://dl.acm.org/citation.cfm?id=2737996">Asynchronous Programming, Analysis and Testing with State Machines</a></strong>. Pantazis Deligiannis, Alastair F. Donaldson, Jeroen Ketema, Akash Lal and Paul Thomson. In the <em>ACM SIGPLAN Conference on Programming Language Design and Implementation</em> (PLDI), 2015.</li>
+<strong><a href="https://www.usenix.org/node/194442">Uncovering Bugs in Distributed Storage Systems During Testing (not in Production!)</a></strong>. Pantazis Deligiannis, Matt McCutchen, Paul Thomson, Shuo Chen, Alastair F. Donaldson, John Erickson, Cheng Huang, Akash Lal, Rashmi Mudduluru, Shaz Qadeer and Wolfram Schulte. In the <em>14th USENIX Conference on File and Storage Technologies</em> (FAST), 2016.</li>
+<li>
+<strong><a href="https://dl.acm.org/citation.cfm?id=2737996">Asynchronous Programming, Analysis and Testing with State Machines</a></strong>. Pantazis Deligiannis, Alastair F. Donaldson, Jeroen Ketema, Akash Lal and Paul Thomson. In the <em>36th Annual ACM SIGPLAN Conference on Programming Language Design and Implementation</em> (PLDI), 2015.</li>
 </ul>
       </section>
     </div>
