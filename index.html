@@ -34,7 +34,7 @@
         <h1>
 <a id="p" class="anchor" href="#p" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>P#</h1>
 
-<p>A toolkit for <strong>building</strong>, <strong>analyzing</strong> and <strong>systematically testing</strong> asynchronous reactive software, such as web-services and distributed systems.</p>
+<p>A toolkit for <strong>building</strong>, <strong>analyzing</strong>, <strong>systematically testing</strong> and <strong>debugging</strong> asynchronous reactive software, such as web-services and distributed systems.</p>
 
 <h2>
 <a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
@@ -43,7 +43,8 @@
 
 <ul>
 <li>Language extensions to C# for building <strong>event-driven asynchronous</strong> applications, writing <strong>test harnesses</strong>, and specifying <strong>safety and liveness properties</strong>.</li>
-<li>A <strong>systematic testing engine</strong> that can capture and control all the specified nondeterminism in the system, and systematically explore the actual executable code to discover bugs.</li>
+<li>A <strong>systematic testing engine</strong> that can capture and control all specified nondeterminism in the system, systematically explore the actual executable code to discover bugs, and report bug traces. A P# bug trace provides a global order of all communication events, and thus is easier to debug.</li>
+<li>Support for <strong>replaying</strong> bug traces, and <strong>debugging</strong> them using the Visual Studio debugger.</li>
 </ul>
 
 <p>Although P# primarily targets .NET, it has also experimental support for systematically testing native C++ code.</p>
@@ -94,6 +95,18 @@
 <p>Where ${DLL_PATH} is the path to your P# program and ${DLL_NAME} is the name of your P# program.</p>
 
 <p>You can optionally give the number of testing iterations to perform using <code>/i:value</code>.</p>
+
+<h2>
+<a id="replay-and-debug-buggy-executions" class="anchor" href="#replay-and-debug-buggy-executions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Replay and debug buggy executions</h2>
+
+<p>The P# replayer can be used to reproduce and debug buggy executions (found by <code>PSharpTester.exe</code>). To invoke the replayer use the following command:</p>
+
+<pre><code>.\PSharpReplayer.exe /test:${DLL_PATH}\${DLL_NAME}.dll /trace:${TRACE_PATH}\${TRACE_NAME}.pstrace
+</code></pre>
+
+<p>Where ${TRACE_PATH} is the path to the bug trace (dumped by <code>PSharpTester.exe</code>) and ${TRACE_NAME} is the name of the bug trace.</p>
+
+<p>You can attach the Visual Studio debugger on this buggy execution, to get the familiar VS debugging experience, by using <code>/break</code>. When using this flag, P# will automatically instrument a breakpoint when the bug is found. You can also insert your own breakpoints in the source code.</p>
 
 <h2>
 <a id="options" class="anchor" href="#options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Options</h2>
