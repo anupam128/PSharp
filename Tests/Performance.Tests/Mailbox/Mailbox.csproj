@@ -38,6 +38,10 @@
       <HintPath>..\..\..\Binaries\Microsoft.PSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Environment.cs" />
@@ -45,6 +49,7 @@
     <Compile Include="Node.cs" />
     <Compile Include="Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TPLTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
