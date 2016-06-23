@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NBody", "NBody\NBody.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Creator", "Creator\Creator.csproj", "{6EFBD4D8-1011-4C0A-AC41-451605BBE5B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mailbox", "Mailbox\Mailbox.csproj", "{704FFD14-0B2E-462F-B44C-1A5052666BFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{6EFBD4D8-1011-4C0A-AC41-451605BBE5B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6EFBD4D8-1011-4C0A-AC41-451605BBE5B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6EFBD4D8-1011-4C0A-AC41-451605BBE5B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{704FFD14-0B2E-462F-B44C-1A5052666BFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{704FFD14-0B2E-462F-B44C-1A5052666BFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{704FFD14-0B2E-462F-B44C-1A5052666BFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{704FFD14-0B2E-462F-B44C-1A5052666BFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,5 +36,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{10C7093E-9C35-48DC-B23B-DFBF5994591E} = {8A2AF4EE-D9F8-4BD4-B858-F144C8448303}
 		{6EFBD4D8-1011-4C0A-AC41-451605BBE5B3} = {8A2AF4EE-D9F8-4BD4-B858-F144C8448303}
+		{704FFD14-0B2E-462F-B44C-1A5052666BFE} = {8A2AF4EE-D9F8-4BD4-B858-F144C8448303}
 	EndGlobalSection
 EndGlobal
