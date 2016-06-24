@@ -135,7 +135,22 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
             }
 
             MachineInfo next = null;
-            if (!this.Strategy.TryGetNext(out next, this.MachineInfos, machineInfo))
+            var availableMachines = this.MachineInfos.Where(
+                mi => mi.IsEnabled && !mi.IsBlocked && !mi.IsWaitingToReceive);
+
+            if (availableMachines.Count() == 0)
+            {
+                var waitingMachine = this.MachineInfos.Where(m => m.IsWaitingToReceive).FirstOrDefault();
+                if (waitingMachine != null)
+                {
+                    string message = IO.Format("Livelock detected. Machine " +
+                        $"'{waitingMachine.Machine.Id}' is waiting for an event, " +
+                        "but no other machine is enabled.");
+                    this.Runtime.BugFinder.NotifyAssertionFailure(message, true);
+                }
+            }
+
+            if (!this.Strategy.TryGetNext(out next, availableMachines, machineInfo))
             {
                 IO.Debug("<ScheduleDebug> Schedule explored.");
                 this.KillRemainingMachines();
@@ -151,14 +166,6 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
             IO.Debug($"<ScheduleDebug> Schedule task '{next.Id}' of machine " +
                 $"'{next.Machine.Id}'.");
-
-            if (next.IsWaitingToReceive)
-            {
-                string message = IO.Format("Livelock detected. Machine " +
-                    $"'{next.Machine.Id}' is waiting for an event, " +
-                    "but no other machine is enabled.");
-                this.Runtime.BugFinder.NotifyAssertionFailure(message, true);
-            }
 
             if (machineInfo != next)
             {
