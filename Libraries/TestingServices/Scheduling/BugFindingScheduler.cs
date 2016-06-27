@@ -411,7 +411,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 ErrorReporter.Report(text);
 
                 IO.Log("<StrategyLog> Found bug using " +
-                    $"'{this.Runtime.Configuration.SchedulingStrategy}' strategy.");
+                    $"'{this.Runtime.Configuration.ExplorationStrategy}' strategy.");
 
                 if (this.Strategy.GetDescription().Length > 0)
                 {

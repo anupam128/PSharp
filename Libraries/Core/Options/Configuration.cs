@@ -12,8 +12,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
+using Microsoft.PSharp.Threading.Scheduling;
 
 namespace Microsoft.PSharp.Utilities
 {
@@ -76,6 +75,15 @@ namespace Microsoft.PSharp.Utilities
 
         #endregion
 
+        #region runtime options
+
+        /// <summary>
+        /// Scheduling strategy for runtime.
+        /// </summary>
+        public SchedulingStrategy SchedulingStrategy;
+
+        #endregion
+
         #region language service options
 
         /// <summary>
@@ -118,6 +126,11 @@ namespace Microsoft.PSharp.Utilities
         #region bug finding options
 
         /// <summary>
+        /// Enables bug-finding mode.
+        /// </summary>
+        public bool EnableBugFinding;
+
+        /// <summary>
         /// The assembly to be analyzed for bugs.
         /// </summary>
         public string AssemblyToBeAnalyzed;
@@ -128,9 +141,9 @@ namespace Microsoft.PSharp.Utilities
         public string TraceFile;
 
         /// <summary>
-        /// Scheduling strategy to use with the P# tester.
+        /// Exploration strategy for bug-finding.
         /// </summary>
-        public SchedulingStrategy SchedulingStrategy;
+        public ExplorationStrategy ExplorationStrategy;
 
         /// <summary>
         /// Number of scheduling iterations.
@@ -297,6 +310,8 @@ namespace Microsoft.PSharp.Utilities
             this.PauseOnAssertionFailure = false;
             this.InteroperationEnabled = true;
 
+            this.SchedulingStrategy = SchedulingStrategy.Default;
+
             this.CompilationTarget = CompilationTarget.Execution;
             this.OptimizationTarget = OptimizationTarget.Release;
             
@@ -306,10 +321,11 @@ namespace Microsoft.PSharp.Utilities
             this.ShowFullDataFlowInformation = false;
             this.DoStateTransitionAnalysis = false;
 
+            this.EnableBugFinding = false;
             this.AssemblyToBeAnalyzed = "";
             this.TraceFile = "";
 
-            this.SchedulingStrategy = SchedulingStrategy.Random;
+            this.ExplorationStrategy = ExplorationStrategy.Random;
             this.SchedulingIterations = 1;
             this.RandomSchedulingSeed = null;
 
@@ -378,14 +394,26 @@ namespace Microsoft.PSharp.Utilities
         }
 
         /// <summary>
-        /// Updates the configuration with the scheduling strategy
-        /// and returns it.
+        /// Updates the configuration with the scheduling
+        /// strategy and returns it.
         /// </summary>
         /// <param name="strategy">SchedulingStrategy</param>
         /// <returns>Configuration</returns>
-        public Configuration WithStrategy(SchedulingStrategy strategy)
+        public Configuration WithSchedulingStrategy(SchedulingStrategy strategy)
         {
             this.SchedulingStrategy = strategy;
+            return this;
+        }
+
+        /// <summary>
+        /// Updates the configuration with the exploration
+        /// strategy and returns it.
+        /// </summary>
+        /// <param name="strategy">ExplorationStrategy</param>
+        /// <returns>Configuration</returns>
+        public Configuration WithExplorationStrategy(ExplorationStrategy strategy)
+        {
+            this.ExplorationStrategy = strategy;
             return this;
         }
 

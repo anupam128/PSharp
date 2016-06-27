@@ -44,14 +44,14 @@ namespace Microsoft.PSharp.Utilities
             }
             else if (option.ToLower().Equals("/interactive"))
             {
-                base.Configuration.SchedulingStrategy = SchedulingStrategy.Interactive;
+                base.Configuration.ExplorationStrategy = ExplorationStrategy.Interactive;
             }
             else if (option.ToLower().StartsWith("/sch:"))
             {
                 string scheduler = option.ToLower().Substring(5);
                 if (scheduler.ToLower().Equals("random"))
                 {
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.Random;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.Random;
                 }
                 else if (scheduler.StartsWith("random-coin"))
                 {
@@ -63,7 +63,7 @@ namespace Microsoft.PSharp.Utilities
                             "flip bound '/sch:random-coin:[bound]', where [bound] >= 0.");
                     }
 
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.RandomCoin;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.RandomCoin;
                     base.Configuration.CoinFlipBound = i;
                 }
                 else if (scheduler.StartsWith("pct"))
@@ -76,16 +76,16 @@ namespace Microsoft.PSharp.Utilities
                             "switch bound '/sch:pct:[bound]', where [bound] >= 0.");
                     }
 
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.PCT;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.PCT;
                     base.Configuration.PrioritySwitchBound = i;
                 }
                 else if (scheduler.ToLower().Equals("dfs"))
                 {
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.DFS;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.DFS;
                 }
                 else if (scheduler.ToLower().Equals("iddfs"))
                 {
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.IDDFS;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.IDDFS;
                 }
                 else if (scheduler.StartsWith("db"))
                 {
@@ -97,7 +97,7 @@ namespace Microsoft.PSharp.Utilities
                             "bound '/sch:db:[bound]', where [bound] >= 0.");
                     }
 
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.DelayBounding;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.DelayBounding;
                     base.Configuration.DelayBound = i;
                 }
                 else if (scheduler.StartsWith("rdb"))
@@ -110,12 +110,12 @@ namespace Microsoft.PSharp.Utilities
                             "bound '/sch:rdb:[bound]', where [bound] >= 0.");
                     }
 
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.RandomDelayBounding;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.RandomDelayBounding;
                     base.Configuration.DelayBound = i;
                 }
                 else if (scheduler.ToLower().Equals("rob"))
                 {
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.RandomOperationBounding;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.RandomOperationBounding;
                     base.Configuration.BoundOperations = true;
                 }
                 else if (scheduler.StartsWith("pob"))
@@ -128,13 +128,14 @@ namespace Microsoft.PSharp.Utilities
                             "switch points '/sch:pob:[x]', where [x] >= 0.");
                     }
 
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.PrioritizedOperationBounding;
+                    base.Configuration.ExplorationStrategy =
+                        ExplorationStrategy.PrioritizedOperationBounding;
                     base.Configuration.BoundOperations = true;
                     base.Configuration.PrioritySwitchBound = i;
                 }
                 else if (scheduler.ToLower().Equals("macemc"))
                 {
-                    base.Configuration.SchedulingStrategy = SchedulingStrategy.MaceMC;
+                    base.Configuration.ExplorationStrategy = ExplorationStrategy.MaceMC;
                 }
                 else
                 {
@@ -240,17 +241,17 @@ namespace Microsoft.PSharp.Utilities
                     "program's dll using '/test:[x]'.");
             }
 
-            if (base.Configuration.SchedulingStrategy != SchedulingStrategy.Interactive &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.Random &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.RandomCoin &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.DFS &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.IDDFS &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.DelayBounding &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.RandomDelayBounding &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.PCT &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.RandomOperationBounding &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.PrioritizedOperationBounding &&
-                base.Configuration.SchedulingStrategy != SchedulingStrategy.MaceMC)
+            if (base.Configuration.ExplorationStrategy != ExplorationStrategy.Interactive &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.Random &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.RandomCoin &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.DFS &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.IDDFS &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.DelayBounding &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.RandomDelayBounding &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.PCT &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.RandomOperationBounding &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.PrioritizedOperationBounding &&
+                base.Configuration.ExplorationStrategy != ExplorationStrategy.MaceMC)
             {
                 ErrorReporter.ReportAndExit("Please give a valid scheduling strategy " +
                         "'/sch:[x]', where [x] is 'random', 'pct' or 'dfs' (other " +
@@ -264,7 +265,7 @@ namespace Microsoft.PSharp.Utilities
                     "max scheduling steps bound.");
             }
 
-            if (base.Configuration.SchedulingStrategy.Equals("iddfs") &&
+            if (base.Configuration.ExplorationStrategy.Equals("iddfs") &&
                 base.Configuration.DepthBound == 0)
             {
                 ErrorReporter.ReportAndExit("The Iterative Deepening DFS scheduler ('iddfs') " +

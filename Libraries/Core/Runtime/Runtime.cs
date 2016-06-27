@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.PSharp.Net;
+using Microsoft.PSharp.Threading.Scheduling;
 using Microsoft.PSharp.Utilities;
 
 namespace Microsoft.PSharp
@@ -57,6 +58,11 @@ namespace Microsoft.PSharp
         /// Collection of machine tasks.
         /// </summary>
         protected ConcurrentBag<Task> MachineTasks;
+
+        /// <summary>
+        /// The P# task scheduler.
+        /// </summary>
+        internal TaskScheduler TaskScheduler;
 
         /// <summary>
         /// Network provider for remote communication.
@@ -484,6 +490,13 @@ namespace Microsoft.PSharp
                     break;
                 }
             }
+
+            //Console.WriteLine("-----");
+            //foreach (var mid in ((FairTaskScheduler)this.TaskScheduler).Schedule)
+            //{
+            //    Console.WriteLine(mid + "  ");
+            //}
+            //Console.WriteLine("-----");
         }
 
         #endregion
@@ -494,33 +507,24 @@ namespace Microsoft.PSharp
         /// Constructor.
         /// </summary>
         protected PSharpRuntime()
-        {
-            this.Configuration = Configuration.Create();
-            this.NetworkProvider = new DefaultNetworkProvider(this);
-            this.Initialize();
-        }
+            : this(null, null)
+        { }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="netProvider">NetworkProvider</param>
         protected PSharpRuntime(INetworkProvider netProvider)
-        {
-            this.Configuration = Configuration.Create();
-            this.NetworkProvider = netProvider;
-            this.Initialize();
-        }
+            : this(null, netProvider)
+        { }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Configuration</param>
         protected PSharpRuntime(Configuration configuration)
-        {
-            this.Configuration = configuration;
-            this.NetworkProvider = new DefaultNetworkProvider(this);
-            this.Initialize();
-        }
+            : this(configuration, null)
+        { }
 
         /// <summary>
         /// Constructor.
@@ -529,19 +533,33 @@ namespace Microsoft.PSharp
         /// <param name="netProvider">NetworkProvider</param>
         protected PSharpRuntime(Configuration configuration, INetworkProvider netProvider)
         {
-            this.Configuration = configuration;
-            this.NetworkProvider = netProvider;
-            this.Initialize();
-        }
+            if (configuration != null)
+            {
+                this.Configuration = configuration;
+            }
+            else
+            {
+                this.Configuration = Configuration.Create();
+            }
 
-        /// <summary>
-        /// Initializes various components of the runtime.
-        /// </summary>
-        private void Initialize()
-        {
+            if (netProvider != null)
+            {
+                this.NetworkProvider = netProvider;
+            }
+            else
+            {
+                this.NetworkProvider = new DefaultNetworkProvider(this);
+            }
+
             this.MachineMap = new ConcurrentDictionary<int, Machine>();
             this.TaskMap = new ConcurrentDictionary<int, Machine>();
             this.MachineTasks = new ConcurrentBag<Task>();
+
+            if (!this.Configuration.EnableBugFinding &&
+                this.Configuration.SchedulingStrategy == SchedulingStrategy.Fair)
+            {
+                this.TaskScheduler = new FairTaskScheduler(this, this.TaskMap);
+            }
         }
 
         #endregion
@@ -592,8 +610,16 @@ namespace Microsoft.PSharp
             
             this.MachineTasks.Add(task);
             this.TaskMap.TryAdd(task.Id, machine);
-            
-            task.Start();
+
+            if (!this.Configuration.EnableBugFinding &&
+                this.Configuration.SchedulingStrategy == SchedulingStrategy.Fair)
+            {
+                task.Start(this.TaskScheduler);
+            }
+            else
+            {
+                task.Start();
+            }
 
             return mid;
         }
@@ -675,8 +701,16 @@ namespace Microsoft.PSharp
             
             this.MachineTasks.Add(task);
             this.TaskMap.TryAdd(task.Id, machine);
-            
-            task.Start();
+
+            if (!this.Configuration.EnableBugFinding &&
+                this.Configuration.SchedulingStrategy == SchedulingStrategy.Fair)
+            {
+                task.Start(this.TaskScheduler);
+            }
+            else
+            {
+                task.Start();
+            }
         }
 
         /// <summary>

@@ -90,7 +90,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             var configuration = Configuration.Create();
             configuration.SuppressTrace = true;
             configuration.Verbose = 2;
-            configuration.SchedulingStrategy = SchedulingStrategy.DFS;
+            configuration.ExplorationStrategy = ExplorationStrategy.DFS;
 
             IO.Debugging = true;
 

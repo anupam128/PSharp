@@ -100,7 +100,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             configuration.SuppressTrace = true;
             configuration.Verbose = 3;
             configuration.CacheProgramState = true;
-            configuration.SchedulingStrategy = SchedulingStrategy.DFS;
+            configuration.ExplorationStrategy = ExplorationStrategy.DFS;
 
             IO.Debugging = true;
 

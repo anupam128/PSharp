@@ -12,7 +12,7 @@ namespace Mailbox
 
         void HandleMail()
         {
-
+            //System.Console.WriteLine("test");
         }
     }
 }

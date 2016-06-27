@@ -53,11 +53,6 @@ namespace Microsoft.PSharp.TestingServices
         internal IDictionary<MachineId, MachineActionTrace> MachineActionTraceMap;
 
         /// <summary>
-        /// The P# task scheduler.
-        /// </summary>
-        internal TaskScheduler TaskScheduler;
-
-        /// <summary>
         /// The root task id.
         /// </summary>
         internal int? RootTaskId;
@@ -107,8 +102,8 @@ namespace Microsoft.PSharp.TestingServices
 
             if (this.Configuration.ScheduleIntraMachineConcurrency)
             {
-                this.TaskScheduler = new TaskWrapperScheduler(this, this.MachineTasks);
-                TaskMachineExtensions.TaskScheduler = this.TaskScheduler as TaskWrapperScheduler;
+                base.TaskScheduler = new TaskWrapperScheduler(this, this.MachineTasks);
+                TaskMachineExtensions.TaskScheduler = base.TaskScheduler as TaskWrapperScheduler;
                 this.BugFinder = new TaskAwareBugFindingScheduler(this, strategy);
             }
             else
@@ -267,7 +262,7 @@ namespace Microsoft.PSharp.TestingServices
 
             if (this.Configuration.ScheduleIntraMachineConcurrency)
             {
-                task.Start(this.TaskScheduler);
+                task.Start(base.TaskScheduler);
             }
             else
             {
@@ -324,11 +319,11 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="userTask">Task</param>
         internal override void TryCreateTaskMachine(Task userTask)
         {
-            this.Assert(this.TaskScheduler is TaskWrapperScheduler, "Unable to wrap the " +
+            this.Assert(base.TaskScheduler is TaskWrapperScheduler, "Unable to wrap the " +
                 "task in a machine, because the task wrapper scheduler is not enabled.\n");
 
             MachineId mid = new MachineId(typeof(TaskMachine), null, this);
-            TaskMachine taskMachine = new TaskMachine(this.TaskScheduler as TaskWrapperScheduler,
+            TaskMachine taskMachine = new TaskMachine(base.TaskScheduler as TaskWrapperScheduler,
                 userTask);
             taskMachine.SetMachineId(mid);
 
@@ -347,7 +342,7 @@ namespace Microsoft.PSharp.TestingServices
 
             if (this.Configuration.ScheduleIntraMachineConcurrency)
             {
-                task.Start(this.TaskScheduler);
+                task.Start(base.TaskScheduler);
             }
             else
             {
@@ -438,7 +433,7 @@ namespace Microsoft.PSharp.TestingServices
 
             if (this.Configuration.ScheduleIntraMachineConcurrency)
             {
-                task.Start(this.TaskScheduler);
+                task.Start(base.TaskScheduler);
             }
             else
             {

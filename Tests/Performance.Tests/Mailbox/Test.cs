@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Microsoft.PSharp;
+using Microsoft.PSharp.Threading.Scheduling;
 using Microsoft.PSharp.Utilities;
 
 namespace Mailbox
@@ -16,7 +17,8 @@ namespace Mailbox
         {
             new TPLTest().Start(NumOfNodes, NumberOfSendsPerNode);
 
-            var runtime = PSharpRuntime.Create();
+            var runtime = PSharpRuntime.Create(Configuration.Create().
+                WithSchedulingStrategy(SchedulingStrategy.Fair));
             Execute(runtime);
             runtime.Wait();
 

@@ -188,7 +188,8 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
-        protected AbstractTestingEngine(Configuration configuration, Action<PSharpRuntime> action)
+        protected AbstractTestingEngine(Configuration configuration,
+            Action<PSharpRuntime> action)
         {
             this.Profiler = new Profiler();
             this.Configuration = configuration;
@@ -207,62 +208,65 @@ namespace Microsoft.PSharp.TestingServices
             this.ExploredDepth = 0;
             this.PrintGuard = 1;
 
-            if (this.Configuration.SchedulingStrategy == SchedulingStrategy.Interactive)
+            this.Configuration.EnableBugFinding = true;
+
+            if (this.Configuration.ExplorationStrategy == ExplorationStrategy.Interactive)
             {
                 this.Strategy = new InteractiveStrategy(this.Configuration);
                 this.Configuration.SchedulingIterations = 1;
                 this.Configuration.PerformFullExploration = false;
                 this.Configuration.Verbose = 2;
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.Replay)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.Replay)
             {
                 string[] traceDump = File.ReadAllLines(this.Configuration.TraceFile);
                 ScheduleTrace trace = new ScheduleTrace(traceDump);
                 this.Strategy = new ReplayStrategy(this.Configuration, trace);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.Random)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.Random)
             {
                 this.Strategy = new RandomStrategy(this.Configuration);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.RandomCoin)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.RandomCoin)
             {
                 this.Strategy = new RandomCoinStrategy(this.Configuration,
                     this.Configuration.CoinFlipBound);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.DFS)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.DFS)
             {
                 this.Strategy = new DFSStrategy(this.Configuration);
                 this.Configuration.PerformFullExploration = false;
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.IDDFS)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.IDDFS)
             {
                 this.Strategy = new IterativeDeepeningDFSStrategy(this.Configuration);
                 this.Configuration.PerformFullExploration = false;
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.DelayBounding)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.DelayBounding)
             {
                 this.Strategy = new ExhaustiveDelayBoundingStrategy(this.Configuration,
                     this.Configuration.DelayBound);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.RandomDelayBounding)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.RandomDelayBounding)
             {
                 this.Strategy = new RandomDelayBoundingStrategy(this.Configuration,
                     this.Configuration.DelayBound);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.PCT)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.PCT)
             {
-                this.Strategy = new PCTStrategy(this.Configuration, this.Configuration.PrioritySwitchBound);
+                this.Strategy = new PCTStrategy(this.Configuration,
+                    this.Configuration.PrioritySwitchBound);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.RandomOperationBounding)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.RandomOperationBounding)
             {
                 this.Strategy = new RandomOperationBoundingStrategy(this.Configuration);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.PrioritizedOperationBounding)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.PrioritizedOperationBounding)
             {
                 this.Strategy = new PrioritizedOperationBoundingStrategy(this.Configuration,
                     this.Configuration.PrioritySwitchBound);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.MaceMC)
+            else if (this.Configuration.ExplorationStrategy == ExplorationStrategy.MaceMC)
             {
                 this.Strategy = new MaceMCStrategy(this.Configuration);
                 this.Configuration.PerformFullExploration = false;

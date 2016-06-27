@@ -129,6 +129,16 @@ namespace Microsoft.PSharp
         /// </summary>
         private Tuple<Event, Action<Event>> ReceivedEventHandler;
 
+        #endregion
+
+        #region properties
+
+        /// <summary>
+        /// Gets the latest received event, or null if no event
+        /// has been received.
+        /// </summary>
+        protected internal Event ReceivedEvent { get; private set; }
+
         /// <summary>
         /// Gets the current state.
         /// </summary>
@@ -146,10 +156,15 @@ namespace Microsoft.PSharp
         }
 
         /// <summary>
-        /// Gets the latest received event, or null if no event
-        /// has been received.
+        /// Gets the current inbox size.
         /// </summary>
-        protected internal Event ReceivedEvent { get; private set; }
+        internal int InboxSize
+        {
+            get
+            {
+                return this.Inbox.Count;
+            }
+        }
 
         #endregion
 
@@ -543,32 +558,32 @@ namespace Microsoft.PSharp
                     return;
                 }
 
-                base.Runtime.Log($"<EnqueueLog> Machine '{base.Id}' " +
-                    $"enqueued event '{eventInfo.EventName}'.");
-
                 this.Inbox.Add(eventInfo);
-
-                if (eventInfo.Event.Assert >= 0)
-                {
-                    var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
-                    this.Assert(eventCount <= eventInfo.Event.Assert, "There are more than " +
-                        $"{eventInfo.Event.Assert} instances of '{eventInfo.EventName}' " +
-                        $"in the input queue of machine '{this}'");
-                }
-
-                if (eventInfo.Event.Assume >= 0)
-                {
-                    var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
-                    this.Assert(eventCount <= eventInfo.Event.Assume, "There are more than " +
-                        $"{eventInfo.Event.Assume} instances of '{eventInfo.EventName}' " +
-                        $"in the input queue of machine '{this}'");
-                }
 
                 if (!this.IsRunning)
                 {
                     this.IsRunning = true;
                     runNewHandler = true;
                 }
+            }
+
+            base.Runtime.Log($"<EnqueueLog> Machine '{base.Id}' " +
+                $"enqueued event '{eventInfo.EventName}'.");
+
+            if (eventInfo.Event.Assert >= 0)
+            {
+                var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
+                this.Assert(eventCount <= eventInfo.Event.Assert, "There are more than " +
+                    $"{eventInfo.Event.Assert} instances of '{eventInfo.EventName}' " +
+                    $"in the input queue of machine '{this}'");
+            }
+
+            if (eventInfo.Event.Assume >= 0)
+            {
+                var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
+                this.Assert(eventCount <= eventInfo.Event.Assume, "There are more than " +
+                    $"{eventInfo.Event.Assume} instances of '{eventInfo.EventName}' " +
+                    $"in the input queue of machine '{this}'");
             }
         }
 

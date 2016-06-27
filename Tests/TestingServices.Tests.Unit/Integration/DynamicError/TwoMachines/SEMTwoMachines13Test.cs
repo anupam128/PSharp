@@ -71,7 +71,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             var configuration = Configuration.Create();
             configuration.SuppressTrace = true;
             configuration.Verbose = 2;
-            configuration.SchedulingStrategy = SchedulingStrategy.DFS;
+            configuration.ExplorationStrategy = ExplorationStrategy.DFS;
 
             var engine = TestingEngineFactory.CreateBugFindingEngine(configuration, TestProgram.Execute).Run();
             Assert.AreEqual(1, engine.NumOfFoundBugs);

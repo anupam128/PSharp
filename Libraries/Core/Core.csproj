@@ -80,8 +80,10 @@
     <Compile Include="Net\NetworkProviders\DefaultNetworkProvider.cs" />
     <Compile Include="Options\OptimizationTarget.cs" />
     <Compile Include="Options\CompilationTarget.cs" />
-    <Compile Include="Options\SchedulingStrategy.cs" />
+    <Compile Include="Options\ExplorationStrategy.cs" />
     <Compile Include="Net\INetworkProvider.cs" />
+    <Compile Include="Threading\Scheduling\SchedulingStrategy.cs" />
+    <Compile Include="Threading\Scheduling\FairTaskScheduler.cs" />
     <Compile Include="Utilities\ErrorReporter.cs" />
     <Compile Include="Utilities\IOLogger.cs" />
     <Compile Include="Utilities\IO.cs" />

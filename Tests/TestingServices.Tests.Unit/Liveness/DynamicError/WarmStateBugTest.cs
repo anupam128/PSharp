@@ -90,7 +90,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             configuration.SuppressTrace = true;
             configuration.Verbose = 2;
             configuration.CacheProgramState = true;
-            configuration.SchedulingStrategy = SchedulingStrategy.DFS;
+            configuration.ExplorationStrategy = ExplorationStrategy.DFS;
 
             var engine = TestingEngineFactory.CreateBugFindingEngine(configuration, TestProgram.Execute).Run();
             var bugReport = "Monitor 'WatchDog' detected infinite execution that violates a liveness property.";

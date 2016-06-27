@@ -168,7 +168,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <returns>Task</returns>
         private Task CreateBugFindingTask()
         {
-            IO.PrintLine($"... Using '{base.Configuration.SchedulingStrategy}' strategy");
+            IO.PrintLine($"... Using '{base.Configuration.ExplorationStrategy}' strategy");
 
             Task task = new Task(() =>
             {

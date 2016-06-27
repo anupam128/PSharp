@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="SchedulingStrategy.cs">
+// <copyright file="ExplorationStrategy.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
 //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -15,9 +15,9 @@
 namespace Microsoft.PSharp.Utilities
 {
     /// <summary>
-    /// P# runtime scheduling strategy.
+    /// P# exploration strategy.
     /// </summary>
-    public enum SchedulingStrategy
+    public enum ExplorationStrategy
     {
         /// <summary>
         /// Interactive scheduling.
