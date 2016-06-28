@@ -558,7 +558,18 @@ namespace Microsoft.PSharp
                     return;
                 }
 
-                this.Inbox.Add(eventInfo);
+                if (eventInfo.EventType == typeof(BulkTransfer))
+                {
+                    foreach (var e in ((BulkTransfer)eventInfo.Event).BufferedEvents)
+                    {
+                        EventInfo ei = new EventInfo(e, eventInfo.OriginInfo);
+                        this.Inbox.Add(ei);
+                    }
+                }
+                else
+                {
+                    this.Inbox.Add(eventInfo);
+                }
 
                 if (!this.IsRunning)
                 {

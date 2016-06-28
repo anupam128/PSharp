@@ -1,4 +1,6 @@
-﻿using Microsoft.PSharp;
+﻿using System.Collections.Generic;
+
+using Microsoft.PSharp;
 
 namespace Mailbox
 {
@@ -40,10 +42,24 @@ namespace Mailbox
 
         void StartSending()
         {
-            for (int idx = 0; idx < this.NumberOfSends; idx++)
+            var bulkSize = 10000;
+            var numOfBulkSends = this.NumberOfSends / bulkSize;
+
+            for (int idx = 0; idx < numOfBulkSends; idx++)
             {
-                this.Send(this.Mailbox, new Mailbox.MailEvent());
+                var bulk = new List<Mailbox.MailEvent>();
+                for (int i = 0; i < bulkSize; i++)
+                {
+                    bulk.Add(new Mailbox.MailEvent());
+                }
+
+                this.Send(this.Mailbox, BulkTransfer.Create(bulk));
             }
+
+            //for (int idx = 0; idx < this.NumberOfSends; idx++)
+            //{
+            //    this.Send(this.Mailbox, new Mailbox.MailEvent());
+            //}
 
             this.Raise(new Halt());
         }

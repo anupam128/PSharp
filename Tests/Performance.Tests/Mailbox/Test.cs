@@ -15,7 +15,7 @@ namespace Mailbox
 
         static void Main(string[] args)
         {
-            //new TPLTest().Start(NumOfNodes, NumberOfSendsPerNode);
+            new TPLTest().Start(NumOfNodes, NumberOfSendsPerNode);
 
             //Profiler.StartMeasuringExecutionTime();
 
