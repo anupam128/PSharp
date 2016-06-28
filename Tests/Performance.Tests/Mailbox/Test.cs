@@ -8,17 +8,25 @@ namespace Mailbox
 {
     public class Test
     {
-        static readonly int NumOfNodes = 10;
-        static readonly int NumberOfSendsPerNode = 10000;
+        internal static readonly int NumOfNodes = 10;
+        internal static readonly int NumberOfSendsPerNode = 10000;
 
         static public Profiler Profiler = new Profiler();
 
         static void Main(string[] args)
         {
-            new TPLTest().Start(NumOfNodes, NumberOfSendsPerNode);
+            //new TPLTest().Start(NumOfNodes, NumberOfSendsPerNode);
 
-            var runtime = PSharpRuntime.Create(Configuration.Create().
-                WithSchedulingStrategy(SchedulingStrategy.Fair));
+            //Profiler.StartMeasuringExecutionTime();
+
+            var configurations = Configuration.Create();
+            //configurations = configurations.WithSchedulingStrategy(SchedulingStrategy.Fair);
+            //configurations = configurations.WithVerbosityEnabled(2);
+
+            var runtime = PSharpRuntime.Create(configurations);
+
+            //Profiler.StartMeasuringExecutionTime();
+
             Execute(runtime);
             runtime.Wait();
 

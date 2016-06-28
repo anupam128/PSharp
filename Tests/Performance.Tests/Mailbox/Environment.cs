@@ -30,6 +30,8 @@ namespace Mailbox
 
         void InitOnEntry()
         {
+            //Test.Profiler.StartMeasuringExecutionTime();
+
             int numOfNodes = (this.ReceivedEvent as Config).NumberOfNodes;
             int numOfSends = (this.ReceivedEvent as Config).NumberOfSendsPerNode;
 
@@ -57,6 +59,8 @@ namespace Mailbox
                 {
                     this.Send(node, new Node.Begin());
                 }
+
+                this.Raise(new Halt());
             }
         }
     }

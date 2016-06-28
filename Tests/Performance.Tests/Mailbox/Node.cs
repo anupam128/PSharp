@@ -44,6 +44,8 @@ namespace Mailbox
             {
                 this.Send(this.Mailbox, new Mailbox.MailEvent());
             }
+
+            this.Raise(new Halt());
         }
     }
 }
