@@ -24,12 +24,8 @@ namespace Microsoft.PSharp.Utilities
         /// </summary>
         Execution = 0,
         /// <summary>
-        /// Enables library compilation target.
-        /// </summary>
-        Library = 1,
-        /// <summary>
         /// Enables testing compilation target.
         /// </summary>
-        Testing = 2
+        Testing = 1
     }
 }

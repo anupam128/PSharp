@@ -255,17 +255,8 @@ namespace Microsoft.PSharp.LanguageServices.Compilation
             
             try
             {
-                if (this.CompilationContext.Configuration.CompilationTarget == CompilationTarget.Library ||
-                    this.CompilationContext.Configuration.CompilationTarget == CompilationTarget.Testing)
-                {
-                    this.ToFile(compilation, OutputKind.DynamicallyLinkedLibrary,
-                        project.OutputFilePath, true, true);
-                }
-                else
-                {
-                    this.ToFile(compilation, project.CompilationOptions.OutputKind,
-                        project.OutputFilePath, true, true);
-                }
+                this.ToFile(compilation, project.CompilationOptions.OutputKind,
+                    project.OutputFilePath, true, true);
             }
             catch (ApplicationException ex)
             {

@@ -48,10 +48,6 @@ namespace Microsoft.PSharp.Utilities
                 {
                     base.Configuration.CompilationTarget = CompilationTarget.Execution;
                 }
-                else if (option.ToLower().Substring(3).Equals("lib"))
-                {
-                    base.Configuration.CompilationTarget = CompilationTarget.Library;
-                }
                 else if (option.ToLower().Substring(3).Equals("test"))
                 {
                     base.Configuration.CompilationTarget = CompilationTarget.Testing;
@@ -59,7 +55,7 @@ namespace Microsoft.PSharp.Utilities
                 else
                 {
                     IO.Error.ReportAndExit("Please give a valid compilation target " +
-                        "'/t:[x]', where [x] is 'all', 'exe', 'lib' or 'test'.");
+                        "'/t:[x]', where [x] is 'all', 'exe' or 'test'.");
                 }
             }
             else if (option.ToLower().StartsWith("/optimization:") && option.Length > 14)
@@ -183,7 +179,8 @@ namespace Microsoft.PSharp.Utilities
             help += "\n\n --------------------";
             help += "\n Compilation options:";
             help += "\n --------------------";
-            help += "\n  /t:[x]\t The compilation target ('exe', 'lib' or 'test')";
+            help += "\n  /t:[x]\t\t The compilation target ('exe' or 'test')";
+            help += "\n  /optimization:[x]\t The optimization level ('debug' or 'release')";
 
             help += "\n\n --------------------";
             help += "\n Analysis options:";
