@@ -30,10 +30,6 @@ namespace Microsoft.PSharp.Utilities
         /// <summary>
         /// Enables testing compilation target.
         /// </summary>
-        Testing = 2,
-        /// <summary>
-        /// Enables remote compilation target.
-        /// </summary>
-        Remote = 3
+        Testing = 2
     }
 }

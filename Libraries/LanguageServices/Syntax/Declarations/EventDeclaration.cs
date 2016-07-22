@@ -145,7 +145,7 @@ namespace Microsoft.PSharp.LanguageServices.Syntax
             string text = "";
 
             if ((this.Program as AbstractPSharpProgram).GetProject().CompilationContext.
-                Configuration.CompilationTarget == CompilationTarget.Remote)
+                Configuration.EnableEventSerialization)
             {
                 text += "[System.Runtime.Serialization.DataContract]\n";
             }
@@ -173,6 +173,12 @@ namespace Microsoft.PSharp.LanguageServices.Syntax
 
             for (int i = 0; i < this.PayloadIdentifiers.Count; i++)
             {
+                if ((this.Program as AbstractPSharpProgram).GetProject().CompilationContext.
+                    Configuration.EnableEventSerialization)
+                {
+                    text += " [System.Runtime.Serialization.DataMember]\n";
+                }
+
                 text += " public ";
                 text += this.PayloadTypes[i].TextUnit.Text + " ";
                 text += this.PayloadIdentifiers[i].TextUnit.Text + ";\n";

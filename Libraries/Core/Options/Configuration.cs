@@ -104,6 +104,11 @@ namespace Microsoft.PSharp.Utilities
         /// </summary>
         public bool ShowFullDataFlowInformation;
 
+        /// <summary>
+        /// Enables event serialization during compilation.
+        /// </summary>
+        public bool EnableEventSerialization;
+
         #endregion
 
         #region bug finding options
@@ -347,6 +352,7 @@ namespace Microsoft.PSharp.Utilities
             this.ShowControlFlowInformation = false;
             this.ShowDataFlowInformation = false;
             this.ShowFullDataFlowInformation = false;
+            this.EnableEventSerialization = false;
 
             this.AssemblyToBeAnalyzed = "";
             this.ScheduleFile = "";

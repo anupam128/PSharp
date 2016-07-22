@@ -56,10 +56,6 @@ namespace Microsoft.PSharp.Utilities
                 {
                     base.Configuration.CompilationTarget = CompilationTarget.Testing;
                 }
-                else if (option.ToLower().Substring(3).Equals("remote"))
-                {
-                    base.Configuration.CompilationTarget = CompilationTarget.Remote;
-                }
                 else
                 {
                     IO.Error.ReportAndExit("Please give a valid compilation target " +
@@ -131,6 +127,10 @@ namespace Microsoft.PSharp.Utilities
             else if (option.ToLower().Equals("/xsa"))
             {
                 base.Configuration.DoStateTransitionAnalysis = true;
+            }
+            else if (option.ToLower().Equals("/enable-event-serialization"))
+            {
+                base.Configuration.EnableEventSerialization = true;
             }
             else
             {

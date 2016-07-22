@@ -256,8 +256,7 @@ namespace Microsoft.PSharp.LanguageServices.Compilation
             try
             {
                 if (this.CompilationContext.Configuration.CompilationTarget == CompilationTarget.Library ||
-                    this.CompilationContext.Configuration.CompilationTarget == CompilationTarget.Testing ||
-                    this.CompilationContext.Configuration.CompilationTarget == CompilationTarget.Remote)
+                    this.CompilationContext.Configuration.CompilationTarget == CompilationTarget.Testing)
                 {
                     this.ToFile(compilation, OutputKind.DynamicallyLinkedLibrary,
                         project.OutputFilePath, true, true);
