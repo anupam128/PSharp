@@ -748,7 +748,7 @@ namespace Microsoft.PSharp
                 this.RaisedEvent = null;
 
                 // Checks if the raised event is ignored.
-                if (this.IgnoredEvents.Contains(nextEventInfo.EventType))
+                if (this.IsIgnored(nextEventInfo.EventType))
                 {
                     nextEventInfo = null;
                 }
@@ -772,17 +772,21 @@ namespace Microsoft.PSharp
                             continue;
                         }
                     }
-                    if (this.IgnoredEvents.Contains(this.Inbox[idx].EventType))
+                    if (this.IsIgnored(this.Inbox[idx].EventType))
                     {
                         this.Inbox.RemoveAt(idx);
                         idx--;
                         continue;
-                    }
+                    }                    
 
                     // Dequeue the first event that is not handled by the state,
                     // or is not deferred.
-                    if (!this.CanHandleEvent(this.Inbox[idx].EventType) ||
-                        !this.DeferredEvents.Contains(this.Inbox[idx].EventType))
+                    if (!this.IsDeferred(this.Inbox[idx].EventType) ||
+                        (
+                          this.DeferredEvents.Contains(typeof(AllEvents)) &&
+                          !this.DeferredEvents.Contains(this.Inbox[idx].EventType) &&
+                          this.CanHandleEvent(this.Inbox[idx].EventType, false)
+                        ))
                     {
                         nextEventInfo = this.Inbox[idx];
                         this.Inbox.RemoveAt(idx);
@@ -934,19 +938,53 @@ namespace Microsoft.PSharp
         /// action binding.
         /// </summary>
         /// <param name="e">Event type</param>
+        /// <param name="UseWildCard">Consider wild-card events or not</param>
         /// <returns>Boolean</returns>
-        private bool CanHandleEvent(Type e)
+        private bool CanHandleEvent(Type e, bool UseWildCard = true)
         {
-            if (this.DeferredEvents.Contains(e) ||
+            if (UseWildCard && this.HasWildCardEvent()) return true;
+
+            if (e == typeof(GotoStateEvent) ||
+                this.DeferredEvents.Contains(e) ||
                 this.GotoTransitions.ContainsKey(e) ||
                 this.PushTransitions.ContainsKey(e) ||
-                this.ActionBindings.ContainsKey(e) ||
-                e == typeof(GotoStateEvent))
+                this.ActionBindings.ContainsKey(e) 
+                )
             {
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks if the event is deferred
+        /// </summary>
+        /// <returns>Boolean</returns>
+        private bool IsDeferred(Type e)
+        {
+            return this.DeferredEvents.Contains(typeof(AllEvents)) ||
+                this.DeferredEvents.Contains(e);
+        }
+
+        /// <summary>
+        /// Checks if the event is ignored
+        /// </summary>
+        /// <returns>Boolean</returns>
+        private bool IsIgnored(Type e)
+        {
+            return this.IgnoredEvents.Contains(typeof(AllEvents)) ||
+                this.IgnoredEvents.Contains(e);
+        }
+
+        /// <summary>
+        /// Checks if the machine has a wildcard event registered
+        /// </summary>
+        /// <returns>Boolean</returns>
+        private bool HasWildCardEvent()
+        {
+            return this.DeferredEvents.Contains(typeof(AllEvents)) || 
+                this.IgnoredEvents.Contains(typeof(AllEvents));
         }
 
         /// <summary>
