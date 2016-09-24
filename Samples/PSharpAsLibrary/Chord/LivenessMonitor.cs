@@ -45,7 +45,8 @@ namespace Chord
         }
 
         [Cold]
-        [OnEventGotoState(typeof(NotifyClientRequest), typeof(Requested))]
+        [OnEventPushState(typeof(NotifyClientRequest), typeof(Requested))]
+        [DeferEvents(typeof(NotifyClientResponse))]
         class Responded : MonitorState { }
 
         [Hot]

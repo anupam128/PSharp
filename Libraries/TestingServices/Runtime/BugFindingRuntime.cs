@@ -96,6 +96,11 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         private int OperationIdCounter;
 
+        /// <summary>
+        /// Monotonically increasing counter.
+        /// </summary>
+        private int EventCounter;
+
         #endregion
 
         #region public API
@@ -134,6 +139,7 @@ namespace Microsoft.PSharp.TestingServices
             this.CoverageInfo = coverageInfo;
 
             this.OperationIdCounter = 0;
+            this.EventCounter = 0;
         }
 
         /// <summary>
@@ -222,14 +228,15 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        public override void SendEvent(MachineId target, Event e)
+        /// <param name="isStarter">Starts an operation?</param>
+        public override void SendEvent(MachineId target, Event e, bool isStarter = false)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot send a null event.");
 
-            this.Send(base.GetCurrentMachine(), target, e, false);
+            this.Send(base.GetCurrentMachine(), target, e, isStarter);
         }
 
         /// <summary>
@@ -497,6 +504,20 @@ namespace Microsoft.PSharp.TestingServices
 
             EventInfo eventInfo = new EventInfo(e, originInfo);
             this.SetOperationIdForEvent(eventInfo, sender, isStarter);
+            eventInfo.SetEventUid(EventCounter++);
+
+            // report the send
+            var machineOrigin = "Env";
+            var originUid = 0;
+            if(sender != null && sender is Machine)
+            {
+                machineOrigin = (sender as Machine).Id.Name;
+                originUid = (sender as Machine).LastDequeueUid;
+            }
+
+            this.CoverageInfo.AddTraceTransition(machineOrigin, originUid, e.GetType().Name,
+                eventInfo.Uid, eventInfo.OperationId, mid.Name);
+
 
             if (this.Configuration.BoundOperations && sender != null)
             {

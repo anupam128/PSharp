@@ -44,6 +44,19 @@ namespace Microsoft.PSharp.TestingServices.Coverage
         [DataMember]
         public HashSet<Transition> Transitions { get; private set; }
 
+        /// <summary>
+        /// Set of machine transitions.
+        /// </summary>
+        [DataMember]
+        public Dictionary<Tuple<string, int>, int> TraceNodes { get; private set; }
+
+        /// <summary>
+        /// Set of machine transitions.
+        /// </summary>
+        [DataMember]
+        public List<Tuple<string, int, string, string, int>> TraceTransitions { get; private set; }
+
+
         #endregion
 
         #region constructors
@@ -56,6 +69,9 @@ namespace Microsoft.PSharp.TestingServices.Coverage
             this.MachinesToStates = new Dictionary<string, HashSet<string>>();
             this.RegisteredEvents = new HashSet<Tuple<string, string, string>>();
             this.Transitions = new HashSet<Transition>();
+
+            this.TraceNodes = new Dictionary<Tuple<string, int>, int>();
+            this.TraceTransitions = new List<Tuple<string, int, string, string, int>>();
         }
 
         #endregion
@@ -77,6 +93,26 @@ namespace Microsoft.PSharp.TestingServices.Coverage
             this.AddState(machineTarget, stateTarget);
             this.Transitions.Add(new Transition(machineOrigin, stateOrigin,
                 edgeLabel, machineTarget, stateTarget));
+        }
+
+        /// <summary>
+        /// Adds a new transition.
+        /// </summary>
+        /// <param name="machineOrigin">Origin machine</param>
+        /// <param name="UidOrigin">Origin machine uid</param>
+        /// <param name="edgeLabel">Edge label</param>
+        /// <param name="machineTarget">Target machine</param>
+        /// <param name="edgeUid">event uid</param>
+        /// <param name="opid">opid</param>
+        public void AddTraceTransition(string machineOrigin, int UidOrigin, string edgeLabel,
+            int edgeUid, int opid, string machineTarget)
+        {
+            if(!TraceNodes.ContainsKey(Tuple.Create(machineOrigin, UidOrigin)))
+            {
+                TraceNodes.Add(Tuple.Create(machineOrigin, UidOrigin), 0);
+            }
+            TraceNodes[Tuple.Create(machineTarget, edgeUid)] = opid;
+            TraceTransitions.Add(Tuple.Create(machineOrigin, UidOrigin, edgeLabel, machineTarget, edgeUid));
         }
 
         /// <summary>

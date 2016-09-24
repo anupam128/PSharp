@@ -162,6 +162,11 @@ namespace Microsoft.PSharp
         /// </summary>
         protected internal Event ReceivedEvent { get; private set; }
 
+        /// <summary>
+        /// UID of last event dequeued
+        /// </summary>
+        protected internal int LastDequeueUid { get; private set; }
+
         #endregion
 
         #region constructors
@@ -190,6 +195,8 @@ namespace Microsoft.PSharp
             this.IsRunning = true;
             this.IsHalted = false;
             this.IsWaitingToReceive = false;
+
+            this.LastDequeueUid = 0;
         }
 
         #endregion
@@ -613,6 +620,7 @@ namespace Microsoft.PSharp
                 if (dequeued)
                 {
                     base.Runtime.NotifyDequeuedEvent(this, nextEventInfo);
+                    this.LastDequeueUid = nextEventInfo.Uid;
                 }
                 else
                 {

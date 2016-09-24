@@ -196,13 +196,14 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        public virtual void SendEvent(MachineId target, Event e)
+        /// <param name="isStarter">Starts an operation?</param>
+        public virtual void SendEvent(MachineId target, Event e, bool isStarter = false)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot send a null event.");
-            this.Send(null, target, e, false);
+            this.Send(null, target, e, isStarter);
         }
 
         /// <summary>

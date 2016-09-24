@@ -53,6 +53,11 @@ namespace Microsoft.PSharp
         /// </summary>
         internal int OperationId { get; private set; }
 
+        /// <summary>
+        /// The UID  of the event.
+        /// </summary>
+        internal int Uid { get; private set; }
+
         #endregion
 
         #region constructor
@@ -94,6 +99,14 @@ namespace Microsoft.PSharp
             this.OperationId = opid;
         }
 
+        /// <summary>
+        /// Sets the event uid.
+        /// </summary>
+        /// <param name="counter">Event Counter</param>
+        internal void SetEventUid(int counter)
+        {
+            this.Uid = counter;  
+        }
         #endregion
     }
 }

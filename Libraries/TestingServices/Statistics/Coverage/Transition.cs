@@ -70,4 +70,5 @@ namespace Microsoft.PSharp.TestingServices.Coverage
             this.StateTarget = stateTarget;
         }
     }
+
 }

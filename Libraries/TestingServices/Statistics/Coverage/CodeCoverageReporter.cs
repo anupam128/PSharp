@@ -58,7 +58,8 @@ namespace Microsoft.PSharp.TestingServices.Coverage
         {
             using (var writer = new XmlTextWriter(graphFile, Encoding.UTF8))
             {
-                this.WriteVisualizationGraph(writer);
+                //this.WriteVisualizationGraph(writer);
+                this.WriteTraceTree(writer);
             }
         }
 
@@ -77,6 +78,73 @@ namespace Microsoft.PSharp.TestingServices.Coverage
         #endregion
 
         #region private methods
+
+        /// <summary>
+        /// Writes the visualization graph.
+        /// </summary>
+        /// <param name="writer">XmlTextWriter</param>
+        private void WriteTraceTree(XmlTextWriter writer)
+        {
+            // ToColor
+            var ToColor = new Func<int, string>(v =>
+            {
+                if (v == 0) return "Black";
+                else if (v == 1) return "Red";
+                else if (v == 2) return "Green";
+                else if (v == 3) return "Blue";
+                else if (v == 4) return "Cyan";
+                else if (v == 5) return "Purple";
+                else return "Brown";
+            });
+
+
+            // Starts document.
+            writer.WriteStartDocument(true);
+            writer.Formatting = Formatting.Indented;
+            writer.Indentation = 2;
+
+            // Starts DirectedGraph element.
+            writer.WriteStartElement("DirectedGraph", @"http://schemas.microsoft.com/vs/2009/dgml");
+
+            // Starts Nodes element.
+            writer.WriteStartElement("Nodes");
+
+            // Iterates machines.
+            foreach (var tup in this.CoverageInfo.TraceNodes)
+            {
+                writer.WriteStartElement("Node");
+                writer.WriteAttributeString("Id", tup.Key.Item1 + "+" + tup.Key.Item2);
+                writer.WriteAttributeString("Label", tup.Key.Item1);
+                writer.WriteAttributeString("Background", ToColor(tup.Value));
+                writer.WriteEndElement();
+            }
+
+            // Ends Nodes element.
+            writer.WriteEndElement();
+
+            // Starts Links element.
+            writer.WriteStartElement("Links");
+
+            // Iterates transitions.
+            foreach (var transition in this.CoverageInfo.TraceTransitions)
+            {
+                writer.WriteStartElement("Link");
+                writer.WriteAttributeString("Source", transition.Item1 + "+" + transition.Item2);
+                writer.WriteAttributeString("Target", transition.Item4 + "+" + transition.Item5);
+                writer.WriteAttributeString("Label", transition.Item3);
+                writer.WriteEndElement();
+            }
+
+            // Ends Links element.
+            writer.WriteEndElement();
+
+            // Ends DirectedGraph element.
+            writer.WriteEndElement();
+
+            // Ends document.
+            writer.WriteEndDocument();
+        }
+
 
         /// <summary>
         /// Writes the visualization graph.
