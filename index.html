@@ -34,7 +34,7 @@
         <h1>
 <a id="p" class="anchor" href="#p" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>P#</h1>
 
-<p>A toolkit for <strong>building</strong>, <strong>analyzing</strong>, <strong>systematically testing</strong> and <strong>debugging</strong> asynchronous reactive software, such as web-services and distributed systems.</p>
+<p>A language and toolkit for <strong>building</strong>, <strong>analyzing</strong>, <strong>systematically testing</strong> and <strong>debugging</strong> asynchronous reactive software, such as web-services and distributed systems.</p>
 
 <h2>
 <a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
@@ -42,7 +42,7 @@
 <p>The P# framework provides:</p>
 
 <ul>
-<li>Language extensions to C# for building <strong>event-driven asynchronous</strong> applications, writing <strong>test harnesses</strong>, and specifying <strong>safety and liveness properties</strong>.</li>
+<li>Language extensions to C# for building <strong>event-driven asynchronous</strong> applications, writing <strong>test harnesses</strong>, and specifying <strong>safety</strong> and <strong>liveness properties</strong>.</li>
 <li>A <strong>systematic testing engine</strong> that can capture and control all specified nondeterminism in the system, systematically explore the actual executable code to discover bugs, and report bug traces. A P# bug trace provides a global order of all communication events, and thus is easier to debug.</li>
 <li>Support for <strong>replaying</strong> bug traces, and <strong>debugging</strong> them using the Visual Studio debugger.</li>
 </ul>
@@ -50,89 +50,35 @@
 <p>Although P# primarily targets .NET, it has also experimental support for systematically testing native C++ code.</p>
 
 <h2>
-<a id="build-instructions" class="anchor" href="#build-instructions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build instructions</h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting started</h2>
 
-<ol>
-<li>Get Visual Studio 2015 (required for Microsoft Roslyn).</li>
-<li>Clone this project and compile using VS2015.</li>
-</ol>
+<p>The best way to build and start using P# is to read our <a href="https://github.com/p-org/PSharp/wiki">wiki</a>.</p>
 
-<p>Optional: Get the <a href="https://www.microsoft.com/en-us/download/details.aspx?id=46850">Visual Studio 2015 SDK</a> to be able to compile the P# visual studio extension (syntax highlighting). Only for the high-level P# language.</p>
+<p>You can also read the manual and available publications:</p>
 
-<h2>
-<a id="how-to-use" class="anchor" href="#how-to-use" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to use</h2>
-
-<p>A good way to start is by reading the <a href="https://github.com/p-org/PSharp/blob/master/Docs/Manual/manual.pdf">manual</a> (which is not feature complete yet, but please also feel free to contact the P# dev team with specific questions).</p>
-
-<p>Next, feel free to check out the P# <a href="https://github.com/p-org/PSharp/tree/master/Samples">samples</a>.</p>
+<ul>
+<li>
+<a href="https://github.com/p-org/PSharp/blob/master/Docs/Manual/manual.pdf">Manual</a><br>
+</li>
+<li><a href="https://github.com/p-org/PSharp/wiki/Publications">Publications</a></li>
+</ul>
 
 <h2>
-<a id="compilation" class="anchor" href="#compilation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Compilation</h2>
+<a id="how-to-contribute" class="anchor" href="#how-to-contribute" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to contribute</h2>
 
-<p>The P# compiler can be used to parse a P# program, rewrite it to C# and finally compile it to an executable. To invoke the compiler use the following command:</p>
-
-<pre><code>.\PSharpCompiler.exe /s:${SOLUTION_PATH}\${SOLUTION_NAME}.sln
-</code></pre>
-
-<p>Where ${SOLUTION_PATH} is the path to your P# solution and ${SOLUTION_NAME} is the name of your P# solution.</p>
-
-<p>To specify an output path destination use the option <code>/o:${OUTPUT\_PATH}</code>.</p>
-
-<p>To compile only a specific project in the solution use the option <code>/p:${PROJECT_NAME}</code>.</p>
-
-<p>To compile as a library (dll) use the option <code>/t:lib</code>.</p>
-
-<p>To compile for testing use the option <code>/t:test</code>.</p>
-
-<h2>
-<a id="systematic-testing" class="anchor" href="#systematic-testing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Systematic testing</h2>
-
-<p>The P# tester can be used to systematically test a P# program to find safety property and liveness property violations. It can be invoked on a P# program (dll) that was previously compiled using the P# compiler (or some other custom build system). To invoke the tester use the following command:</p>
-
-<pre><code>.\PSharpTester.exe /test:${DLL_PATH}\${DLL_NAME}.dll
-</code></pre>
-
-<p>Where ${DLL_PATH} is the path to your P# program and ${DLL_NAME} is the name of your P# program.</p>
-
-<p>You can optionally give the number of testing iterations to perform using <code>/i:value</code>.</p>
-
-<h2>
-<a id="replay-and-debug-buggy-executions" class="anchor" href="#replay-and-debug-buggy-executions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Replay and debug buggy executions</h2>
-
-<p>The P# replayer can be used to reproduce and debug buggy executions (found by <code>PSharpTester.exe</code>). To invoke the replayer use the following command:</p>
-
-<pre><code>.\PSharpReplayer.exe /test:${DLL_PATH}\${DLL_NAME}.dll /trace:${TRACE_PATH}\${TRACE_NAME}.pstrace
-</code></pre>
-
-<p>Where ${TRACE_PATH} is the path to the bug trace (dumped by <code>PSharpTester.exe</code>) and ${TRACE_NAME} is the name of the bug trace.</p>
-
-<p>You can attach the Visual Studio debugger on this buggy execution, to get the familiar VS debugging experience, by using <code>/break</code>. When using this flag, P# will automatically instrument a breakpoint when the bug is found. You can also insert your own breakpoints in the source code.</p>
-
-<h2>
-<a id="options" class="anchor" href="#options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Options</h2>
-
-<p>To see various available command line options for the P# tools use the option <code>/?</code>.</p>
+<p>We welcome contributions! However, before you start contributing, please read carefully the <a href="https://github.com/p-org/PSharp/wiki/Contributing-Code">development guidelines</a>.</p>
 
 <h2>
 <a id="contact-us" class="anchor" href="#contact-us" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contact us</h2>
 
-<p>If you would like to use P# in your project, or have any specific questions, please feel free to contact one of the following members of the P# team:</p>
+<p>If you would like to use P# in your project, or have any specific questions, please feel free to contact one of the following members of the P# team (@p-org/psharp-developers):</p>
 
 <ul>
-<li>Pantazis Deligiannis (<a href="mailto:p.deligiannis@imperial.ac.uk">p.deligiannis@imperial.ac.uk</a>)</li>
-<li>Shaz Qadeer (<a href="mailto:qadeer@microsoft.com">qadeer@microsoft.com</a>)</li>
 <li>Akash Lal (<a href="mailto:akashl@microsoft.com">akashl@microsoft.com</a>)</li>
+<li>Rashmi Mudduluru (<a href="mailto:t-rasmud@microsoft.com">t-rasmud@microsoft.com</a>)</li>
+<li>Pantazis Deligiannis (<a href="mailto:pdeligia@microsoft.com">pdeligia@microsoft.com</a>)</li>
+<li>Shaz Qadeer (<a href="mailto:qadeer@microsoft.com">qadeer@microsoft.com</a>)</li>
 <li>Cheng Huang (<a href="mailto:cheng.huang@microsoft.com">cheng.huang@microsoft.com</a>)</li>
-</ul>
-
-<h2>
-<a id="publications" class="anchor" href="#publications" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Publications</h2>
-
-<ul>
-<li>
-<strong><a href="https://www.usenix.org/node/194442">Uncovering Bugs in Distributed Storage Systems During Testing (not in Production!)</a></strong>. Pantazis Deligiannis, Matt McCutchen, Paul Thomson, Shuo Chen, Alastair F. Donaldson, John Erickson, Cheng Huang, Akash Lal, Rashmi Mudduluru, Shaz Qadeer and Wolfram Schulte. In the <em>14th USENIX Conference on File and Storage Technologies</em> (FAST), 2016.</li>
-<li>
-<strong><a href="https://dl.acm.org/citation.cfm?id=2737996">Asynchronous Programming, Analysis and Testing with State Machines</a></strong>. Pantazis Deligiannis, Alastair F. Donaldson, Jeroen Ketema, Akash Lal and Paul Thomson. In the <em>36th Annual ACM SIGPLAN Conference on Programming Language Design and Implementation</em> (PLDI), 2015.</li>
 </ul>
       </section>
     </div>
