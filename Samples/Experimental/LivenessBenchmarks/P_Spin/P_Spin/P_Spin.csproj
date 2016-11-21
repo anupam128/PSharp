@@ -48,7 +48,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="Client.p" />
-    <None Include="Environment.p" />
+    <None Include="Main.p" />
     <None Include="Lk_Machine.p" />
     <None Include="RLock_Machine.p" />
     <None Include="RWant_Machine.p" />

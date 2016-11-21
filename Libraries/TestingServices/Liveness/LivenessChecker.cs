@@ -222,9 +222,12 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 return;
             }
             Console.WriteLine("******* Potential cycle **********");
+            var index = this.Runtime.ScheduleTrace.Count - 1;
             do
             {
-                var scheduleStep = this.Runtime.ScheduleTrace.Pop();
+                //var scheduleStep = this.Runtime.ScheduleTrace.Pop();
+                var scheduleStep = this.Runtime.ScheduleTrace[index];
+                index--;
                 var state = this.Runtime.StateCache[scheduleStep];
                 this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
 
@@ -234,13 +237,13 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 // The state can be safely removed, because the liveness detection
                 // algorithm currently removes cycles, so a specific state can only
                 // appear once in the schedule trace.
-                this.Runtime.StateCache.Remove(scheduleStep);
+                //this.Runtime.StateCache.Remove(scheduleStep);
             }
-            while (this.Runtime.ScheduleTrace.Peek() != null && !this.Runtime.StateCache[
-                this.Runtime.ScheduleTrace.Peek()].Fingerprint.Equals(root));
+            while (index > 0 && this.Runtime.ScheduleTrace[index] != null && !this.Runtime.StateCache[
+                this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
 
-            var rt = Runtime.ScheduleTrace.Peek();
-            var rts = Runtime.StateCache[Runtime.ScheduleTrace.Peek()];
+            //var rt = Runtime.ScheduleTrace.Peek();
+            //var rts = Runtime.StateCache[Runtime.ScheduleTrace.Peek()];
 
             if (Runtime.Configuration.EnableDebugging)
             {
@@ -319,7 +322,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                         Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.IntegerChoice.Value}");
                     }
                 }
-                Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
+                //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
                 Console.WriteLine("<LivenessDebug> ----------------------------------.");
                 //PotentialCycle.Clear();
                 this.Runtime.BugFinder.SwitchSchedulingStrategy(this);

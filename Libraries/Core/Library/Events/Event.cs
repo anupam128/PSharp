@@ -63,6 +63,14 @@ namespace Microsoft.PSharp
             this.Assume = assume;
         }
 
+        /// <summary>
+        /// Used defined hash for caching event data
+        /// </summary>
+        /// <returns>int</returns>
+        internal protected virtual int GetEventHash()
+        {
+            return 0;
+        }
         #endregion
     }
 }
