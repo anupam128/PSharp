@@ -47,6 +47,7 @@ namespace LassoExample
         [OnEntry(nameof(OnInitEntry))]
         [OnEventDoAction(typeof(SetNeighbour), nameof(OnSetNeighbour))]
         [OnEventDoAction(typeof(Message), nameof(OnMessage))]
+        [OnEventDoAction(typeof(Default), nameof(OnDefault))]
         class Init : MachineState { }
         #endregion
 
@@ -70,7 +71,12 @@ namespace LassoExample
             {
                 this.Value++; 
             }
-            Send(Next, new Message(Value));
+            //Send(Next, new Message(Value));
+        }
+        void OnDefault()
+        {
+            if(Next != null)
+                Send(Next, new Message(Value));
         }
         #endregion
     }

@@ -444,7 +444,8 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 var choices = fairNondeterministicChoiceSteps.Where(c => c.Item1.NondetId == step.Item1.NondetId);
                 var falseChoices = choices.Where(c => c.Item1.BooleanChoice == false).Count();
-                if (choices.Count() == falseChoices)
+                var trueChoices = choices.Where(c => c.Item1.BooleanChoice == true).Count();
+                if (trueChoices == 0 || falseChoices == 0)
                     return false;
             }
 
