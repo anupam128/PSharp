@@ -336,7 +336,6 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 }
                 //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
                 Console.WriteLine("<LivenessDebug> ----------------------------------.");
-                //PotentialCycle.Clear();
                 this.Runtime.BugFinder.SwitchSchedulingStrategy(this);
             }
             else
@@ -597,12 +596,12 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             if (this.Runtime.Configuration.EnableCycleReplayingStrategy)
             {
                 ScheduleStep nextStep = this.PotentialCycle[this.CurrentCycleIndex].Item1;
-                if (nextStep.Type != ScheduleStepType.NondeterministicChoice ||
-                    nextStep.BooleanChoice == null)
+                if ((nextStep.Type == ScheduleStepType.SchedulingChoice) || nextStep.BooleanChoice == null)
                 {
                     IO.Debug("<LivenessDebug> Trace is not reproducible: next step is " +
                         "not a nondeterministic boolean choice.");
-                    Console.WriteLine("xxxxxxxxxxx Escaping - boolean choice: " + nextStep.Type + " " + nextStep.Index);
+                    Console.WriteLine("xxxxxxxxxxx Escaping - boolean choice: " + nextStep.Type + " " + nextStep.Index + " " + 
+                        (nextStep.Type == ScheduleStepType.FairNondeterministicChoice) + " " + (nextStep.Type.Equals(ScheduleStepType.FairNondeterministicChoice)));
                     this.EscapeCycle();
                     return this.BugFindingSchedulingStrategy.GetNextBooleanChoice(maxValue, out next);
                 }
