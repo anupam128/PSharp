@@ -221,7 +221,20 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 return;
             }
-            Console.WriteLine("******* Potential cycle **********");
+
+            List<int> checkIndex = new List<int>();
+            for (int i = this.Runtime.ScheduleTrace.Count - 1; i >= 0; i--)
+            {
+                if (this.Runtime.StateCache[this.Runtime.ScheduleTrace[i]].Fingerprint.Equals(root))
+                {
+                    checkIndex.Add(i);
+                }
+            }
+
+            var randInd = new Random(DateTime.Now.Millisecond).Next(checkIndex.Count - 1);
+            var checkIndexRand = checkIndex[randInd];
+
+            Console.WriteLine("******* Potential cycle ********** " + randInd);
             var index = this.Runtime.ScheduleTrace.Count - 1;
             do
             {
@@ -239,11 +252,10 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 // appear once in the schedule trace.
                 //this.Runtime.StateCache.Remove(scheduleStep);
             }
-            while (index > 0 && this.Runtime.ScheduleTrace[index] != null && !this.Runtime.StateCache[
-                this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
-
-            //var rt = Runtime.ScheduleTrace.Peek();
-            //var rts = Runtime.StateCache[Runtime.ScheduleTrace.Peek()];
+            //while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+            // !this.Runtime.StateCache[this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
+            while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+             index > checkIndexRand);
 
             if (Runtime.Configuration.EnableDebugging)
             {
@@ -282,6 +294,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
 
                     x.Item2.PrettyPrint();
                 }
+                IO.Debug("ROOT fp: " + root);
                 IO.Debug("<LivenessDebug> ----------------------------------.");
             }
 
@@ -304,8 +317,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             if (this.HotMonitors.Count > 0)
             {
                 this.EndOfCycleIndex = this.PotentialCycle.Select(val => val.Item1).Min(val => val.Index);
-                //this.Runtime.Configuration.LivenessTemperatureThreshold = PotentialCycle.Count * 100;
-                Console.WriteLine("FAIR CYCLE FOUND!!");
+                Console.WriteLine("FAIR CYCLE FOUND!! " + randInd);
                 Console.WriteLine("<LivenessDebug> ------------- CYCLE --------------.");
                 foreach (var x in this.PotentialCycle)
                 {
@@ -437,12 +449,11 @@ namespace Microsoft.PSharp.TestingServices.Liveness
         private bool IsNondeterminismFair(IEnumerable<Tuple<ScheduleStep, State>> cycle)
         {
             var fairNondeterministicChoiceSteps = cycle.Where(
-                val => val.Item1.Type == ScheduleStepType.FairNondeterministicChoice &&
+                val => val.Item1.Type == (ScheduleStepType.FairNondeterministicChoice) &&
                 val.Item1.BooleanChoice != null);
-
             foreach (var step in fairNondeterministicChoiceSteps)
             {
-                var choices = fairNondeterministicChoiceSteps.Where(c => c.Item1.NondetId == step.Item1.NondetId);
+                var choices = fairNondeterministicChoiceSteps.Where(c => c.Item1.NondetId.Equals(step.Item1.NondetId));
                 var falseChoices = choices.Where(c => c.Item1.BooleanChoice == false).Count();
                 var trueChoices = choices.Where(c => c.Item1.BooleanChoice == true).Count();
                 if (trueChoices == 0 || falseChoices == 0)
