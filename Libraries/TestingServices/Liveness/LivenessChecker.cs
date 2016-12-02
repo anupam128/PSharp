@@ -235,27 +235,21 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             var checkIndexRand = checkIndex[randInd];
 
             Console.WriteLine("******* Potential cycle ********** " + randInd);
-            var index = this.Runtime.ScheduleTrace.Count - 1;
+            var index = this.Runtime.ScheduleTrace.Count;
             do
             {
-                //var scheduleStep = this.Runtime.ScheduleTrace.Pop();
-                var scheduleStep = this.Runtime.ScheduleTrace[index];
                 index--;
+                var scheduleStep = this.Runtime.ScheduleTrace[index];
                 var state = this.Runtime.StateCache[scheduleStep];
                 this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
 
                 IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
                     scheduleStep.Type, state.Fingerprint.ToString());
-
-                // The state can be safely removed, because the liveness detection
-                // algorithm currently removes cycles, so a specific state can only
-                // appear once in the schedule trace.
-                //this.Runtime.StateCache.Remove(scheduleStep);
             }
-            //while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-            // !this.Runtime.StateCache[this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
             while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-             index > checkIndexRand);
+             !this.Runtime.StateCache[this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
+            //while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+            // !(index < checkIndexRand));
 
             if (Runtime.Configuration.EnableDebugging)
             {
