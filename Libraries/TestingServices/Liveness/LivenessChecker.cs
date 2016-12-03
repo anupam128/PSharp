@@ -225,31 +225,34 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             List<int> checkIndex = new List<int>();
             for (int i = this.Runtime.ScheduleTrace.Count - 1; i >= 0; i--)
             {
+                if (this.Runtime.ScheduleTrace.Peek().Equals(this.Runtime.ScheduleTrace[i]))
+                    continue;
                 if (this.Runtime.StateCache[this.Runtime.ScheduleTrace[i]].Fingerprint.Equals(root))
                 {
-                    checkIndex.Add(i);
+                    checkIndex.Add(this.Runtime.ScheduleTrace[i].Index);
                 }
             }
 
             var randInd = new Random(DateTime.Now.Millisecond).Next(checkIndex.Count - 1);
-            var checkIndexRand = checkIndex[randInd];
+            //var checkIndexRand = checkIndex[randInd];
+            var checkIndexRand = checkIndex.Last();
 
-            Console.WriteLine("******* Potential cycle ********** " + randInd);
-            var index = this.Runtime.ScheduleTrace.Count;
+            Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
+            var index = this.Runtime.ScheduleTrace.Count - 1;
             do
             {
-                index--;
                 var scheduleStep = this.Runtime.ScheduleTrace[index];
+                index--;
                 var state = this.Runtime.StateCache[scheduleStep];
                 this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
 
                 IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
                     scheduleStep.Type, state.Fingerprint.ToString());
             }
-            while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-             !this.Runtime.StateCache[this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
             //while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-            // !(index < checkIndexRand));
+            // !this.Runtime.StateCache[this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
+            while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+             this.Runtime.ScheduleTrace[index].Index != checkIndexRand);
 
             if (Runtime.Configuration.EnableDebugging)
             {
@@ -311,7 +314,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             if (this.HotMonitors.Count > 0)
             {
                 this.EndOfCycleIndex = this.PotentialCycle.Select(val => val.Item1).Min(val => val.Index);
-                Console.WriteLine("FAIR CYCLE FOUND!! " + randInd);
+                Console.WriteLine("FAIR CYCLE FOUND!! "/* + randInd*/);
                 Console.WriteLine("<LivenessDebug> ------------- CYCLE --------------.");
                 foreach (var x in this.PotentialCycle)
                 {
