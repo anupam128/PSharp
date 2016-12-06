@@ -309,6 +309,9 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 //return;
             }
 
+            if (PotentialCycle.Count == 0)
+            {
+                bool fairCycleFound = false;
                 int NumTries = Math.Min(checkIndex.Count, 3);
                 while (!fairCycleFound && NumTries > 0)
                 {
