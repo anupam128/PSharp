@@ -233,7 +233,8 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 }
             }
 
-            var randInd = new Random(DateTime.Now.Millisecond).Next(checkIndex.Count - 1);
+            var rand = new Random(DateTime.Now.Millisecond);
+            var randInd = rand.Next(checkIndex.Count - 1);
             //var checkIndexRand = checkIndex[randInd];
             var checkIndexRand = checkIndex.Last();
 
@@ -299,14 +300,47 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 IO.Debug("<LivenessDebug> Scheduling in cycle is unfair.");
                 this.PotentialCycle.Clear();
-                return;
+                //return;
             }
             else if (!this.IsNondeterminismFair(this.PotentialCycle))
             {
                 IO.Debug("<LivenessDebug> Nondeterminism in cycle is unfair.");
                 this.PotentialCycle.Clear();
-                return;
+                //return;
             }
+
+                int NumTries = Math.Min(checkIndex.Count, 3);
+                while (!fairCycleFound && NumTries > 0)
+                {
+                    randInd = rand.Next(checkIndex.Count - 1);
+                    checkIndexRand = checkIndex[randInd];
+
+                    Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
+                    index = this.Runtime.ScheduleTrace.Count - 1;
+                    do
+                    {
+                        var scheduleStep = this.Runtime.ScheduleTrace[index];
+                        index--;
+                        var state = this.Runtime.StateCache[scheduleStep];
+                        this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
+
+                        IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
+                            scheduleStep.Type, state.Fingerprint.ToString());
+                    }
+                    while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+                     this.Runtime.ScheduleTrace[index].Index != checkIndexRand);
+                    if (IsSchedulingFair(this.PotentialCycle) && IsNondeterminismFair(this.PotentialCycle))
+                    {
+                        fairCycleFound = true;
+                    }
+                    NumTries--;
+                }
+                if (!fairCycleFound)
+                {
+                    PotentialCycle.Clear();
+                    return;
+                }
+            }            
 
             IO.Debug("<LivenessDebug> Cycle execution is fair.");
             
