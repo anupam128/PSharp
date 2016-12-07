@@ -116,7 +116,7 @@ machine Server
                 CurrentTerm = payload.0;
                 VotedFor = null;
             }
-
+			
             AppendEntries(payload.0, payload.1, payload.2, payload.3, payload.4, payload.5, payload.6);
 		}
 		on AppendEntriesResponse do (payload : (int, bool, machine, machine))
@@ -267,7 +267,15 @@ machine Server
 				if (index == ServerId){}
 				else
 				{
+					if(Servers[index] in NextIndex)
+					{
+						NextIndex -= Servers[index];
+					}
 					NextIndex += (Servers[index], logIndex + 1);
+					if(Servers[index] in MatchIndex)
+					{
+						MatchIndex -= Servers[index];	
+					}
 					MatchIndex += (Servers[index], 0);
 				}
 				index = index + 1;
@@ -323,7 +331,6 @@ machine Server
 							logs += (sizeof(logs), Logs[index]);
 							tIndex = tIndex + 1;
 						}
-
 						prevLogIndex = NextIndex[server] - 1;
 						prevLogTerm = GetLogTermForIndex(prevLogIndex);
 						
@@ -398,8 +405,8 @@ machine Server
 
             if (payload.1)
             {
-                NextIndex[payload.2] = sizeof(Logs) + 1;
-                MatchIndex[payload.2] = sizeof(Logs);
+                NextIndex += (payload.2, sizeof(Logs) + 1);
+                MatchIndex += (payload.2, sizeof(Logs));
 
                 VotesReceived = VotesReceived + 1;
                 if (payload.3 != null && VotesReceived >= (sizeof(Servers) / 2) + 1)
@@ -420,7 +427,7 @@ machine Server
             {
                 if (NextIndex[payload.2] > 1)
                 {
-                    NextIndex[payload.2] = NextIndex[payload.2] - 1;
+                    NextIndex += (payload.2, NextIndex[payload.2] - 1);
                 }
 
 				index = NextIndex[payload.2] - 1;
@@ -474,7 +481,7 @@ machine Server
 		var entryVal : Log;
 		var tIndex : int;
 		var tLog : Log;
-
+		
         if (Term < CurrentTerm)
         {
             send rLeaderId, AppendEntriesResponse, CurrentTerm, false, this, ReceiverEndpoint;
@@ -483,12 +490,19 @@ machine Server
         {
             if (PrevLogIndex > 0)
             {
-				if((sizeof(Logs) < PrevLogIndex) || (Logs[PrevLogIndex - 1].Term != PrevLogTerm))
+				print "fail check1 {0}, {1}", sizeof(Logs), PrevLogIndex - 1;
+				if(sizeof(Logs) > 0)
 				{
-					send rLeaderId, AppendEntriesResponse, CurrentTerm, false, this, ReceiverEndpoint;
+					if((sizeof(Logs) < PrevLogIndex) || (Logs[PrevLogIndex - 1].Term != PrevLogTerm))
+					{
+						print "fail check2";
+						send rLeaderId, AppendEntriesResponse, CurrentTerm, false, this, ReceiverEndpoint;
+					}
+					
 				}
-				else
+				if(sizeof(Logs) <= 0 || !((sizeof(Logs) < PrevLogIndex) || (Logs[PrevLogIndex - 1].Term != PrevLogTerm)))
 				{
+					print "fail check3";
 					if (sizeof(Entries) > 0)
                 {
                     currentIndex = PrevLogIndex + 1;
@@ -496,6 +510,7 @@ machine Server
 					index = 0;
 					while (sizeof(Entries) > 0 && index < sizeof(Entries))
 					{
+						print "failss";
 						entryVal = Entries[index];
 						if (sizeof(Logs) < currentIndex)
                         {
@@ -519,7 +534,7 @@ machine Server
 						index = index + 1;
 					}
                 }
-
+				print "fail check4";
                 if (LeaderCommit > CommitIndex && sizeof(Logs) < LeaderCommit)
                 {
                     CommitIndex = sizeof(Logs);
