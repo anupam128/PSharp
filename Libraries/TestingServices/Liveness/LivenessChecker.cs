@@ -370,6 +370,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 }
                 //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
                 Console.WriteLine("<LivenessDebug> ----------------------------------.");
+                this.Runtime.Configuration.LivenessTemperatureThreshold = 10 * PotentialCycle.Count;
                 this.Runtime.BugFinder.SwitchSchedulingStrategy(this);
             }
             else
