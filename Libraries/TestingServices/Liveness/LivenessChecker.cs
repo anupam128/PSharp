@@ -234,26 +234,64 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             }
 
             var rand = new Random(DateTime.Now.Millisecond);
-            var randInd = rand.Next(checkIndex.Count - 1);
-            //var checkIndexRand = checkIndex[randInd];
-            var checkIndexRand = checkIndex.Last();
+            //var checkIndexRand = checkIndex.Last();
 
-            Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
-            var index = this.Runtime.ScheduleTrace.Count - 1;
-            do
+            foreach(var checkIndexRand in checkIndex)
             {
-                var scheduleStep = this.Runtime.ScheduleTrace[index];
-                index--;
-                var state = this.Runtime.StateCache[scheduleStep];
-                this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
+                Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
+                var index = this.Runtime.ScheduleTrace.Count - 1;
+                do
+                {
+                    var scheduleStep = this.Runtime.ScheduleTrace[index];
+                    index--;
+                    var state = this.Runtime.StateCache[scheduleStep];
+                    this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
 
-                IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
-                    scheduleStep.Type, state.Fingerprint.ToString());
+                    IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
+                        scheduleStep.Type, state.Fingerprint.ToString());
+                }
+                while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+                 this.Runtime.ScheduleTrace[index].Index != checkIndexRand);
+
+                this.HotMonitors = this.GetHotMonitors(this.PotentialCycle);
+                if (this.HotMonitors.Count > 0)
+                {
+                    this.EndOfCycleIndex = this.PotentialCycle.Select(val => val.Item1).Min(val => val.Index);
+                    Console.WriteLine("HOT CYCLE FOUND!! ");
+                    Console.WriteLine("<LivenessDebug> ------------- CYCLE --------------.");
+                    foreach (var x in this.PotentialCycle)
+                    {
+                        if (x.Item1.Type == ScheduleStepType.SchedulingChoice)
+                        {
+                            Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.ScheduledMachineId}");
+                        }
+                        else if (x.Item1.BooleanChoice != null)
+                        {
+                            Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.BooleanChoice.Value}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.IntegerChoice.Value}");
+                        }
+                    }
+                    Console.WriteLine("<LivenessDebug> ----------------------------------.");
+                    this.Runtime.BugFinder.SwitchSchedulingStrategy(this);
+                }
+
+                if (!IsSchedulingFair(this.PotentialCycle))
+                {
+                    Console.WriteLine("LASSO -- SCHEDULING");
+                }
+                else if(!IsNondeterminismFair(this.PotentialCycle))
+                {
+                    Console.WriteLine("LASSO -- NON DETERMINISM");
+                }
+                else
+                {
+                    Console.WriteLine("FAIR LASSO FOUND");
+                }
+                PotentialCycle.Clear();
             }
-            //while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-            // !this.Runtime.StateCache[this.Runtime.ScheduleTrace[index]].Fingerprint.Equals(root));
-            while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-             this.Runtime.ScheduleTrace[index].Index != checkIndexRand);
 
             if (Runtime.Configuration.EnableDebugging)
             {
@@ -300,50 +338,50 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 IO.Debug("<LivenessDebug> Scheduling in cycle is unfair.");
                 this.PotentialCycle.Clear();
-                //return;
+                return;
             }
             else if (!this.IsNondeterminismFair(this.PotentialCycle))
             {
                 IO.Debug("<LivenessDebug> Nondeterminism in cycle is unfair.");
                 this.PotentialCycle.Clear();
-                //return;
+                return;
             }
 
-            if (PotentialCycle.Count == 0)
-            {
-                bool fairCycleFound = false;
-                int NumTries = Math.Min(checkIndex.Count, 3);
-                while (!fairCycleFound && NumTries > 0)
-                {
-                    randInd = rand.Next(checkIndex.Count - 1);
-                    checkIndexRand = checkIndex[randInd];
+            //if (PotentialCycle.Count == 0)
+            //{
+            //    bool fairCycleFound = false;
+            //    int NumTries = Math.Min(checkIndex.Count, 3);
+            //    while (!fairCycleFound && NumTries > 0)
+            //    {
+            //        randInd = rand.Next(checkIndex.Count - 1);
+            //        checkIndexRand = checkIndex[randInd];
 
-                    Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
-                    index = this.Runtime.ScheduleTrace.Count - 1;
-                    do
-                    {
-                        var scheduleStep = this.Runtime.ScheduleTrace[index];
-                        index--;
-                        var state = this.Runtime.StateCache[scheduleStep];
-                        this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
+            //        Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
+            //        index = this.Runtime.ScheduleTrace.Count - 1;
+            //        do
+            //        {
+            //            var scheduleStep = this.Runtime.ScheduleTrace[index];
+            //            index--;
+            //            var state = this.Runtime.StateCache[scheduleStep];
+            //            this.PotentialCycle.Insert(0, Tuple.Create(scheduleStep, state));
 
-                        IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
-                            scheduleStep.Type, state.Fingerprint.ToString());
-                    }
-                    while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
-                     this.Runtime.ScheduleTrace[index].Index != checkIndexRand);
-                    if (IsSchedulingFair(this.PotentialCycle) && IsNondeterminismFair(this.PotentialCycle))
-                    {
-                        fairCycleFound = true;
-                    }
-                    NumTries--;
-                }
-                if (!fairCycleFound)
-                {
-                    PotentialCycle.Clear();
-                    return;
-                }
-            }            
+            //            IO.Debug("<LivenessDebug> Cycle contains {0} with {1}.",
+            //                scheduleStep.Type, state.Fingerprint.ToString());
+            //        }
+            //        while (index > 0 && this.Runtime.ScheduleTrace[index] != null &&
+            //         this.Runtime.ScheduleTrace[index].Index != checkIndexRand);
+            //        if (IsSchedulingFair(this.PotentialCycle) && IsNondeterminismFair(this.PotentialCycle))
+            //        {
+            //            fairCycleFound = true;
+            //        }
+            //        NumTries--;
+            //    }
+            //    if (!fairCycleFound)
+            //    {
+            //        PotentialCycle.Clear();
+            //        return;
+            //    }
+            //}
 
             IO.Debug("<LivenessDebug> Cycle execution is fair.");
             
@@ -368,7 +406,6 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                         Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.IntegerChoice.Value}");
                     }
                 }
-                //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
                 Console.WriteLine("<LivenessDebug> ----------------------------------.");
                 this.Runtime.BugFinder.SwitchSchedulingStrategy(this);
             }

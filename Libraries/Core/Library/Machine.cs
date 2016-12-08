@@ -733,7 +733,6 @@ namespace Microsoft.PSharp
                 hash = hash + 31 * this.IsHalted.GetHashCode();
 
                 hash = hash + 31 * this.ProgramCounter;
-                Console.WriteLine("captured program counter: " + ProgramCounter + " " + GetType());
 
                 foreach (var state in this.StateStack)
                 {

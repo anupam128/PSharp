@@ -107,6 +107,7 @@ namespace Microsoft.PSharp.TestingServices.StateCaching
             if (stateExists)
             {
                 IO.Debug("<LivenessDebug> Detected potential infinite execution.");
+                System.Console.WriteLine("Infinite lasso detected (may not be fair)");
                 this.Runtime.LivenessChecker.CheckLivenessAtTraceCycle(state.Fingerprint);
             }
         }
