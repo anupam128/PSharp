@@ -233,12 +233,9 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                 }
             }
 
-            var rand = new Random(DateTime.Now.Millisecond);
-            var randInd = rand.Next(checkIndex.Count - 1);
-            //var checkIndexRand = checkIndex[randInd];
-            var checkIndexRand = checkIndex.Last();
+            var checkIndexRand = checkIndex.First();
 
-            Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
+            Console.WriteLine("******* Potential cycle ********** ");
             var index = this.Runtime.ScheduleTrace.Count - 1;
             do
             {
@@ -311,14 +308,15 @@ namespace Microsoft.PSharp.TestingServices.Liveness
 
             if (PotentialCycle.Count == 0)
             {
+                var rand = new Random(DateTime.Now.Millisecond);
                 bool fairCycleFound = false;
                 int NumTries = Math.Min(checkIndex.Count, 3);
                 while (!fairCycleFound && NumTries > 0)
                 {
-                    randInd = rand.Next(checkIndex.Count - 1);
+                    var randInd = rand.Next(checkIndex.Count - 1);
                     checkIndexRand = checkIndex[randInd];
 
-                    Console.WriteLine("******* Potential cycle ********** "/* + randInd*/);
+                    Console.WriteLine("******* Potential cycle ********** ");
                     index = this.Runtime.ScheduleTrace.Count - 1;
                     do
                     {
@@ -335,6 +333,11 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                     if (IsSchedulingFair(this.PotentialCycle) && IsNondeterminismFair(this.PotentialCycle))
                     {
                         fairCycleFound = true;
+                        break;
+                    }
+                    else
+                    {
+                        PotentialCycle.Clear();
                     }
                     NumTries--;
                 }
@@ -351,7 +354,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             if (this.HotMonitors.Count > 0)
             {
                 this.EndOfCycleIndex = this.PotentialCycle.Select(val => val.Item1).Min(val => val.Index);
-                Console.WriteLine("FAIR CYCLE FOUND!! "/* + randInd*/);
+                Console.WriteLine("FAIR CYCLE FOUND!! ");
                 Console.WriteLine("<LivenessDebug> ------------- CYCLE --------------.");
                 foreach (var x in this.PotentialCycle)
                 {
