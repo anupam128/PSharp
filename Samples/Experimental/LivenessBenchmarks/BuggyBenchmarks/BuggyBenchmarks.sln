@@ -19,8 +19,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LassoExample", "LassoExampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnotherLassoExample", "AnotherLassoExample\AnotherLassoExample.csproj", "{92F8885C-619B-469A-88BE-EB8681DFBBCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FairRandomCycle", "FairRandomCycle\FairRandomCycle.csproj", "{BF4EB95F-33F7-45C3-BCD7-9DC706F664E1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,10 +57,6 @@ Global
 		{92F8885C-619B-469A-88BE-EB8681DFBBCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92F8885C-619B-469A-88BE-EB8681DFBBCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92F8885C-619B-469A-88BE-EB8681DFBBCB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BF4EB95F-33F7-45C3-BCD7-9DC706F664E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF4EB95F-33F7-45C3-BCD7-9DC706F664E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF4EB95F-33F7-45C3-BCD7-9DC706F664E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF4EB95F-33F7-45C3-BCD7-9DC706F664E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
