@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RandomFalsePositive
+namespace PartialCachingLasso
 {
     class Environment : Machine
     {

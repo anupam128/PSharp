@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B5B4CEA1-C208-47DD-8382-6F1E03A86A87}</ProjectGuid>
+    <ProjectGuid>{9805E808-B805-41D5-AA52-66FC8B618240}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RandomFalsePositive</RootNamespace>
-    <AssemblyName>RandomFalsePositive</AssemblyName>
+    <RootNamespace>RandomInfinite</RootNamespace>
+    <AssemblyName>RandomInfinite</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
