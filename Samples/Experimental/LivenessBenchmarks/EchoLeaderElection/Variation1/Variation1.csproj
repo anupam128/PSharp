@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A7C8B34F-8259-4D94-91D0-0256858B007E}</ProjectGuid>
+    <ProjectGuid>{6519C592-1CD3-4408-A797-FCE36BF65570}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Variant1</RootNamespace>
-    <AssemblyName>Variant1</AssemblyName>
+    <RootNamespace>Variation1</RootNamespace>
+    <AssemblyName>Variation1</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

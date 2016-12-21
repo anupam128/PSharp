@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Variant1
+namespace Variation1
 {
     public class Leader : Machine
     {
@@ -34,6 +34,7 @@ namespace Variant1
         void OnSetValue()
         {
             leader = (ReceivedEvent as SetValue).leader;
+            Console.WriteLine("Leader elected: " + leader);
             this.Monitor<LivenessMonitor>(new LivenessMonitor.LeaderElected(leader));
         }
         #endregion

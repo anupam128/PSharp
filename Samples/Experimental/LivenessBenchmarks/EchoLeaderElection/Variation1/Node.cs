@@ -3,7 +3,7 @@
 
 using Microsoft.PSharp;
 
-namespace Variant1
+namespace Variation1
 {
     class Node : Machine
     {
@@ -114,7 +114,7 @@ namespace Variant1
             int caw, rec, father, lrec, win, r;
 
             restart:
-            Receive(typeof(Tok));
+            Receive(typeof(Tok), new System.Func<Event, bool>(e => (e as Tok).Token == -1));
             caw = myid; rec = 0; lrec = 0;
             father = 3; win = 3; r = 3;
 
@@ -124,58 +124,90 @@ namespace Variant1
             while (true)
             {
                 if (lrec == 2)
-                {
                     break;
-                }
-                var receivedEvt = Receive(typeof(Tok), typeof(Ldr));
-                if (receivedEvt is Ldr)
+                else
                 {
-                    r = (receivedEvt as Ldr).Value;
-                    if (lrec == 0 && r != myid)
+                    var receivedEvt = Receive(typeof(Tok), typeof(Ldr));
+                    if(receivedEvt is Ldr)
                     {
-                        Send(Neighbour1, new Ldr(r));
-                        Send(Neighbour2, new Ldr(r));
-                    }
-                    lrec++;
-                    win = r;
-
-                }
-                if (receivedEvt is Tok)
-                {
-                    r = (receivedEvt as Tok).Token;
-                    System.Console.WriteLine("{0} received r value {1}; has caw value {2}", myid, r, caw);
-                    //recvtok((receivedEvt as Tok).SenderId, Neighbour2, ref r, ref caw, ref rec, ref father, ref myid);
-                    int q = (receivedEvt as Tok).SenderId;
-                    MachineId c = Neighbour2;
-                    if (r < caw)
-                    {
-                        caw = r;
-                        rec = 0;
-                        father = q;
-                        Send(c, new Tok(r, MyId));
-                    }
-
-                    if (r == caw)
-                    {
-                        rec++;
-                        if (rec == 2 && caw == myid)
+                        r = (receivedEvt as Ldr).Value;
+                        if (lrec == 0 && r != myid)
                         {
-                            Send(Neighbour1, new Ldr(myid));
-                            Send(Neighbour2, new Ldr(myid));
+                            Send(Neighbour1, new Ldr(r));
+                            Send(Neighbour2, new Ldr(r));
                         }
-                        if (rec == 2 && caw != myid && father == Neighbour1Id)
+                        lrec++;
+                        win = r;
+                    }
+                    else if (receivedEvt is Tok)
+                    {
+                        r = (receivedEvt as Tok).Token;
+                        if((receivedEvt as Tok).SenderId == Neighbour1Id)
                         {
-                            Send(Neighbour1, new Tok(caw, MyId));
+                            int q = Neighbour1Id;
+                            MachineId c = Neighbour2;
+                            if (r < caw)
+                            {
+                                caw = r;
+                                rec = 0;
+                                father = q;
+                                Send(c, new Tok(r, MyId));
+                            }
+
+                            if (r == caw)
+                            {
+                                rec++;
+                                if (rec == 2 && caw == myid)
+                                {
+                                    Send(Neighbour1, new Ldr(myid));
+                                    Send(Neighbour2, new Ldr(myid));
+                                }
+                                if(rec == 2 && caw != myid && father == Neighbour1Id)
+                                {
+                                    Send(Neighbour1, new Tok(caw, MyId));
+                                }
+                                if(rec == 2 && caw != myid && father == Neighbour2Id)
+                                {
+                                    Send(Neighbour2, new Tok(caw, MyId));
+                                }
+                            }
                         }
-                        if (rec == 2 && caw != myid && father == Neighbour2Id)
+                        else if ((receivedEvt as Tok).SenderId == Neighbour2Id)
                         {
-                            Send(Neighbour2, new Tok(caw, MyId));
+                            int q = Neighbour2Id;
+                            MachineId c = Neighbour1;
+
+                            if (r < caw)
+                            {
+                                caw = r;
+                                rec = 0;
+                                father = q;
+                                Send(c, new Tok(r, MyId));
+                            }
+
+                            if (r == caw)
+                            {
+                                rec++;
+                                if (rec == 2 && caw == myid)
+                                {
+                                    Send(Neighbour1, new Ldr(myid));
+                                    Send(Neighbour2, new Ldr(myid));
+                                }
+                                if (rec == 2 && caw != myid && father == Neighbour1Id)
+                                {
+                                    Send(Neighbour1, new Tok(caw, MyId));
+                                }
+                                if (rec == 2 && caw != myid && father == Neighbour2Id)
+                                {
+                                    Send(Neighbour2, new Tok(caw, MyId));
+                                }
+                            }
                         }
                     }
                 }
             }
-            System.Console.WriteLine("here");
-            if (win == myid)
+            
+            if(win == myid)
             {
                 Send(LeaderMachine, new Leader.SetValue(myid));
                 Send(NrLeadersMachine, new NrLeadersMachine.Increment());
@@ -184,39 +216,9 @@ namespace Variant1
                 var receivedEvt = Receive(typeof(NrLeadersMachine.GotValue));
                 this.Assert((receivedEvt as NrLeadersMachine.GotValue).Value == 1, "More than one leader");
             }
+
             Send(DoneMachine, new DoneMachine.Increment());
             goto restart;
-        }
-        #endregion
-
-        #region private methods
-        void recvtok(int q, MachineId c, ref int r, ref int caw, ref int rec, ref int father, ref int myid)
-        {
-            if (r < caw)
-            {
-                caw = r;
-                rec = 0;
-                father = q;
-                Send(c, new Tok(r, MyId));
-            }
-
-            if (r == caw)
-            {
-                rec++;
-                if (rec == 2 && caw == myid)
-                {
-                    Send(Neighbour1, new Ldr(myid));
-                    Send(Neighbour2, new Ldr(myid));
-                }
-                if (rec == 2 && caw != myid && father == Neighbour1Id)
-                {
-                    Send(Neighbour1, new Tok(caw, MyId));
-                }
-                if (rec == 2 && caw != myid && father == Neighbour2Id)
-                {
-                    Send(Neighbour2, new Tok(caw, MyId));
-                }
-            }
         }
         #endregion
     }

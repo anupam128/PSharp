@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Variant1
+namespace Variation1
 {
     public class Test
     {
