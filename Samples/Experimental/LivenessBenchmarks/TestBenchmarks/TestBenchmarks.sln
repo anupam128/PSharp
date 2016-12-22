@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomInfinite", "RandomInf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartialCachingLasso", "PartialCachingLasso\PartialCachingLasso.csproj", "{F557F1F7-2C40-4392-AF9D-C533F1FE6C6A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeferredEvents", "DeferredEvents\DeferredEvents.csproj", "{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F557F1F7-2C40-4392-AF9D-C533F1FE6C6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F557F1F7-2C40-4392-AF9D-C533F1FE6C6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F557F1F7-2C40-4392-AF9D-C533F1FE6C6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
