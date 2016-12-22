@@ -521,6 +521,14 @@ namespace Microsoft.PSharp
         #endregion
 
         #region internal methods
+        /// <summary>
+        /// Returns the hashed state of this machine.
+        /// </summary>
+        /// <returns></returns>
+        protected virtual int GetHashedState()
+        {
+            return 0;
+        }
 
         /// <summary>
         /// Transitions to the start state, and executes the
@@ -733,6 +741,8 @@ namespace Microsoft.PSharp
                 hash = hash + 31 * this.IsHalted.GetHashCode();
 
                 hash = hash + 31 * this.ProgramCounter;
+                // Adds the user-defined hashed state.
+                hash = hash + 31 * this.GetHashedState();
 
                 foreach (var state in this.StateStack)
                 {

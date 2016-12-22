@@ -46,5 +46,10 @@ namespace FalsePositive
             }
         }
         #endregion
+
+        protected override int GetHashedState()
+        {
+            return Counter.GetHashCode();
+        }
     }
 }
