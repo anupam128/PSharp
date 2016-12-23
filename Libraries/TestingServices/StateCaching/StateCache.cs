@@ -37,6 +37,7 @@ namespace Microsoft.PSharp.TestingServices.StateCaching
         /// </summary>
         private Dictionary<ScheduleStep, State> StateMap;
 
+        private HashSet<Fingerprint> fpStore;
         #endregion
 
         #region internal API
@@ -49,6 +50,7 @@ namespace Microsoft.PSharp.TestingServices.StateCaching
         {
             this.Runtime = runtime;
             this.StateMap = new Dictionary<ScheduleStep, State>();
+            fpStore = new HashSet<Fingerprint>();
         }
 
         /// <summary>
@@ -100,9 +102,11 @@ namespace Microsoft.PSharp.TestingServices.StateCaching
                     "choice '{1}'.", fingerprint.GetHashCode(), scheduleStep.IntegerChoice.Value);
             }
 
-            var stateExists = this.StateMap.Values.Any(val => val.Fingerprint.Equals(fingerprint));
+            //var stateExists = this.StateMap.Values.Any(val => val.Fingerprint.Equals(fingerprint));
+            var stateExists = this.fpStore.Any(val => val.Equals(fingerprint));
 
             this.StateMap.Add(scheduleStep, state);
+            fpStore.Add(fingerprint);
 
             if (stateExists)
             {
