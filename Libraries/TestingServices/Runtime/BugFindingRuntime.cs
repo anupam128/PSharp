@@ -1032,6 +1032,15 @@ namespace Microsoft.PSharp.TestingServices
             return fingerprint;
         }
 
+        internal void GetProgramStatePrint()
+        {
+            foreach (var machine in this.MachineMap.Values)
+            {
+                Console.WriteLine("============ Machine: " + machine.Id.Name);
+                machine.GetCachedStatePrint();
+            }
+        }
+
         #endregion
 
         #region private methods

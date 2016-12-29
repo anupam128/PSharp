@@ -751,10 +751,30 @@ namespace Microsoft.PSharp
 
                 foreach (var e in this.Inbox)
                 {
+                    if(this.IsHalted || e.EventType.FullName.Contains("TimerTickEvent") ||
+                        e.EventType.FullName.Contains("ExtentAvailableEvent") || e.EventType.FullName.Contains("ExpirationEvent"))
+                    {
+                        continue;
+                    }
+
                     hash = hash * 31 + e.EventType.GetHashCode();
                 }
 
                 return hash;
+            }
+        }
+
+        internal void GetCachedStatePrint()
+        {
+            Console.WriteLine("States:");
+            foreach(var state in StateStack)
+            {
+                Console.WriteLine(state.GetType());
+            }
+            Console.WriteLine("Events: ");
+            foreach (var e in this.Inbox)
+            {
+                Console.WriteLine(e.EventType);
             }
         }
 
@@ -850,6 +870,7 @@ namespace Microsoft.PSharp
                         lock (this.Inbox)
                         {
                             this.IsHalted = true;
+                            this.Id.isHalted = true;
                             this.CleanUpResources();
                             base.Runtime.NotifyHalted(this);
                         }
@@ -1109,6 +1130,7 @@ namespace Microsoft.PSharp
             catch (Exception ex)
             {
                 this.IsHalted = true;
+                this.Id.isHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)
@@ -1267,6 +1289,7 @@ namespace Microsoft.PSharp
             catch (Exception ex)
             {
                 this.IsHalted = true;
+                this.Id.isHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)
@@ -1342,6 +1365,7 @@ namespace Microsoft.PSharp
             catch (Exception ex)
             {
                 this.IsHalted = true;
+                this.Id.isHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)

@@ -364,16 +364,22 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                     }
                     else if (x.Item1.BooleanChoice != null)
                     {
-                        Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.BooleanChoice.Value}");
+                        Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.BooleanChoice.Value} :: {x.Item1.ScheduledMachineId}");
                     }
                     else
                     {
                         Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.IntegerChoice.Value}");
                     }
+
+                    foreach(var e in x.Item2.EnabledMachines)
+                    {
+                        Console.WriteLine("Enabled: " + e.Name);
+                    }
                 }
                 //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
                 Console.WriteLine("<LivenessDebug> ----------------------------------.");
                 this.Runtime.Configuration.LivenessTemperatureThreshold = 10 * PotentialCycle.Count;
+                //this.Runtime.BugFinder.NotifyAssertionFailure("CYCLE FOUND", false);
                 this.Runtime.BugFinder.SwitchSchedulingStrategy(this);
             }
             else
@@ -427,7 +433,11 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             foreach (var step in schedulingChoiceSteps)
             {
                 scheduledMachines.Add(step.Item1.ScheduledMachineId);
-                enabledMachines.UnionWith(step.Item2.EnabledMachines);
+            }
+
+            foreach(var state in cycle)
+            {
+                enabledMachines.UnionWith(state.Item2.EnabledMachines);
             }
 
             foreach (var m in enabledMachines)
