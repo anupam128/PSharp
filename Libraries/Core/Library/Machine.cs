@@ -751,8 +751,9 @@ namespace Microsoft.PSharp
 
                 foreach (var e in this.Inbox)
                 {
-                    if(this.IsHalted || e.EventType.FullName.Contains("TimerTickEvent") ||
-                        e.EventType.FullName.Contains("ExtentAvailableEvent") || e.EventType.FullName.Contains("ExpirationEvent"))
+                    if(e.EventType.FullName.Contains("TimerTickEvent") ||
+                        e.EventType.FullName.Contains("ExtentAvailableEvent") || e.EventType.FullName.Contains("ExpirationEvent")
+                        || e.EventType.FullName.Contains("MessageEvent"))
                     {
                         continue;
                     }

@@ -310,11 +310,16 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 var rand = new Random(DateTime.Now.Millisecond);
                 bool fairCycleFound = false;
-                int NumTries = Math.Min(checkIndex.Count, 3);
+                //int NumTries = Math.Min(checkIndex.Count, 3);
+                //while (!fairCycleFound && NumTries > 0)
+                int NumTries = checkIndex.Count - 1;
+                int i = 0;
                 while (!fairCycleFound && NumTries > 0)
                 {
+                    i++;
                     var randInd = rand.Next(checkIndex.Count - 1);
-                    checkIndexRand = checkIndex[randInd];
+                    //checkIndexRand = checkIndex[randInd];
+                    checkIndexRand = checkIndex[i];
 
                     Console.WriteLine("******* Potential cycle ********** ");
                     index = this.Runtime.ScheduleTrace.Count - 1;
@@ -369,11 +374,6 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                     else
                     {
                         Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.IntegerChoice.Value}");
-                    }
-
-                    foreach(var e in x.Item2.EnabledMachines)
-                    {
-                        Console.WriteLine("Enabled: " + e.Name);
                     }
                 }
                 //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);

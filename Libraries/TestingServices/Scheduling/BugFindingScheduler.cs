@@ -137,9 +137,8 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 this.Runtime.Configuration.SafetyPrefixBound <= this.ExploredSteps)
             {
                 this.Runtime.StateCache.CaptureState(this.Runtime.ScheduleTrace.Peek());
-                this.Runtime.GetProgramStatePrint();
             }
-            this.Runtime.GetProgramStatePrint();
+            //this.Runtime.GetProgramStatePrint();
             // Checks the liveness monitors for potential liveness bugs.
             this.Runtime.LivenessChecker.CheckLivenessAtShedulingStep();
 
@@ -229,9 +228,8 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 this.Runtime.Configuration.SafetyPrefixBound <= this.ExploredSteps)
             {
                 this.Runtime.StateCache.CaptureState(this.Runtime.ScheduleTrace.Peek());
-                this.Runtime.GetProgramStatePrint();
             }
-            this.Runtime.GetProgramStatePrint();
+            //this.Runtime.GetProgramStatePrint();
             // Checks the liveness monitors for potential liveness bugs.
             this.Runtime.LivenessChecker.CheckLivenessAtShedulingStep();
             
@@ -263,7 +261,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
             {
                 this.Runtime.StateCache.CaptureState(this.Runtime.ScheduleTrace.Peek());
             }
-            this.Runtime.GetProgramStatePrint();
+            //this.Runtime.GetProgramStatePrint();
             // Checks the liveness monitors for potential liveness bugs.
             this.Runtime.LivenessChecker.CheckLivenessAtShedulingStep();
 
