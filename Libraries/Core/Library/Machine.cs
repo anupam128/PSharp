@@ -871,7 +871,6 @@ namespace Microsoft.PSharp
                         lock (this.Inbox)
                         {
                             this.IsHalted = true;
-                            this.Id.isHalted = true;
                             this.CleanUpResources();
                             base.Runtime.NotifyHalted(this);
                         }
@@ -1131,7 +1130,6 @@ namespace Microsoft.PSharp
             catch (Exception ex)
             {
                 this.IsHalted = true;
-                this.Id.isHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)
@@ -1290,7 +1288,6 @@ namespace Microsoft.PSharp
             catch (Exception ex)
             {
                 this.IsHalted = true;
-                this.Id.isHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)
@@ -1366,7 +1363,6 @@ namespace Microsoft.PSharp
             catch (Exception ex)
             {
                 this.IsHalted = true;
-                this.Id.isHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)

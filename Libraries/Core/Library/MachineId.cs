@@ -61,10 +61,6 @@ namespace Microsoft.PSharp
         [DataMember]
         internal readonly string EndPoint;
 
-        /// <summary>
-        /// Bool.
-        /// </summary>
-        public bool isHalted;
         #endregion
 
         #region static fields
@@ -101,7 +97,6 @@ namespace Microsoft.PSharp
             this.EndPoint = this.Runtime.NetworkProvider.GetLocalEndPoint();
             
             this.Value = Interlocked.Increment(ref IdCounter);
-            this.isHalted = false;
             if (this.FriendlyName != null && this.FriendlyName.Length > 0)
             {
                 this.Name = string.Format("{0}({1})", this.FriendlyName, this.Value);
