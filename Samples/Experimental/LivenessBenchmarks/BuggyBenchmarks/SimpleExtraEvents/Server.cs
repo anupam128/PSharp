@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExtraEvents
+namespace SimpleExtraEvents
 {
     class Server : Machine
     {
@@ -13,6 +13,7 @@ namespace ExtraEvents
         public class Event1 : Event { }
         public class Event2 : Event { }
         public class Event3 : Event { }
+        class Local : Event { }
         #endregion
 
         #region fields
@@ -23,11 +24,20 @@ namespace ExtraEvents
         #region states
         [Start]
         [OnEntry(nameof(InitOnEntry))]
-        [DeferEvents(typeof(Event3))]
+        [OnEventGotoState(typeof(Local), typeof(HandleEvents))]
+        class Init : MachineState { }
+
         [OnEventDoAction(typeof(Event1), nameof(OnEvent1))]
         [OnEventDoAction(typeof(Event2), nameof(OnEvent2))]
+        [DeferEvents(typeof(Event3))]
         [OnEventDoAction(typeof(Timer.TimerTickEvent), nameof(OnTimeout))]
-        class Init : MachineState { }
+        [OnEventGotoState(typeof(Local), typeof(Handling))]
+        class HandleEvents : MachineState { }
+
+        [DeferEvents(typeof(Event1), typeof(Event2))]
+        [OnEventDoAction(typeof(Event3), nameof(OnEvent3))]
+        [OnEventGotoState(typeof(Timer.TimerTickEvent), typeof(HandleEvents))]
+        class Handling : MachineState { }
         #endregion
 
         #region actions
@@ -36,6 +46,7 @@ namespace ExtraEvents
             ctr1 = 0;
             ctr2 = 0;
             CreateMachine(typeof(Timer), new Timer.Config(this.Id));
+            Raise(new Local());
         }
         void OnEvent1()
         {
@@ -45,12 +56,18 @@ namespace ExtraEvents
         {
             ctr2++;
         }
+        void OnEvent3()
+        {
+            Console.WriteLine("Handling event 3");
+            Send(Id, new Event3());
+        }
         void OnTimeout()
         {
             if(ctr2 > ctr1)
             {
                 this.Monitor<LivenessMonitor>(new LivenessMonitor.CtrExceeded());
             }
+            Raise(new Local());
         }
         #endregion
     }

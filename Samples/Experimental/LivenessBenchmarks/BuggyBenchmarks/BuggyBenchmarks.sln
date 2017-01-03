@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimerCycle", "TimerCycle\Ti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtraEvents", "ExtraEvents\ExtraEvents.csproj", "{FC04029F-6B49-47EB-8FBB-07BEDD377D3A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleExtraEvents", "SimpleExtraEvents\SimpleExtraEvents.csproj", "{F6762845-CF83-4DF5-9C04-400EE64250B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{FC04029F-6B49-47EB-8FBB-07BEDD377D3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC04029F-6B49-47EB-8FBB-07BEDD377D3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC04029F-6B49-47EB-8FBB-07BEDD377D3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6762845-CF83-4DF5-9C04-400EE64250B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6762845-CF83-4DF5-9C04-400EE64250B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6762845-CF83-4DF5-9C04-400EE64250B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6762845-CF83-4DF5-9C04-400EE64250B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

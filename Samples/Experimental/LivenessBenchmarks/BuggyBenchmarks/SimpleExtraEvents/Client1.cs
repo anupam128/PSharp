@@ -5,12 +5,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExtraEvents
+namespace SimpleExtraEvents
 {
-    class Client : Machine
+    class Client1 : Machine
     {
-        #region fields
+        #region events
+        public class Config : Event
+        {
+            public MachineId Target;
+            public Config(MachineId Target)
+            {
+                this.Target = Target;
+            }
+        }
         class Local : Event { }
+        #endregion
+
+        #region fields
+        MachineId server;
         #endregion
 
         #region states
@@ -19,35 +31,23 @@ namespace ExtraEvents
         [OnEventGotoState(typeof(Local), typeof(Handling))]
         class Init : MachineState { }
 
-        [OnEntry(nameof(ProcessEvent))]
+        [OnEntry(nameof(Process))]
         [OnEventGotoState(typeof(Local), typeof(Handling))]
         class Handling : MachineState { }
-        #endregion
-
-        #region fields
-        MachineId server;
         #endregion
 
         #region actions
         void InitOnEntry()
         {
-            server = CreateMachine(typeof(Server));
+            var e = ReceivedEvent as Config;
+            server = e.Target;
             Raise(new Local());
         }
-        void ProcessEvent()
+
+        void Process()
         {
-            if (this.Random())
-            {
-                Send(server, new Server.FirstEvent());
-            }
-            if (this.Random())
-            {
-                Send(server, new Server.SecondEvent());
-            }
-            if (this.Random())
-            {
-                Send(server, new Server.ThirdEvent());
-            }
+            Send(server, new Server.Event1());
+            Send(server, new Server.Event3());
             Raise(new Local());
         }
         #endregion

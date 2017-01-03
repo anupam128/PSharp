@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExtraEvents
+namespace SimpleExtraEvents
 {
     class LivenessMonitor : Monitor
     {
