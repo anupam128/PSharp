@@ -310,16 +310,11 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 var rand = new Random(DateTime.Now.Millisecond);
                 bool fairCycleFound = false;
-                //int NumTries = Math.Min(checkIndex.Count, 3);
-                //while (!fairCycleFound && NumTries > 0)
-                int NumTries = checkIndex.Count - 1;
-                int i = 0;
+                int NumTries = Math.Min(checkIndex.Count, 3);
                 while (!fairCycleFound && NumTries > 0)
                 {
-                    i++;
                     var randInd = rand.Next(checkIndex.Count - 1);
-                    //checkIndexRand = checkIndex[randInd];
-                    checkIndexRand = checkIndex[i];
+                    checkIndexRand = checkIndex[randInd];
 
                     Console.WriteLine("******* Potential cycle ********** ");
                     index = this.Runtime.ScheduleTrace.Count - 1;
