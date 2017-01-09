@@ -310,7 +310,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
             {
                 var rand = new Random(DateTime.Now.Millisecond);
                 bool fairCycleFound = false;
-                int NumTries = Math.Min(checkIndex.Count, 3);
+                int NumTries = Math.Min(checkIndex.Count, 5);
                 while (!fairCycleFound && NumTries > 0)
                 {
                     var randInd = rand.Next(checkIndex.Count - 1);
@@ -371,7 +371,6 @@ namespace Microsoft.PSharp.TestingServices.Liveness
                         Console.WriteLine($"{x.Item1.Index} :: {x.Item1.Type} :: {x.Item1.IntegerChoice.Value}");
                     }
                 }
-                //Console.WriteLine("Root: " + rt.Index + " " + rt.Type);
                 Console.WriteLine("<LivenessDebug> ----------------------------------.");
                 this.Runtime.Configuration.LivenessTemperatureThreshold = 10 * PotentialCycle.Count;
                 //this.Runtime.BugFinder.NotifyAssertionFailure("CYCLE FOUND", false);

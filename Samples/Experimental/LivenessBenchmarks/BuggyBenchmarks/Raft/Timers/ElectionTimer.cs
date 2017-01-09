@@ -121,7 +121,8 @@ namespace Raft
                 this.Send(this.Target, new Timeout(), true);
             }
 
-            this.Raise(new CancelTimer());
+            this.Send(this.Id, new TickEvent());
+            //this.Raise(new CancelTimer());
         }
 
         [OnEntry(nameof(InactiveOnEntry))]
