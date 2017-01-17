@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartialCachingLasso", "Part
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeferredEvents", "DeferredEvents\DeferredEvents.csproj", "{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransitiveBug", "TransitiveBug\TransitiveBug.csproj", "{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84C96EF8-A386-4D6F-BAA1-CAB2836BFE1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

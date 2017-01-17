@@ -754,15 +754,18 @@ namespace Microsoft.PSharp
                     //if (e.EventType.FullName.Contains("TimerTickEvent") ||
                     //    e.EventType.FullName.Contains("ExtentAvailableEvent") || e.EventType.FullName.Contains("ExpirationEvent")
                     //    || e.EventType.FullName.Contains("MessageEvent"))
-                    //if (e.EventType.FullName.Contains("Event3"))
-                    //if (e.EventType.FullName.Contains("Timeout") || e.EventType.FullName.Contains("VoteRequest")
-                    //    || e.EventType.FullName.Contains("VoteResponse") || e.EventType.FullName.Contains("TickEvent")
-                    //    || e.EventType.FullName.Contains("StartTimer"))
-                    if (e.EventType.FullName.Contains("Event1") || e.EventType.FullName.Contains("Event2")
-                        || e.EventType.FullName.Contains("TickEvent"))
+                    //{
+                    //    continue;
+                    //}
+                    if (e.EventType.FullName.Contains("Timeout") || e.EventType.FullName.Contains("VoteRequest")
+                        || e.EventType.FullName.Contains("VoteResponse") || e.EventType.FullName.Contains("TickEvent")
+                        || e.EventType.FullName.Contains("StartTimer"))
                     {
                         continue;
                     }
+                    //if (e.EventType.FullName.Contains("Event3"))
+                    //if (e.EventType.FullName.Contains("Event1") || e.EventType.FullName.Contains("Event2")
+                    //    || e.EventType.FullName.Contains("TickEvent"))
 
                     hash = hash * 31 + e.EventType.GetHashCode();
                 }

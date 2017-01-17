@@ -58,7 +58,7 @@ namespace Raft
 
         void EntryOnInit()
         {
-            this.NumberOfServers = 5;
+            this.NumberOfServers = 3;
             this.LeaderTerm = 0;
 
             this.Servers = new MachineId[this.NumberOfServers];
