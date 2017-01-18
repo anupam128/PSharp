@@ -50,7 +50,7 @@ namespace Chord
 
             // LIVENESS BUG: can never detect the key, and keeps looping without
             // exiting the process. Enable to introduce the bug.
-            //this.Keys.Add(17);
+            this.Keys.Add(17);
 
             this.QueryCounter = 0;
 
@@ -70,7 +70,7 @@ namespace Chord
                     var key = this.GetNextQueryKey();
                     IO.Log($"<ChordLog> Client is searching for successor of key '{key}'");
                     this.Send(this.ClusterManager, new ChordNode.FindSuccessor(this.Id, key));
-                    //this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifyClientRequest(key));
+                    this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifyClientRequest(key));
                 }
                 else if (this.Random())
                 {
@@ -114,7 +114,7 @@ namespace Chord
         {
             var successor = (this.ReceivedEvent as ChordNode.FindSuccessorResp).Node;
             var key = (this.ReceivedEvent as ChordNode.FindSuccessorResp).Key;
-            //this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifyClientResponse(key));
+            this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifyClientResponse(key));
             this.Send(successor, new ChordNode.QueryId(this.Id));
         }
 

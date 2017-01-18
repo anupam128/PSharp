@@ -242,7 +242,7 @@ namespace Chord
             var successor = this.FingerTable[(this.NodeId + 1) % this.NumOfIds].Node;
 
             this.Send(this.Manager, new JoinAck());
-            //this.Send(successor, new NotifySuccessor(this.Id));
+            this.Send(successor, new NotifySuccessor(this.Id));
         }
 
         [OnEventDoAction(typeof(FindSuccessor), nameof(ProcessFindSuccessor))]
@@ -379,7 +379,6 @@ namespace Chord
                 "Finger table of {0} does not contain {1}.", this.NodeId, key);
             this.FingerTable[key] = new Finger(this.FingerTable[key].Start,
                 this.FingerTable[key].End, successor);
-            this.Monitor<LivenessMonitor1>(new LivenessMonitor1.FoundSuccessor(key));
         }
 
         void ProcessFindPredecessorResp()

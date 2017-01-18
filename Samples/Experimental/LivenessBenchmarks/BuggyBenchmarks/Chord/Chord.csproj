@@ -52,7 +52,6 @@
     <Compile Include="ClusterManager.cs" />
     <Compile Include="Finger.cs" />
     <Compile Include="LivenessMonitor.cs" />
-    <Compile Include="LivenessMonitor1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>
