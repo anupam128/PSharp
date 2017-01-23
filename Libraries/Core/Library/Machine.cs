@@ -757,12 +757,12 @@ namespace Microsoft.PSharp
                     //{
                     //    continue;
                     //}
-                    if (e.EventType.FullName.Contains("Timeout") || e.EventType.FullName.Contains("VoteRequest")
-                        || e.EventType.FullName.Contains("VoteResponse") || e.EventType.FullName.Contains("TickEvent")
-                        || e.EventType.FullName.Contains("StartTimer"))
-                    {
-                        continue;
-                    }
+                    //if (e.EventType.FullName.Contains("Timeout") || e.EventType.FullName.Contains("VoteRequest")
+                    //    || e.EventType.FullName.Contains("VoteResponse") || e.EventType.FullName.Contains("TickEvent")
+                    //    || e.EventType.FullName.Contains("StartTimer"))
+                    //{
+                    //    continue;
+                    //}
                     //if (e.EventType.FullName.Contains("Event3"))
                     //if (e.EventType.FullName.Contains("Event1") || e.EventType.FullName.Contains("Event2")
                     //    || e.EventType.FullName.Contains("TickEvent"))
@@ -1686,7 +1686,7 @@ namespace Microsoft.PSharp
 
         #endregion
 
-            #region error checking
+        #region error checking
 
             /// <summary>
             /// Check machine for state related errors.
