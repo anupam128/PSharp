@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeferredEvents", "DeferredE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransitiveBug", "TransitiveBug\TransitiveBug.csproj", "{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaftTransient", "RaftTransient\RaftTransient.csproj", "{1A663E6F-6373-4D52-972E-0E31D18E3487}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F82AA64F-3703-4CB4-89F3-681CB80FA0D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A663E6F-6373-4D52-972E-0E31D18E3487}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A663E6F-6373-4D52-972E-0E31D18E3487}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A663E6F-6373-4D52-972E-0E31D18E3487}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A663E6F-6373-4D52-972E-0E31D18E3487}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
