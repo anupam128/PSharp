@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.PSharp;
 
-namespace Raft
+namespace RaftBackoff
 {
     /// <summary>
     /// A server in Raft can be one of the following three roles:
@@ -288,7 +288,8 @@ namespace Raft
 
         void StartLeaderElection()
         {
-            this.Raise(new BecomeCandidate());
+            if(this.Random())
+                this.Raise(new BecomeCandidate());
         }
 
         void VoteAsFollower()
