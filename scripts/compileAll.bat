@@ -4,3 +4,4 @@
 .\PSharpCompiler.exe /s:D:\BatchPoolServer\PoolServer\PoolServer.sln /t:test
 cd D:\BatchService\src\xstore\watask\PoolManager\PoolServer
 .\comptest.cmd
+cd D:\PSharp\Binaries

@@ -69,16 +69,17 @@ namespace BoundedRaft
 
         void InactiveOnEntry()
         {
-            Counter++;
-            if (Counter == 1000)
-            {
-                Counter = 0;
-                Send(this.Id, new StartTimer());
-            }
-            else
-            {
-                this.Send(this.Id, new Local());
-            }
+            //Counter++;
+            //if (Counter == 1000)
+            //{
+            //    Counter = 0;
+            //    Send(this.Id, new StartTimer());
+            //}
+            //else
+            //{
+            //    this.Send(this.Id, new Local());
+            //}
+            this.Send(this.Id, new Local());
         }
     }
 }
