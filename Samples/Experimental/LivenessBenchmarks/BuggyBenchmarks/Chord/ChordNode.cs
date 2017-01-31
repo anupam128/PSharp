@@ -379,7 +379,7 @@ namespace Chord
                 "Finger table of {0} does not contain {1}.", this.NodeId, key);
             this.FingerTable[key] = new Finger(this.FingerTable[key].Start,
                 this.FingerTable[key].End, successor);
-            this.Monitor<LivenessMonitor1>(new LivenessMonitor1.FoundSuccessor(key));
+            //this.Monitor<LivenessMonitor1>(new LivenessMonitor1.FoundSuccessor(key));
         }
 
         void ProcessFindPredecessorResp()
