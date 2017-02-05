@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace PingPong
@@ -23,11 +25,11 @@ namespace PingPong
         [OnEntry(nameof(ActiveOnEntry))]
         class Active : MachineState { }
 
-        void ActiveOnEntry()
+        async Task ActiveOnEntry()
         {
             while (this.Counter < 5)
             {
-                this.Receive(typeof(Ping));
+                await this.Receive(typeof(Ping));
                 this.SendPong();
             }
 

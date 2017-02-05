@@ -13,6 +13,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 
 using Microsoft.PSharp.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -43,7 +44,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
             [OnEntry(nameof(InitOnEntry))]
             class Init : MachineState { }
 
-            void InitOnEntry()
+            async Task InitOnEntry()
             {
                 int counter = 0;
                 var n = CreateMachine(typeof(N));
@@ -51,7 +52,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
                 while (counter < 1000)
                 {
                     this.Send(n, new E(this.Id));
-                    this.Receive(typeof(E));
+                    await this.Receive(typeof(E));
                     counter++;
                 }
             }

@@ -229,7 +229,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="eventTypes">Event types</param>
         /// <returns>Received event</returns>
-        public virtual Event Receive(params Type[] eventTypes)
+        public virtual async Task<Event> Receive(params Type[] eventTypes)
         {
             this.Assert(Task.CurrentId != null, "Only machines can " +
                 "wait to receive an event.");
@@ -238,7 +238,7 @@ namespace Microsoft.PSharp
                 $"{(int)Task.CurrentId} does not correspond to a machine.");
 
             Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return machine.Receive(eventTypes);
+            return await machine.Receive(eventTypes);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace Microsoft.PSharp
         /// <param name="eventType">Event type</param>
         /// <param name="predicate">Predicate</param>
         /// <returns>Received event</returns>
-        public virtual Event Receive(Type eventType, Func<Event, bool> predicate)
+        public virtual async Task<Event> Receive(Type eventType, Func<Event, bool> predicate)
         {
             this.Assert(Task.CurrentId != null, "Only machines can " +
                 "wait to receive an event.");
@@ -257,7 +257,7 @@ namespace Microsoft.PSharp
                 $"{(int)Task.CurrentId} does not belong to a machine.");
 
             Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return machine.Receive(eventType, predicate);
+            return await machine.Receive(eventType, predicate);
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="events">Event types and predicates</param>
         /// <returns>Received event</returns>
-        public virtual Event Receive(params Tuple<Type, Func<Event, bool>>[] events)
+        public virtual async Task<Event> Receive(params Tuple<Type, Func<Event, bool>>[] events)
         {
             this.Assert(Task.CurrentId != null, "Only machines can " +
                 "wait to receive an event.");
@@ -275,7 +275,7 @@ namespace Microsoft.PSharp
                 $"{(int)Task.CurrentId} does not belong to a machine.");
 
             Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return machine.Receive(events);
+            return await machine.Receive(events);
         }
 
         /// <summary>
@@ -987,19 +987,9 @@ namespace Microsoft.PSharp
         /// or more events.
         /// </summary>
         /// <param name="machine">Machine</param>
-        /// <param name="events">Events</param>
-        internal virtual void NotifyWaitEvents(Machine machine, string events)
+        internal virtual void NotifyWaitEvents(Machine machine)
         {
-            this.Log($"<ReceiveLog> Machine '{machine.Id}' " +
-                $"is waiting on events:{events}.");
-
-            lock (machine)
-            {
-                while (machine.IsWaitingToReceive)
-                {
-                    System.Threading.Monitor.Wait(machine);
-                }
-            }
+            this.Log($"<ReceiveLog> Machine '{machine.Id}' is waiting to receive an event.");
         }
 
         /// <summary>
@@ -1011,12 +1001,6 @@ namespace Microsoft.PSharp
         {
             this.Log($"<ReceiveLog> Machine '{machine.Id}' received " +
                 $"event '{eventInfo.EventName}' and unblocked.");
-
-            lock (machine)
-            {
-                System.Threading.Monitor.Pulse(machine);
-                machine.IsWaitingToReceive = false;
-            }
         }
 
         /// <summary>

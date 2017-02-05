@@ -12,6 +12,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 using Microsoft.PSharp.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -59,12 +61,12 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(InitOnEntry))]
             class Init : MachineState { }
 
-            void InitOnEntry()
+            async Task InitOnEntry()
             {
                 var m = this.CreateMachine(typeof(A));
                 this.Send(m, new E1());
                 this.Send(m, new E2(this.Id));
-                var e = this.Receive(typeof(E2)) as E2;
+                var e = await this.Receive(typeof(E2)) as E2;
                 //Console.WriteLine("Got Response from {0}", e.mid);
             }
         }

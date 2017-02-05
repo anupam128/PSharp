@@ -96,11 +96,6 @@ namespace Microsoft.PSharp
         private bool IsHalted;
 
         /// <summary>
-        /// Is machine waiting to receive an event.
-        /// </summary>
-        internal bool IsWaitingToReceive;
-
-        /// <summary>
         /// Inbox of the state-machine. Incoming events are
         /// queued here. Events are dequeued to be processed.
         /// </summary>
@@ -122,9 +117,10 @@ namespace Microsoft.PSharp
         private List<EventWaitHandler> EventWaitHandlers;
 
         /// <summary>
-        /// Event obtained using the receive statement.
+        /// Completion source that contains the event obtained
+        /// using the receive statement.
         /// </summary>
-        private Event EventViaReceiveStatement;
+        private TaskCompletionSource<Event> ReceiveCompletionSource;
 
         /// <summary>
         /// Gets the current state.
@@ -205,7 +201,6 @@ namespace Microsoft.PSharp
 
             this.IsRunning = true;
             this.IsHalted = false;
-            this.IsWaitingToReceive = false;
         }
 
         #endregion
@@ -345,23 +340,19 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="eventTypes">Event types</param>
         /// <returns>Event received</returns>
-        protected internal Event Receive(params Type[] eventTypes)
+        protected internal async Task<Event> Receive(params Type[] eventTypes)
         {
             base.Runtime.NotifyReceiveCalled(this);
 
             lock (this.Inbox)
             {
+                this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
                 foreach (var type in eventTypes)
                 {
                     this.EventWaitHandlers.Add(new EventWaitHandler(type));
                 }
             }
-
-            this.WaitOnEvent();
-
-            var received = this.EventViaReceiveStatement;
-            this.EventViaReceiveStatement = null;
-            return received;
+            return await this.WaitOnEvent();
         }
 
         /// <summary>
@@ -371,20 +362,17 @@ namespace Microsoft.PSharp
         /// <param name="eventType">Event type</param>
         /// <param name="predicate">Predicate</param>
         /// <returns>Event received</returns>
-        protected internal Event Receive(Type eventType, Func<Event, bool> predicate)
+        protected internal async Task<Event> Receive(Type eventType, Func<Event, bool> predicate)
         {
             base.Runtime.NotifyReceiveCalled(this);
 
             lock (this.Inbox)
             {
+                this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
                 this.EventWaitHandlers.Add(new EventWaitHandler(eventType, predicate));
             }
 
-            this.WaitOnEvent();
-
-            var received = this.EventViaReceiveStatement;
-            this.EventViaReceiveStatement = null;
-            return received;
+            return await this.WaitOnEvent();
         }
 
         /// <summary>
@@ -393,23 +381,20 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="events">Event types and predicates</param>
         /// <returns>Event received</returns>
-        protected internal Event Receive(params Tuple<Type, Func<Event, bool>>[] events)
+        protected internal async Task<Event> Receive(params Tuple<Type, Func<Event, bool>>[] events)
         {
             base.Runtime.NotifyReceiveCalled(this);
 
             lock (this.Inbox)
             {
+                this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
                 foreach (var e in events)
                 {
                     this.EventWaitHandlers.Add(new EventWaitHandler(e.Item1, e.Item2));
                 }
             }
 
-            this.WaitOnEvent();
-
-            var received = this.EventViaReceiveStatement;
-            this.EventViaReceiveStatement = null;
-            return received;
+            return await this.WaitOnEvent();
         }
 
         /// <summary>
@@ -553,9 +538,9 @@ namespace Microsoft.PSharp
                            val.Predicate(eventInfo.Event));
                 if (eventWaitHandler != null)
                 {
-                    this.EventViaReceiveStatement = eventInfo.Event;
                     this.EventWaitHandlers.Clear();
                     base.Runtime.NotifyReceivedEvent(this, eventInfo);
+                    this.ReceiveCompletionSource.SetResult(eventInfo.Event);
                     return;
                 }
 
@@ -749,6 +734,25 @@ namespace Microsoft.PSharp
             }
         }
 
+        /// <summary>
+        /// Returns the names of the events that the machine
+        /// is waiting to receive.
+        /// </summary>
+        /// <returns>String</returns>
+        internal string GetEventWaitHandlerNames()
+        {
+            string events = "";
+            lock (this.Inbox)
+            {
+                foreach (var ewh in this.EventWaitHandlers)
+                {
+                    events += " '" + ewh.EventType.FullName + "'";
+                }
+            }
+
+            return events;
+        }
+
         #endregion
 
         #region event handling methods
@@ -929,8 +933,9 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Waits for an event to arrive.
         /// </summary>
-        private void WaitOnEvent()
+        private async Task<Event> WaitOnEvent()
         {
+            bool isWaiting = true;
             lock (this.Inbox)
             {
                 // Iterate through the events in the inbox.
@@ -943,38 +948,24 @@ namespace Microsoft.PSharp
                                val.Predicate(this.Inbox[idx].Event));
                     if (eventWaitHandler != null)
                     {
-                        this.EventViaReceiveStatement = this.Inbox[idx].Event;
-                        this.EventWaitHandlers.Clear();
-
                         base.Runtime.Log($"<ReceiveLog> Machine '{base.Id}' dequeued " +
                             $"event '{this.Inbox[idx].EventName}' via a Receive.");
 
+                        this.EventWaitHandlers.Clear();
+                        this.ReceiveCompletionSource.SetResult(this.Inbox[idx].Event);
                         this.Inbox.RemoveAt(idx);
+                        isWaiting = false;
                         break;
                     }
                 }
-
-                if (this.EventViaReceiveStatement == null)
-                {
-                    this.IsWaitingToReceive = true;
-                }
             }
 
-            if (this.IsWaitingToReceive)
+            if (isWaiting)
             {
-                string events = "";
-
-                lock (this.Inbox)
-                {
-                    foreach (var ewh in this.EventWaitHandlers)
-                    {
-                        events += " '" + ewh.EventType.FullName + "'";
-                    }
-                }
-
-                base.Runtime.NotifyWaitEvents(this, events);
-                this.IsWaitingToReceive = false;
+                base.Runtime.NotifyWaitEvents(this);
             }
+
+            return await this.ReceiveCompletionSource.Task;
         }
 
         /// <summary>
@@ -1100,7 +1091,11 @@ namespace Microsoft.PSharp
 
             try
             {
-                action.Invoke(this, null);
+                object result = action.Invoke(this, null);
+                if (result is Task)
+                {
+                    (result as Task).Wait();
+                }
             }
             catch (Exception ex)
             {
@@ -1257,7 +1252,11 @@ namespace Microsoft.PSharp
                 if (entryAction != null)
                 {
                     base.Runtime.NotifyInvokedAction(this, entryAction, this.ReceivedEvent);
-                    entryAction.Invoke(this, null);
+                    object result = entryAction.Invoke(this, null);
+                    if (result is Task)
+                    {
+                        (result as Task).Wait();
+                    }
                 }
             }
             catch (Exception ex)
@@ -1323,7 +1322,11 @@ namespace Microsoft.PSharp
                 if (exitAction != null)
                 {
                     base.Runtime.NotifyInvokedAction(this, exitAction, this.ReceivedEvent);
-                    exitAction.Invoke(this, null);
+                    object result = exitAction.Invoke(this, null);
+                    if (result is Task)
+                    {
+                        (result as Task).Wait();
+                    }
                 }
 
                 // Invokes the exit action of the event handler,
@@ -1332,7 +1335,11 @@ namespace Microsoft.PSharp
                 {
                     MethodInfo eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
                     base.Runtime.NotifyInvokedAction(this, eventHandlerExitAction, this.ReceivedEvent);
-                    eventHandlerExitAction.Invoke(this, null);
+                    object result = eventHandlerExitAction.Invoke(this, null);
+                    if (result is Task)
+                    {
+                        (result as Task).Wait();
+                    }
                 }
             }
             catch (Exception ex)
@@ -1570,8 +1577,17 @@ namespace Microsoft.PSharp
                 "in machine '{1}'.", actionName, this.GetType().Name);
             this.Assert(method.GetParameters().Length == 0, "Action '{0}' in machine " +
                 "'{1}' must have 0 formal parameters.", method.Name, this.GetType().Name);
-            this.Assert(method.ReturnType == typeof(void), "Action '{0}' in machine " +
-                "'{1}' must have 'void' return type.", method.Name, this.GetType().Name);
+
+            if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
+            {
+                this.Assert(method.ReturnType == typeof(Task), "Action '{0}' in machine " +
+                    "'{1}' must have 'Task' return type.", method.Name, this.GetType().Name);
+            }
+            else
+            {
+                this.Assert(method.ReturnType == typeof(void), "Action '{0}' in machine " +
+                    "'{1}' must have 'void' return type.", method.Name, this.GetType().Name);
+            }
             
             return method;
         }
@@ -1632,12 +1648,12 @@ namespace Microsoft.PSharp
         }
 
         #endregion
+        
+        #region error checking
 
-            #region error checking
-
-            /// <summary>
-            /// Check machine for state related errors.
-            /// </summary>
+        /// <summary>
+        /// Check machine for state related errors.
+        /// </summary>
         private void AssertStateValidity()
         {
             this.Assert(StateTypeMap[this.GetType()].Count > 0, $"Machine '{base.Id}' " +
