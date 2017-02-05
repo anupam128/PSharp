@@ -950,9 +950,10 @@ namespace Microsoft.PSharp.TestingServices
         /// or more events.
         /// </summary>
         /// <param name="machine">Machine</param>
-        /// <param name="events">Events</param>
-        internal override void NotifyWaitEvents(Machine machine, string events)
+        internal override void NotifyWaitEvents(Machine machine)
         {
+            string events = machine.GetEventWaitHandlerNames();
+
             this.BugTrace.AddWaitToReceiveStep(machine.Id, machine.CurrentStateName, events);
 
             IO.Log($"<ReceiveLog> Machine '{machine.Id}' " +
@@ -983,7 +984,6 @@ namespace Microsoft.PSharp.TestingServices
             }
 
             this.BugFinder.NotifyTaskReceivedEvent(machine);
-            machine.IsWaitingToReceive = false;
         }
 
         /// <summary>
