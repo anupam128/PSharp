@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.PSharp;
 
-namespace Chord
+namespace Chord1
 {
     /// <summary>
     /// How to run:

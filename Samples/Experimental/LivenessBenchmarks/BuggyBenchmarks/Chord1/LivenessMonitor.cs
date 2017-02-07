@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Chord
+namespace Chord1
 {
-    class LivenessMonitor1 : Monitor
+    class LivenessMonitor : Monitor
     {
         #region events
         public class FoundSuccessor : Event
