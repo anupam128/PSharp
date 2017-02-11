@@ -14,13 +14,15 @@ namespace PingPong
 			    WithDebuggingEnabled();
             var runtime = PSharpRuntime.Create(config);
             Test.Execute(runtime);
-			runtime.Wait();
+			//runtime.Wait();
+			Console.ReadLine();
         }
 
         [Microsoft.PSharp.Test]
         public static void Execute(PSharpRuntime runtime)
         {
-            runtime.CreateMachine(typeof(Server));
+            var task = runtime.CreateMachine(typeof(Server));
+			task.Wait();
         }
     }
 }

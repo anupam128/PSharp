@@ -25,16 +25,14 @@ namespace PingPong
         [OnEventDoAction(typeof(Pong), nameof(SendPing))]
         class Active : MachineState { }
 
-        Task ActiveOnEntry()
+        async Task ActiveOnEntry()
         {
-            this.SendPing();
-			return this.DoneTask;
+            await this.SendPing();
         }
 
-        Task SendPing()
+        async Task SendPing()
         {
-            this.Send(this.Client, new Ping());
-			return this.DoneTask;
+            await this.Send(this.Client, new Ping());
         }
     }
 }

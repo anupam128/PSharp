@@ -134,7 +134,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         public virtual async Task<MachineId> CreateMachine(Type type, Event e = null)
         {
-            return await this.TryCreateMachine(null, type, null, e);
+			return await this.TryCreateMachine(null, type, null, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         public virtual async Task<MachineId> CreateMachine(Type type, string friendlyName, Event e = null)
         {
-            return await this.TryCreateMachine(null, type, friendlyName, e);
+            return await this.TryCreateMachine(null, type, friendlyName, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         public virtual async Task<MachineId> RemoteCreateMachine(Type type, string endpoint, Event e = null)
         {
-            return await this.TryCreateRemoteMachine(null, type, null, endpoint, e);
+            return await this.TryCreateRemoteMachine(null, type, null, endpoint, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace Microsoft.PSharp
         public virtual async Task<MachineId> RemoteCreateMachine(Type type, string friendlyName,
             string endpoint, Event e = null)
         {
-            return await this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e);
+            return await this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -214,13 +214,13 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        public virtual void RemoteSendEvent(MachineId target, Event e)
+        public virtual async Task RemoteSendEvent(MachineId target, Event e)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot send a null event.");
-            this.SendRemotely(null, target, e, false);
+            await this.SendRemotely(null, target, e, false);
         }
 
         /// <summary>
@@ -581,7 +581,8 @@ namespace Microsoft.PSharp
         {
             this.Assert(type.IsSubclassOf(typeof(Machine)),
                 $"Type '{type.Name}' is not a machine.");
-            return await this.NetworkProvider.RemoteCreateMachine(type, friendlyName, endpoint, e);
+            return await this.NetworkProvider.RemoteCreateMachine(type, friendlyName, endpoint, e).
+			    ConfigureAwait(false);
         }
 
         /// <summary>
@@ -650,8 +651,7 @@ namespace Microsoft.PSharp
                 this.Log($"<SendLog> Event '{eventInfo.EventName}' was sent to '{mid}'.");
             }
 
-            bool runHandler = false;
-            machine.Enqueue(eventInfo, ref runHandler);
+            bool runHandler = await machine.Enqueue(eventInfo);
 
             if (!runHandler)
             {

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.PSharp.Utilities;
@@ -131,6 +132,11 @@ namespace Microsoft.PSharp
         /// </summary>
         private TaskCompletionSource<Event> ReceiveCompletionSource;
 
+		/// <summary>
+		/// Semaphore used to synchronize access to the inbox.
+		/// </summary>
+		private SemaphoreSlim InboxLock;
+
 		#endregion
 
 		#region properties
@@ -223,6 +229,7 @@ namespace Microsoft.PSharp
             this.ActionHandlerStack = new Stack<Dictionary<Type, EventActionHandler>>();
             this.ActionMap = new Dictionary<string, MethodInfo>();
             this.EventWaitHandlers = new List<EventWaitHandler>();
+			this.InboxLock = new SemaphoreSlim(1, 1);
 
             this.IsRunning = true;
             this.IsHalted = false;
@@ -310,13 +317,13 @@ namespace Microsoft.PSharp
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
         /// <param name="isStarter">Is starting a new operation</param>
-        protected void RemoteSend(MachineId mid, Event e, bool isStarter = false)
+        protected async Task RemoteSend(MachineId mid, Event e, bool isStarter = false)
         {
             // If the target machine is null, then report an error and exit.
             this.Assert(mid != null, $"Machine '{base.Id}' is sending to a null machine.");
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            base.Runtime.SendRemotely(this, mid, e, isStarter);
+            await base.Runtime.SendRemotely(this, mid, e, isStarter);
         }
 
         /// <summary>
@@ -369,14 +376,20 @@ namespace Microsoft.PSharp
         {
             base.Runtime.NotifyReceiveCalled(this);
 
-            lock (this.Inbox)
-            {
-                this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
-                foreach (var type in eventTypes)
-                {
-                    this.EventWaitHandlers.Add(new EventWaitHandler(type));
-                }
-            }
+			await this.InboxLock.WaitAsync();
+			try
+			{
+				this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
+				foreach (var type in eventTypes)
+				{
+					this.EventWaitHandlers.Add(new EventWaitHandler(type));
+				}
+			}
+			finally
+			{
+				this.InboxLock.Release();
+			}
+
             return await this.WaitOnEvent();
         }
 
@@ -391,11 +404,16 @@ namespace Microsoft.PSharp
         {
             base.Runtime.NotifyReceiveCalled(this);
 
-            lock (this.Inbox)
-            {
-                this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
-                this.EventWaitHandlers.Add(new EventWaitHandler(eventType, predicate));
-            }
+			await this.InboxLock.WaitAsync();
+			try
+			{
+				this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
+				this.EventWaitHandlers.Add(new EventWaitHandler(eventType, predicate));
+			}
+			finally
+			{
+				this.InboxLock.Release();
+			}
 
             return await this.WaitOnEvent();
         }
@@ -410,14 +428,19 @@ namespace Microsoft.PSharp
         {
             base.Runtime.NotifyReceiveCalled(this);
 
-            lock (this.Inbox)
-            {
-                this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
-                foreach (var e in events)
-                {
-                    this.EventWaitHandlers.Add(new EventWaitHandler(e.Item1, e.Item2));
-                }
-            }
+			await this.InboxLock.WaitAsync();
+			try
+			{
+				this.ReceiveCompletionSource = new TaskCompletionSource<Event>();
+				foreach (var e in events)
+				{
+					this.EventWaitHandlers.Add(new EventWaitHandler(e.Item1, e.Item2));
+				}
+			}
+			finally
+			{
+				this.InboxLock.Release();
+			}
 
             return await this.WaitOnEvent();
         }
@@ -548,54 +571,61 @@ namespace Microsoft.PSharp
         /// Enqueues the event wrapper.
         /// </summary>
         /// <param name="eventInfo">EventInfo</param>
-        /// <param name="runNewHandler">Run a new handler</param>
-        internal void Enqueue(EventInfo eventInfo, ref bool runNewHandler)
+		/// <returns>Boolean</returns>
+		internal async Task<bool> Enqueue(EventInfo eventInfo)
         {
-            lock (this.Inbox)
-            {
-                if (this.IsHalted)
-                {
-                    return;
-                }
+			await this.InboxLock.WaitAsync();
+			try
+			{
+				if (this.IsHalted)
+				{
+					return false;
+				}
 
-                EventWaitHandler eventWaitHandler = this.EventWaitHandlers.FirstOrDefault(
-                    val => val.EventType == eventInfo.EventType &&
-                           val.Predicate(eventInfo.Event));
-                if (eventWaitHandler != null)
-                {
-                    this.EventWaitHandlers.Clear();
-                    base.Runtime.NotifyReceivedEvent(this, eventInfo);
-                    this.ReceiveCompletionSource.SetResult(eventInfo.Event);
-                    return;
-                }
+				EventWaitHandler eventWaitHandler = this.EventWaitHandlers.FirstOrDefault(
+					val => val.EventType == eventInfo.EventType &&
+						   val.Predicate(eventInfo.Event));
+				if (eventWaitHandler != null)
+				{
+					this.EventWaitHandlers.Clear();
+					base.Runtime.NotifyReceivedEvent(this, eventInfo);
+					this.ReceiveCompletionSource.SetResult(eventInfo.Event);
+					return false;
+				}
 
-                base.Runtime.Log($"<EnqueueLog> Machine '{base.Id}' " +
-                    $"enqueued event '{eventInfo.EventName}'.");
+				base.Runtime.Log($"<EnqueueLog> Machine '{base.Id}' " +
+					$"enqueued event '{eventInfo.EventName}'.");
 
-                this.Inbox.Add(eventInfo);
+				this.Inbox.Add(eventInfo);
 
-                if (eventInfo.Event.Assert >= 0)
-                {
-                    var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
-                    this.Assert(eventCount <= eventInfo.Event.Assert, "There are more than " +
-                        $"{eventInfo.Event.Assert} instances of '{eventInfo.EventName}' " +
-                        $"in the input queue of machine '{this}'");
-                }
+				if (eventInfo.Event.Assert >= 0)
+				{
+					var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
+					this.Assert(eventCount <= eventInfo.Event.Assert, "There are more than " +
+						$"{eventInfo.Event.Assert} instances of '{eventInfo.EventName}' " +
+						$"in the input queue of machine '{this}'");
+				}
 
-                if (eventInfo.Event.Assume >= 0)
-                {
-                    var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
-                    this.Assert(eventCount <= eventInfo.Event.Assume, "There are more than " +
-                        $"{eventInfo.Event.Assume} instances of '{eventInfo.EventName}' " +
-                        $"in the input queue of machine '{this}'");
-                }
+				if (eventInfo.Event.Assume >= 0)
+				{
+					var eventCount = this.Inbox.Count(val => val.EventType.Equals(eventInfo.EventType));
+					this.Assert(eventCount <= eventInfo.Event.Assume, "There are more than " +
+						$"{eventInfo.Event.Assume} instances of '{eventInfo.EventName}' " +
+						$"in the input queue of machine '{this}'");
+				}
 
-                if (!this.IsRunning)
-                {
-                    this.IsRunning = true;
-                    runNewHandler = true;
-                }
-            }
+				if (!this.IsRunning)
+				{
+					this.IsRunning = true;
+					return true;
+				}
+
+				return false;
+			}
+			finally
+			{
+				this.InboxLock.Release();
+			}
         }
 
         /// <summary>
@@ -615,30 +645,36 @@ namespace Microsoft.PSharp
             {
                 var defaultHandling = false;
                 var dequeued = false;
-                lock (this.Inbox)
-                {
-                    dequeued = this.GetNextEvent(out nextEventInfo);
 
-                    // Check if next event to process is null.
-                    if (nextEventInfo == null)
-                    {
-                        if (this.HasDefaultHandler())
-                        {
-                            base.Runtime.Log($"<DefaultLog> Machine '{base.Id}' " +
-                                "is executing the default handler in state " +
-                                $"'{this.CurrentStateName}'.");
+				await this.InboxLock.WaitAsync();
+				try
+				{
+					dequeued = this.GetNextEvent(out nextEventInfo);
 
-                            nextEventInfo = new EventInfo(new Default(), new EventOriginInfo(
-                                base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
-                            defaultHandling = true;
-                        }
-                        else
-                        {
-                            this.IsRunning = false;
-                            break;
-                        }
-                    }
-                }
+					// Check if next event to process is null.
+					if (nextEventInfo == null)
+					{
+						if (this.HasDefaultHandler())
+						{
+							base.Runtime.Log($"<DefaultLog> Machine '{base.Id}' " +
+								"is executing the default handler in state " +
+								$"'{this.CurrentStateName}'.");
+
+							nextEventInfo = new EventInfo(new Default(), new EventOriginInfo(
+								base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
+							defaultHandling = true;
+						}
+						else
+						{
+							this.IsRunning = false;
+							break;
+						}
+					}
+				}
+				finally
+				{
+					this.InboxLock.Release();
+				}
 
                 // Notifies the runtime for a new event to handle. This is only used
                 // during bug-finding and operation bounding, because the runtime has
@@ -666,66 +702,6 @@ namespace Microsoft.PSharp
                     base.Runtime.NotifyDefaultHandlerFired();
                 }
             }
-        }
-
-        /// <summary>
-        /// Sets the operation priority of the queue to the specified operation id.
-        /// </summary>
-        /// <param name="opid">OperationId</param>
-        internal void SetQueueOperationPriority(int opid)
-        {
-            lock (this.Inbox)
-            {
-                // Iterate through the events in the inbox, and give priority
-                // to the first event with the specified operation id.
-                for (int idx = 0; idx < this.Inbox.Count; idx++)
-                {
-                    if (idx == 0 && this.Inbox[idx].OperationId == opid)
-                    {
-                        break;
-                    }
-                    else if (this.Inbox[idx].OperationId == opid)
-                    {
-                        var prioritizedEvent = this.Inbox[idx];
-
-                        var sameSenderConflict = false;
-                        for (int prev = 0; prev < idx; prev++)
-                        {
-                            if (this.Inbox[prev].OriginInfo.SenderMachineId.Equals(
-                                prioritizedEvent.OriginInfo.SenderMachineId))
-                            {
-                                sameSenderConflict = true;
-                            }
-                        }
-
-                        if (!sameSenderConflict)
-                        {
-                            this.Inbox.RemoveAt(idx);
-                            this.Inbox.Insert(0, prioritizedEvent);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns true if the specified operation id is pending
-        /// execution by the machine.
-        /// </summary>
-        /// <param name="opid">OperationId</param>
-        /// <returns>Boolean</returns>
-        internal override bool IsOperationPending(int opid)
-        {
-            foreach (var e in this.Inbox)
-            {
-                if (e.OperationId == opid)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -764,16 +740,22 @@ namespace Microsoft.PSharp
         /// is waiting to receive.
         /// </summary>
         /// <returns>String</returns>
-        internal string GetEventWaitHandlerNames()
+        internal async Task<string> GetEventWaitHandlerNames()
         {
             string events = "";
-            lock (this.Inbox)
-            {
-                foreach (var ewh in this.EventWaitHandlers)
-                {
-                    events += " '" + ewh.EventType.FullName + "'";
-                }
-            }
+
+			await this.InboxLock.WaitAsync();
+			try
+			{
+				foreach (var ewh in this.EventWaitHandlers)
+				{
+					events += " '" + ewh.EventType.FullName + "'";
+				}
+			}
+			finally
+			{
+				this.InboxLock.Release();
+			}
 
             return events;
         }
@@ -868,12 +850,17 @@ namespace Microsoft.PSharp
                     // is halt, then terminate the machine.
                     if (e.GetType().Equals(typeof(Halt)))
                     {
-                        lock (this.Inbox)
-                        {
-                            this.IsHalted = true;
-                            this.CleanUpResources();
-                            base.Runtime.NotifyHalted(this);
-                        }
+						await this.InboxLock.WaitAsync();
+						try
+						{
+							this.IsHalted = true;
+							this.CleanUpResources();
+							base.Runtime.NotifyHalted(this);
+						}
+						finally
+						{
+							this.InboxLock.Release();
+						}
 
                         return;
                     }
@@ -961,29 +948,35 @@ namespace Microsoft.PSharp
         private async Task<Event> WaitOnEvent()
         {
             bool isWaiting = true;
-            lock (this.Inbox)
-            {
-                // Iterate through the events in the inbox.
-                for (int idx = 0; idx < this.Inbox.Count; idx++)
-                {
-                    // Dequeues the first event that the machine waits
-                    // to receive, if there is one in the inbox.
-                    EventWaitHandler eventWaitHandler = this.EventWaitHandlers.FirstOrDefault(
-                        val => val.EventType == this.Inbox[idx].EventType &&
-                               val.Predicate(this.Inbox[idx].Event));
-                    if (eventWaitHandler != null)
-                    {
-                        base.Runtime.Log($"<ReceiveLog> Machine '{base.Id}' dequeued " +
-                            $"event '{this.Inbox[idx].EventName}' via a Receive.");
 
-                        this.EventWaitHandlers.Clear();
-                        this.ReceiveCompletionSource.SetResult(this.Inbox[idx].Event);
-                        this.Inbox.RemoveAt(idx);
-                        isWaiting = false;
-                        break;
-                    }
-                }
-            }
+			await this.InboxLock.WaitAsync();
+			try
+			{
+				// Iterate through the events in the inbox.
+				for (int idx = 0; idx < this.Inbox.Count; idx++)
+				{
+					// Dequeues the first event that the machine waits
+					// to receive, if there is one in the inbox.
+					EventWaitHandler eventWaitHandler = this.EventWaitHandlers.FirstOrDefault(
+						val => val.EventType == this.Inbox[idx].EventType &&
+							   val.Predicate(this.Inbox[idx].Event));
+					if (eventWaitHandler != null)
+					{
+						base.Runtime.Log($"<ReceiveLog> Machine '{base.Id}' dequeued " +
+							$"event '{this.Inbox[idx].EventName}' via a Receive.");
+
+						this.EventWaitHandlers.Clear();
+						this.ReceiveCompletionSource.SetResult(this.Inbox[idx].Event);
+						this.Inbox.RemoveAt(idx);
+						isWaiting = false;
+						break;
+					}
+				}
+			}
+			finally
+			{
+				this.InboxLock.Release();
+			}
 
             if (isWaiting)
             {
@@ -1497,7 +1490,7 @@ namespace Microsoft.PSharp
                     }
                 }
                 // cache completed
-                lock(MachineStateCached)
+                lock (MachineStateCached)
                 {
                     MachineStateCached[machineType] = true;
                     System.Threading.Monitor.PulseAll(MachineStateCached);

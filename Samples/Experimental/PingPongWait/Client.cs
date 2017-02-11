@@ -31,17 +31,17 @@ namespace PingPong
             while (this.Counter < 5)
             {
                 await this.Receive(typeof(Ping));
-                this.SendPong();
+                await this.SendPong();
             }
 
             this.Raise(new Halt());
         }
 
-        private void SendPong()
+        private async Task SendPong()
         {
             this.Counter++;
             Console.WriteLine("\nTurns: {0} / 5\n", this.Counter);
-            this.Send(this.Server, new Pong());
+            await this.Send(this.Server, new Pong());
         }
     }
 }
