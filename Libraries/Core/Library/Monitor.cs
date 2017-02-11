@@ -190,7 +190,7 @@ namespace Microsoft.PSharp
             this.Assert(e != null, $"Monitor '{this.GetType().Name}' is raising a null event.");
             EventInfo raisedEvent = new EventInfo(e, new EventOriginInfo(
                 base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
-            base.Runtime.NotifyRaisedEvent(this, raisedEvent, false);
+            base.Runtime.NotifyRaisedEvent(this, raisedEvent);
             this.HandleEvent(e);
         }
 

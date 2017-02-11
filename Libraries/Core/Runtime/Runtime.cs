@@ -13,12 +13,8 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.PSharp.Collections;
@@ -32,6 +28,15 @@ namespace Microsoft.PSharp
     /// </summary>
 	internal class Runtime : IPSharpRuntime
     {
+		#region static fields
+
+		/// <summary>
+		/// Cache storing machine constructors.
+		/// </summary>
+		protected static AsyncDictionary<Type, Func<Machine>> MachineConstructorCache;
+
+		#endregion
+
         #region fields
 
         /// <summary>
@@ -44,30 +49,20 @@ namespace Microsoft.PSharp
         /// </summary>
 		protected AsyncDictionary<int, Machine> MachineMap;
 
-        ///// <summary>
-        ///// Map from task ids to machines.
-        ///// </summary>
-        //protected ConcurrentDictionary<int, Machine> TaskMap;
-
-        /// <summary>
-        /// Map from machine types to constructors.
-        /// </summary>
-        protected static AsyncDictionary<Type, Func<Machine>> MachineConstructorMap;
-
-        ///// <summary>
-        ///// Collection of machine tasks.
-        ///// </summary>
-        //protected ConcurrentBag<Task> MachineTasks;
-
 		/// <summary>
         /// List of monitors in the program.
         /// </summary>
         protected AsyncList<Monitor> Monitors;
 
-        /// <summary>
-        /// Network provider for remote communication.
-        /// </summary>
-        internal INetworkProvider NetworkProvider;
+		///// <summary>
+		///// Map from task ids to machines.
+		///// </summary>
+		//protected ConcurrentDictionary<int, Machine> TaskMap;
+
+		/// <summary>
+		/// Network provider for remote communication.
+		/// </summary>
+		internal INetworkProvider NetworkProvider;
 
         #endregion
 
@@ -78,7 +73,7 @@ namespace Microsoft.PSharp
         /// </summary>
         static Runtime()
         {
-            MachineConstructorMap = new AsyncDictionary<Type, Func<Machine>>();
+            MachineConstructorCache = new AsyncDictionary<Type, Func<Machine>>();
         }
 
         #endregion
@@ -168,7 +163,7 @@ namespace Microsoft.PSharp
             this.Assert(target != null, "Cannot send to a null machine.");
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot send a null event.");
-            await this.Send(null, target, e, false);
+			await this.Send(null, target, e);
         }
 
         /// <summary>
@@ -182,7 +177,7 @@ namespace Microsoft.PSharp
             this.Assert(target != null, "Cannot send to a null machine.");
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot send a null event.");
-            await this.SendRemotely(null, target, e, false);
+            await this.SendRemotely(null, target, e);
         }
 
         /// <summary>
@@ -354,36 +349,6 @@ namespace Microsoft.PSharp
             }
         }
 
-        /// <summary>
-        /// Waits until all P# machines have finished execution.
-        /// </summary>
-        public void Wait()
-        {
-            //Task[] taskArray = null;
-
-            //while (true)
-            //{
-            //    taskArray = this.MachineTasks.ToArray();
-
-            //    try
-            //    {
-            //        Task.WaitAll(taskArray);
-            //    }
-            //    catch (AggregateException)
-            //    {
-            //        this.MachineTasks = new ConcurrentBag<Task>(
-            //            this.MachineTasks.Where(val => !val.IsCompleted));
-
-            //        continue;
-            //    }
-
-            //    if (taskArray.Length == this.MachineTasks.Count)
-            //    {
-            //        break;
-            //    }
-            //}
-        }
-
         #endregion
 
         #region initialization
@@ -439,7 +404,6 @@ namespace Microsoft.PSharp
         {
             this.MachineMap = new AsyncDictionary<int, Machine>();
             //this.TaskMap = new ConcurrentDictionary<int, Machine>();
-            //this.MachineTasks = new ConcurrentBag<Task>();
             this.Monitors = new AsyncList<Monitor>();
         }
 
@@ -486,12 +450,12 @@ namespace Microsoft.PSharp
             MachineId mid = new MachineId(type, friendlyName, this);
 			Machine machine = null;
 
-			var result = await MachineConstructorMap.TryGetValue(type);
+			var result = await MachineConstructorCache.TryGetValue(type);
 			if (!result.Item1)
 			{
 				Func<Machine> constructor = Expression.Lambda<Func<Machine>>(
 					Expression.New(type.GetConstructor(Type.EmptyTypes))).Compile();
-				await MachineConstructorMap.Add(type, constructor);
+				await MachineConstructorCache.Add(type, constructor);
 				machine = constructor();
 			}
 			else
@@ -508,7 +472,6 @@ namespace Microsoft.PSharp
 
 			this.RunMachineEventHandler(machine, e, true);
 
-			//this.MachineTasks.Add(task);
 			//this.TaskMap.TryAdd(task.Id, machine);
 
             return mid;
@@ -574,8 +537,7 @@ namespace Microsoft.PSharp
         /// <param name="sender">Sender machine</param>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        internal virtual async Task Send(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
+        internal virtual async Task Send(AbstractMachine sender, MachineId mid, Event e)
         {
             EventInfo eventInfo = new EventInfo(e, null);
 
@@ -606,7 +568,6 @@ namespace Microsoft.PSharp
 
 			this.RunMachineEventHandler(machine);
             
-            //this.MachineTasks.Add(task);
             //this.TaskMap.TryAdd(task.Id, machine);
         }
 
@@ -653,8 +614,7 @@ namespace Microsoft.PSharp
         /// <param name="sender">Sender machine</param>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        internal virtual async Task SendRemotely(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
+        internal virtual async Task SendRemotely(AbstractMachine sender, MachineId mid, Event e)
         {
             await this.NetworkProvider.RemoteSend(mid, e);
         }
@@ -889,8 +849,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="machine">AbstractMachine</param>
         /// <param name="eventInfo">EventInfo</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        internal virtual void NotifyRaisedEvent(AbstractMachine machine, EventInfo eventInfo, bool isStarter)
+        internal virtual void NotifyRaisedEvent(AbstractMachine machine, EventInfo eventInfo)
         {
             // No-op in production, except for logging.
             if (this.Configuration.Verbose <= 1)

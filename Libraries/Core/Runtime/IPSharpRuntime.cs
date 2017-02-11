@@ -174,11 +174,6 @@ namespace Microsoft.PSharp
 		/// <param name="args">Arguments</param>
 		void Log(string s, params object[] args);
 
-		/// <summary>
-		/// Waits until all P# machines have finished execution.
-		/// </summary>
-		void Wait();
-
 		#endregion
 	}
 }

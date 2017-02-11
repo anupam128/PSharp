@@ -39,6 +39,21 @@ namespace Microsoft.PSharp.TestingServices
     {
         #region fields
 
+		/// <summary>
+        /// The P# bugfinding scheduler.
+        /// </summary>
+        internal BugFindingScheduler BugFinder;
+
+		/// <summary>
+		/// The P# liveness checker.
+		/// </summary>
+		internal LivenessChecker LivenessChecker;
+
+		/// <summary>
+		/// The P# task scheduler.
+		/// </summary>
+		internal TaskScheduler TaskScheduler;
+
         /// <summary>
         /// The P# program schedule trace.
         /// </summary>
@@ -49,6 +64,22 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         internal BugTrace BugTrace;
 
+		/// <summary>
+		/// Data structure containing information
+		/// regarding testing coverage.
+		/// </summary>
+		internal CoverageInfo CoverageInfo;
+
+		/// <summary>
+		/// The P# program state cache.
+		/// </summary>
+		internal StateCache StateCache;
+
+		/// <summary>
+		/// Collection of machine tasks.
+		/// </summary>
+		private ConcurrentBag<Task> MachineTasks;
+
         /// <summary>
         /// A map from unique machine ids to action traces.
         /// Only used for dynamic data race detection.
@@ -56,40 +87,9 @@ namespace Microsoft.PSharp.TestingServices
         internal IDictionary<MachineId, MachineActionTrace> MachineActionTraceMap;
 
         /// <summary>
-        /// The P# task scheduler.
-        /// </summary>
-        internal TaskScheduler TaskScheduler;
-
-        /// <summary>
         /// The root task id.
         /// </summary>
         internal int? RootTaskId;
-
-        /// <summary>
-        /// The P# bugfinding scheduler.
-        /// </summary>
-        internal BugFindingScheduler BugFinder;
-
-        /// <summary>
-        /// The P# program state cache.
-        /// </summary>
-        internal StateCache StateCache;
-
-        /// <summary>
-        /// The P# liveness checker.
-        /// </summary>
-        internal LivenessChecker LivenessChecker;
-
-        /// <summary>
-        /// Data structure containing information
-        /// regarding testing coverage.
-        /// </summary>
-        internal CoverageInfo CoverageInfo;
-
-        /// <summary>
-        /// Monotonically increasing machine id counter.
-        /// </summary>
-        private int OperationIdCounter;
 
         #endregion
 
@@ -116,15 +116,15 @@ namespace Microsoft.PSharp.TestingServices
                 this.BugFinder = new BugFindingScheduler(this, strategy);
             }
 
+			this.LivenessChecker = new LivenessChecker(this, strategy);
+
             this.ScheduleTrace = new ScheduleTrace();
             this.BugTrace = new BugTrace();
-            this.MachineActionTraceMap = new ConcurrentDictionary<MachineId, MachineActionTrace>();
-
             this.StateCache = new StateCache(this);
-            this.LivenessChecker = new LivenessChecker(this, strategy);
             this.CoverageInfo = new CoverageInfo();
 
-            this.OperationIdCounter = 0;
+			this.MachineTasks = new ConcurrentBag<Task>();
+            this.MachineActionTraceMap = new ConcurrentDictionary<MachineId, MachineActionTrace>();
         }
 
         /// <summary>
@@ -485,8 +485,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="sender">Sender machine</param>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        internal override void Send(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
+        internal override void Send(AbstractMachine sender, MachineId mid, Event e)
         {
             if (sender != null)
             {
@@ -507,7 +506,6 @@ namespace Microsoft.PSharp.TestingServices
             }
 
             EventInfo eventInfo = new EventInfo(e, originInfo);
-            this.SetOperationIdForEvent(eventInfo, sender, isStarter);
 
             if (this.Configuration.BoundOperations && sender != null)
             {
@@ -591,10 +589,9 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="sender">Sender machine</param>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        internal override void SendRemotely(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
+        internal override void SendRemotely(AbstractMachine sender, MachineId mid, Event e)
         {
-            this.Send(sender, mid, e, isStarter);
+            this.Send(sender, mid, e);
         }
 
         /// <summary>
@@ -876,16 +873,12 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="machine">AbstractMachine</param>
         /// <param name="eventInfo">EventInfo</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        internal override void NotifyRaisedEvent(AbstractMachine machine, EventInfo eventInfo,
-            bool isStarter)
+        internal override void NotifyRaisedEvent(AbstractMachine machine, EventInfo eventInfo)
         {
             machine.AssertCorrectRGPInvocation();
 
             if (machine is Machine)
             {
-                this.SetOperationIdForEvent(eventInfo, machine, isStarter);
-
                 string machineState = (machine as Machine).CurrentStateName;
                 this.BugTrace.AddRaiseEventStep(machine.Id, machineState, eventInfo);
 
@@ -1048,6 +1041,36 @@ namespace Microsoft.PSharp.TestingServices
             return fingerprint;
         }
 
+		/// <summary>
+		/// Waits until the bug-finding runtime has finished execution.
+		/// </summary>
+		internal void Wait()
+		{
+			//Task[] taskArray = null;
+
+			//while (true)
+			//{
+			//    taskArray = this.MachineTasks.ToArray();
+
+			//    try
+			//    {
+			//        Task.WaitAll(taskArray);
+			//    }
+			//    catch (AggregateException)
+			//    {
+			//        this.MachineTasks = new ConcurrentBag<Task>(
+			//            this.MachineTasks.Where(val => !val.IsCompleted));
+
+			//        continue;
+			//    }
+
+			//    if (taskArray.Length == this.MachineTasks.Count)
+			//    {
+			//        break;
+			//    }
+			//}
+		}
+
         #endregion
 
         #region private methods
@@ -1200,29 +1223,6 @@ namespace Microsoft.PSharp.TestingServices
             }
 
             this.CoverageInfo.AddTransition(originMachine, originState, edgeLabel, destMachine, destState);
-        }
-
-        /// <summary>
-        /// Sets the operation id for the given event.
-        /// </summary>
-        /// <param name="eventInfo">EventInfo</param>
-        /// <param name="sender">Sender machine</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        private void SetOperationIdForEvent(EventInfo eventInfo, AbstractMachine sender, bool isStarter)
-        {
-            if (isStarter)
-            {
-                this.OperationIdCounter++;
-                eventInfo.SetOperationId(this.OperationIdCounter);
-            }
-            else if (sender != null)
-            {
-                eventInfo.SetOperationId(sender.OperationId);
-            }
-            else
-            {
-                eventInfo.SetOperationId(0);
-            }
         }
 
         /// <summary>

@@ -301,14 +301,13 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        protected async Task Send(MachineId mid, Event e, bool isStarter = false)
+        protected async Task Send(MachineId mid, Event e)
         {
             // If the target machine is null, then report an error and exit.
             this.Assert(mid != null, $"Machine '{base.Id}' is sending to a null machine.");
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            await base.Runtime.Send(this, mid, e, isStarter);
+            await base.Runtime.Send(this, mid, e);
         }
 
         /// <summary>
@@ -316,14 +315,13 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        protected async Task RemoteSend(MachineId mid, Event e, bool isStarter = false)
+        protected async Task RemoteSend(MachineId mid, Event e)
         {
             // If the target machine is null, then report an error and exit.
             this.Assert(mid != null, $"Machine '{base.Id}' is sending to a null machine.");
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            await base.Runtime.SendRemotely(this, mid, e, isStarter);
+            await base.Runtime.SendRemotely(this, mid, e);
         }
 
         /// <summary>
@@ -357,14 +355,13 @@ namespace Microsoft.PSharp
         /// Raises an event internally at the end of the current action.
         /// </summary>
         /// <param name="e">Event</param>
-        /// <param name="isStarter">Is starting a new operation</param>
-        protected void Raise(Event e, bool isStarter = false)
+        protected void Raise(Event e)
         {
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is raising a null event.");
             this.RaisedEvent = new EventInfo(e, new EventOriginInfo(
                 base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
-            base.Runtime.NotifyRaisedEvent(this, this.RaisedEvent, isStarter);
+            base.Runtime.NotifyRaisedEvent(this, this.RaisedEvent);
         }
 
         /// <summary>

@@ -17,7 +17,6 @@ namespace PingPong
             var runtime = PSharpRuntime.Create(config);
             Task task = Test.Execute(runtime);
 			task.Wait();
-			//runtime.Wait();
 			Console.ReadLine();
         }
 
