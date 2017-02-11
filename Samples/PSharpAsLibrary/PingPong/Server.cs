@@ -1,35 +1,22 @@
 ﻿using System;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace PingPong
 {
     internal class Server : Machine
     {
-        MachineId Client;
+		internal class Pong : Event { }
 
         [Start]
-        [OnEntry(nameof(InitOnEntry))]
-        class Init : MachineState { }
-
-        void InitOnEntry()
-        {
-            this.Client = this.CreateMachine(typeof(Client), "TheUltimateClientMachine");
-            this.Send(this.Client, new Config(this.Id));
-            this.Goto(typeof(Active));
-        }
-
-        [OnEntry(nameof(ActiveOnEntry))]
-        [OnEventDoAction(typeof(Ping), nameof(SendPong))]
+        [OnEventDoAction(typeof(Client.Ping), nameof(SendPong))]
         class Active : MachineState { }
 
-        void ActiveOnEntry()
+        async Task SendPong()
         {
-            this.SendPong();
-        }
-
-        void SendPong()
-        {
-            this.Send(this.Client, new Pong());
+			var client = (this.ReceivedEvent as Client.Ping).Client;
+            await this.Send(client, new Pong());
         }
     }
 }
