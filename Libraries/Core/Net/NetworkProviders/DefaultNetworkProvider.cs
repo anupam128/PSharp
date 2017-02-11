@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="DefaultNetworkProvider.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
@@ -27,7 +27,7 @@ namespace Microsoft.PSharp.Net
         /// <summary>
         /// Instance of the P# runtime.
         /// </summary>
-        private PSharpRuntime Runtime;
+        private Runtime Runtime;
 
         /// <summary>
         /// The local endpoint.
@@ -41,8 +41,8 @@ namespace Microsoft.PSharp.Net
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
-        public DefaultNetworkProvider(PSharpRuntime runtime)
+        /// <param name="runtime">Runtime</param>
+        public DefaultNetworkProvider(Runtime runtime)
         {
             this.Runtime = runtime;
             this.LocalEndPoint = "";
@@ -66,7 +66,7 @@ namespace Microsoft.PSharp.Net
         async Task<MachineId> INetworkProvider.RemoteCreateMachine(Type type, string friendlyName,
             string endpoint, Event e)
         {
-            return await this.Runtime.CreateMachine(type, friendlyName, e);
+            return await this.Runtime.CreateMachineAsync(type, friendlyName, e);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Microsoft.PSharp.Net
         /// <param name="e">Event</param>
         async Task INetworkProvider.RemoteSend(MachineId target, Event e)
         {
-            await this.Runtime.SendEvent(target, e);
+            await this.Runtime.SendEventAsync(target, e);
         }
 
         /// <summary>

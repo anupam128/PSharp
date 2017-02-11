@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PSharp
@@ -79,6 +80,11 @@ namespace Microsoft.PSharp
         /// liveness bug has been found.
         /// </summary>
         private int LivenessTemperature;
+
+		/// <summary>
+		/// Semaphore used to synchronize access to the monitor.
+		/// </summary>
+		private SemaphoreSlim Lock;
 
         #endregion
 
@@ -154,6 +160,7 @@ namespace Microsoft.PSharp
         {
             this.ActionMap = new Dictionary<string, MethodInfo>();
             this.LivenessTemperature = 0;
+			this.Lock = new SemaphoreSlim(1, 1);
         }
 
         #endregion
@@ -226,11 +233,19 @@ namespace Microsoft.PSharp
         /// Notifies the monitor to handle the received event.
         /// </summary>
         /// <param name="e">Event</param>
-        internal void MonitorEvent(Event e)
+		internal async Task MonitorEvent(Event e)
         {
-            base.Runtime.Log($"<MonitorLog> Monitor '{this.GetType().Name}' " +
-                $"is processing event '{e.GetType().FullName}'.");
-            this.HandleEvent(e);
+			await this.Lock.WaitAsync();
+			try
+			{
+				base.Runtime.Log($"<MonitorLog> Monitor '{this.GetType().Name}' " +
+				$"is processing event '{e.GetType().FullName}'.");
+				this.HandleEvent(e);
+			}
+			finally
+			{
+				this.Lock.Release();
+			}
         }
 
         /// <summary>

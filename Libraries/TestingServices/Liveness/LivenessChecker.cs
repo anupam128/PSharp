@@ -33,7 +33,7 @@ namespace Microsoft.PSharp.TestingServices.Liveness
         /// <summary>
         /// The P# runtime.
         /// </summary>
-        private PSharpBugFindingRuntime Runtime;
+        private BugFindingRuntime Runtime;
 
         /// <summary>
         /// List of monitors in the program.
@@ -93,9 +93,9 @@ namespace Microsoft.PSharp.TestingServices.Liveness
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpBugFindingRuntime</param>
+        /// <param name="runtime">BugFindingRuntime</param>
         /// <param name="bugFindingSchedulingStrategy">ISchedulingStrategy</param>
-        internal LivenessChecker(PSharpBugFindingRuntime runtime,
+        internal LivenessChecker(BugFindingRuntime runtime,
             ISchedulingStrategy bugFindingSchedulingStrategy)
         {
             this.Runtime = runtime;

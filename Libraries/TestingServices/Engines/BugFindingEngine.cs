@@ -62,7 +62,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="action">Action</param>
         /// <returns>BugFindingEngine</returns>
         public static BugFindingEngine Create(Configuration configuration,
-            Action<PSharpRuntime> action)
+            Action<Runtime> action)
         {
             return new BugFindingEngine(configuration, action);
         }
@@ -181,7 +181,7 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
-        private BugFindingEngine(Configuration configuration, Action<PSharpRuntime> action)
+        private BugFindingEngine(Configuration configuration, Action<Runtime> action)
             : base(configuration, action)
         {
             this.Initialize();
@@ -252,8 +252,8 @@ namespace Microsoft.PSharp.TestingServices
                     {
                         IO.PrintLine($"..... Iteration #{i + 1}");
                     }
-
-                    var runtime = new PSharpBugFindingRuntime(base.Configuration, base.Strategy);
+                    
+                    var runtime = new BugFindingRuntime(base.Configuration, base.Strategy);
 
                     StringWriter sw = null;
                     if (base.Configuration.RedirectTestConsoleOutput &&
@@ -410,8 +410,8 @@ namespace Microsoft.PSharp.TestingServices
         /// Gathers the exploration strategy statistics for
         /// the latest testing iteration.
         /// </summary>
-        /// <param name="runtime">PSharpBugFindingRuntime</param>
-        private void GatherIterationStatistics(PSharpBugFindingRuntime runtime)
+        /// <param name="runtime">BugFindingRuntime</param>
+        private void GatherIterationStatistics(BugFindingRuntime runtime)
         {
             TestReport report = runtime.BugFinder.GetReport();
             report.CoverageInfo.Merge(runtime.CoverageInfo);
@@ -436,7 +436,7 @@ namespace Microsoft.PSharp.TestingServices
         /// Constructs a reproducable trace.
         /// </summary>
         /// <param name="runtime">Runtime</param>
-        private void ConstructReproducableTrace(PSharpBugFindingRuntime runtime)
+        private void ConstructReproducableTrace(BugFindingRuntime runtime)
         {
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -497,7 +497,7 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="runtime">Runtime</param>
         /// <param name="iteration">Iteration</param>
-        private void EmitRaceInstrumentationTraces(PSharpBugFindingRuntime runtime, int iteration)
+        private void EmitRaceInstrumentationTraces(BugFindingRuntime runtime, int iteration)
         {
             string name = Path.GetFileNameWithoutExtension(this.Assembly.Location);
             name += "_" + base.Configuration.TestingProcessId;

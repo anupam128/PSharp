@@ -33,7 +33,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 
         class Engine
         {
-            public static void Send(PSharpRuntime runtime, MachineId target)
+            public static void Send(Runtime runtime, MachineId target)
             {
                 runtime.SendEvent(target, new E1(2));
             }
@@ -60,7 +60,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(PSharpRuntime runtime)
+            public static void Execute(Runtime runtime)
             {
                 runtime.CreateMachine(typeof(Real1));
             }

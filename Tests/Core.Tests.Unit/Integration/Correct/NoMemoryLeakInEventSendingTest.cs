@@ -74,7 +74,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         public static class Program
         {
             [Test]
-            public static void Execute(PSharpRuntime runtime)
+            public static void Execute(Runtime runtime)
             {
                 runtime.CreateMachine(typeof(M));
             }
@@ -83,7 +83,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [TestMethod]
         public void TestNoMemoryLeakInEventSending()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = Runtime.Create();
             Program.Execute(runtime);
             runtime.Wait();
         }

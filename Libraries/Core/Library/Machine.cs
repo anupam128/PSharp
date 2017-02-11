@@ -331,11 +331,11 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <typeparam name="T">Type of the monitor</typeparam>
         /// <param name="e">Event</param>
-        protected void Monitor<T>(Event e)
+		protected async Task Monitor<T>(Event e)
         {
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            base.Runtime.Monitor<T>(this, e);
+            await base.Runtime.Monitor<T>(this, e);
         }
 
         /// <summary>
@@ -855,7 +855,7 @@ namespace Microsoft.PSharp
 						{
 							this.IsHalted = true;
 							this.CleanUpResources();
-							base.Runtime.NotifyHalted(this);
+							await base.Runtime.NotifyHalted(this);
 						}
 						finally
 						{

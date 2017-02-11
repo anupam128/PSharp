@@ -66,7 +66,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <summary>
         /// A P# test action.
         /// </summary>
-        internal Action<PSharpRuntime> TestAction;
+        internal Action<Runtime> TestAction;
 
         /// <summary>
         /// The bug-finding scheduling strategy.
@@ -210,7 +210,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
         protected AbstractTestingEngine(Configuration configuration,
-            Action<PSharpRuntime> action)
+            Action<Runtime> action)
         {
             this.Profiler = new Profiler();
             this.Configuration = configuration;
@@ -456,12 +456,12 @@ namespace Microsoft.PSharp.TestingServices
                 testMethods[0].IsConstructor ||
                 !testMethods[0].IsPublic || !testMethods[0].IsStatic ||
                 testMethods[0].GetParameters().Length != 1 ||
-                testMethods[0].GetParameters()[0].ParameterType != typeof(PSharpRuntime))
+                testMethods[0].GetParameters()[0].ParameterType != typeof(Runtime))
             {
                 IO.Error.ReportAndExit("Incorrect test method declaration. Please " +
                     "declare the test method as follows:\n" +
                     $"  [{typeof(Test).FullName}] public static void " +
-                    $"void {testMethods[0].Name}(PSharpRuntime runtime) {{ ... }}");
+                    $"void {testMethods[0].Name}(Runtime runtime) {{ ... }}");
             }
 
             this.TestMethod = testMethods[0];

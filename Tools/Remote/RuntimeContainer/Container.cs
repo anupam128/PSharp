@@ -52,7 +52,7 @@ namespace Microsoft.PSharp.Remote
         /// <summary>
         /// The local P# runtime.
         /// </summary>
-        private static PSharpRuntime PSharpRuntime;
+        private static Runtime Runtime;
 
         /// <summary>
         /// Network provider for remote communication.
@@ -121,7 +121,7 @@ namespace Microsoft.PSharp.Remote
 
                 try
                 {
-                    entry.Invoke(null, new object[] { Container.PSharpRuntime });
+                    entry.Invoke(null, new object[] { Container.Runtime });
                 }
                 catch (Exception ex)
                 {
@@ -187,8 +187,8 @@ namespace Microsoft.PSharp.Remote
         /// </summary>
         private static void InitializePSharpRuntime()
         {
-            Container.PSharpRuntime = PSharpRuntime.Create(Container.Configuration, Container.NetworkProvider);
-            Container.NetworkProvider.Initialize(Container.PSharpRuntime, Container.RemoteApplicationAssembly);
+            Container.Runtime = Runtime.Create(Container.Configuration, Container.NetworkProvider);
+            Container.NetworkProvider.Initialize(Container.Runtime, Container.RemoteApplicationAssembly);
             Container.NotifyManagerInitialization();
         }
 

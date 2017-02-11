@@ -67,25 +67,25 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute1(PSharpRuntime runtime)
+            public static void Execute1(Runtime runtime)
             {
                 ErrorTypeVal = ErrorType.CALL_GOTO;
                 runtime.CreateMachine(typeof(Program));
             }
             [Test]
-            public static void Execute2(PSharpRuntime runtime)
+            public static void Execute2(Runtime runtime)
             {
                 ErrorTypeVal = ErrorType.CALL_RAISE;
                 runtime.CreateMachine(typeof(Program));
             }
             [Test]
-            public static void Execute3(PSharpRuntime runtime)
+            public static void Execute3(Runtime runtime)
             {
                 ErrorTypeVal = ErrorType.CALL_SEND;
                 runtime.CreateMachine(typeof(Program));
             }
             [Test]
-            public static void Execute4(PSharpRuntime runtime)
+            public static void Execute4(Runtime runtime)
             {
                 ErrorTypeVal = ErrorType.ON_EXIT;
                 runtime.CreateMachine(typeof(Program));

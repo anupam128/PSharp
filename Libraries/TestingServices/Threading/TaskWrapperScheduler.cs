@@ -32,7 +32,7 @@ namespace Microsoft.PSharp.TestingServices.Threading
         /// <summary>
         /// The P# runtime.
         /// </summary>
-        private PSharpRuntime Runtime;
+        private Runtime Runtime;
 
         /// <summary>
         /// The machine tasks.
@@ -51,9 +51,9 @@ namespace Microsoft.PSharp.TestingServices.Threading
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
+        /// <param name="runtime">Runtime</param>
         /// <param name="machineTasks">Machine tasks</param>
-        internal TaskWrapperScheduler(PSharpRuntime runtime, ConcurrentBag<Task> machineTasks)
+        internal TaskWrapperScheduler(Runtime runtime, ConcurrentBag<Task> machineTasks)
         {
             this.Runtime = runtime;
             this.MachineTasks = machineTasks;

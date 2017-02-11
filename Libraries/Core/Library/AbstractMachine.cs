@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="AbstractMachine.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
@@ -30,7 +30,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// The P# runtime that executes this machine.
         /// </summary>
-        internal PSharpRuntime Runtime { get; private set; }
+        internal Runtime Runtime { get; private set; }
 
         /// <summary>
         /// The unique machine id.
@@ -125,7 +125,7 @@ namespace Microsoft.PSharp
         internal void SetMachineId(MachineId mid)
         {
             this.Id = mid;
-            this.Runtime = mid.Runtime;
+			this.Runtime = mid.RuntimeHandle;
         }
 
         /// <summary>

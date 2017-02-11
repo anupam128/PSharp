@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 using Microsoft.PSharp.Utilities;
 
@@ -13,16 +15,16 @@ namespace PingPong
 			    WithVerbosityEnabled(2).
 			    WithDebuggingEnabled();
             var runtime = PSharpRuntime.Create(config);
-            Test.Execute(runtime);
+            Task task = Test.Execute(runtime);
+			task.Wait();
 			//runtime.Wait();
 			Console.ReadLine();
         }
 
         [Microsoft.PSharp.Test]
-        public static void Execute(PSharpRuntime runtime)
+        public static async Task Execute(IPSharpRuntime runtime)
         {
-            var task = runtime.CreateMachine(typeof(Environment));
-			//task.Wait();
+			await runtime.CreateMachineAsync(typeof(Environment));
         }
     }
 }

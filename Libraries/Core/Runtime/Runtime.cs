@@ -21,15 +21,16 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.PSharp.Collections;
 using Microsoft.PSharp.Net;
 using Microsoft.PSharp.Utilities;
 
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Class implementing the P# runtime.
+    /// Class implementing the production P# runtime.
     /// </summary>
-    public class PSharpRuntime
+	internal class Runtime : IPSharpRuntime
     {
         #region fields
 
@@ -39,29 +40,29 @@ namespace Microsoft.PSharp
         internal Configuration Configuration;
 
         /// <summary>
-        /// List of monitors in the program.
-        /// </summary>
-        protected List<Monitor> Monitors;
-
-        /// <summary>
         /// Map from unique machine ids to machines.
         /// </summary>
-        protected ConcurrentDictionary<int, Machine> MachineMap;
+		protected AsyncDictionary<int, Machine> MachineMap;
 
-        /// <summary>
-        /// Map from task ids to machines.
-        /// </summary>
-        protected ConcurrentDictionary<int, Machine> TaskMap;
+        ///// <summary>
+        ///// Map from task ids to machines.
+        ///// </summary>
+        //protected ConcurrentDictionary<int, Machine> TaskMap;
 
         /// <summary>
         /// Map from machine types to constructors.
         /// </summary>
-        protected static ConcurrentDictionary<Type, Func<Machine>> MachineConstructorMap;
+        protected static AsyncDictionary<Type, Func<Machine>> MachineConstructorMap;
 
-        /// <summary>
-        /// Collection of machine tasks.
+        ///// <summary>
+        ///// Collection of machine tasks.
+        ///// </summary>
+        //protected ConcurrentBag<Task> MachineTasks;
+
+		/// <summary>
+        /// List of monitors in the program.
         /// </summary>
-        protected ConcurrentBag<Task> MachineTasks;
+        protected AsyncList<Monitor> Monitors;
 
         /// <summary>
         /// Network provider for remote communication.
@@ -75,54 +76,14 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static PSharpRuntime()
+        static Runtime()
         {
-            MachineConstructorMap = new ConcurrentDictionary<Type, Func<Machine>>();
+            MachineConstructorMap = new AsyncDictionary<Type, Func<Machine>>();
         }
 
         #endregion
 
         #region public methods
-
-        /// <summary>
-        /// Creates a new P# runtime.
-        /// </summary>
-        /// <returns>PSharpRuntime</returns>
-        public static PSharpRuntime Create()
-        {
-            return new PSharpRuntime();
-        }
-
-        /// <summary>
-        /// Creates a new P# runtime.
-        /// </summary>
-        /// <param name="netProvider">NetworkProvider</param>
-        /// <returns>PSharpRuntime</returns>
-        public static PSharpRuntime Create(INetworkProvider netProvider)
-        {
-            return new PSharpRuntime(netProvider);
-        }
-
-        /// <summary>
-        /// Creates a new P# runtime.
-        /// </summary>
-        /// <param name="configuration">Configuration</param>
-        /// <returns>PSharpRuntime</returns>
-        public static PSharpRuntime Create(Configuration configuration)
-        {
-            return new PSharpRuntime(configuration);
-        }
-
-        /// <summary>
-        /// Creates a new P# runtime.
-        /// </summary>
-        /// <param name="configuration">Configuration</param>
-        /// <param name="netProvider">NetworkProvider</param>
-        /// <returns>PSharpRuntime</returns>
-        public static PSharpRuntime Create(Configuration configuration, INetworkProvider netProvider)
-        {
-            return new PSharpRuntime(configuration, netProvider);
-        }
 
         /// <summary>
         /// Creates a new machine of the specified type and with
@@ -132,7 +93,7 @@ namespace Microsoft.PSharp
         /// <param name="type">Type of the machine</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual async Task<MachineId> CreateMachine(Type type, Event e = null)
+        public virtual async Task<MachineId> CreateMachineAsync(Type type, Event e = null)
         {
 			return await this.TryCreateMachine(null, type, null, e).ConfigureAwait(false);
         }
@@ -146,7 +107,7 @@ namespace Microsoft.PSharp
         /// <param name="friendlyName">Friendly machine name used for logging</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual async Task<MachineId> CreateMachine(Type type, string friendlyName, Event e = null)
+        public virtual async Task<MachineId> CreateMachineAsync(Type type, string friendlyName, Event e = null)
         {
             return await this.TryCreateMachine(null, type, friendlyName, e).ConfigureAwait(false);
         }
@@ -160,7 +121,7 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual async Task<MachineId> RemoteCreateMachine(Type type, string endpoint, Event e = null)
+        public virtual async Task<MachineId> RemoteCreateMachineAsync(Type type, string endpoint, Event e = null)
         {
             return await this.TryCreateRemoteMachine(null, type, null, endpoint, e).ConfigureAwait(false);
         }
@@ -175,7 +136,7 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual async Task<MachineId> RemoteCreateMachine(Type type, string friendlyName,
+        public virtual async Task<MachineId> RemoteCreateMachineAsync(Type type, string friendlyName,
             string endpoint, Event e = null)
         {
             return await this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e).ConfigureAwait(false);
@@ -187,12 +148,13 @@ namespace Microsoft.PSharp
         /// </summary>
         public virtual MachineId GetCurrentMachineId()
         {
-            if(Task.CurrentId == null || !this.TaskMap.ContainsKey((int) Task.CurrentId))
-            {
-                return null;
-            }
-            Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return machine.Id;
+			throw new NotImplementedException();
+            //if(Task.CurrentId == null || !this.TaskMap.ContainsKey((int) Task.CurrentId))
+            //{
+            //    return null;
+            //}
+            //Machine machine = this.TaskMap[(int)Task.CurrentId];
+            //return machine.Id;
         }
 
         /// <summary>
@@ -200,7 +162,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        public virtual async Task SendEvent(MachineId target, Event e)
+        public virtual async Task SendEventAsync(MachineId target, Event e)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
@@ -214,7 +176,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        public virtual async Task RemoteSendEvent(MachineId target, Event e)
+        public virtual async Task RemoteSendEventAsync(MachineId target, Event e)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
@@ -229,16 +191,17 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="eventTypes">Event types</param>
         /// <returns>Received event</returns>
-        public virtual async Task<Event> Receive(params Type[] eventTypes)
+        public virtual async Task<Event> ReceiveEventAsync(params Type[] eventTypes)
         {
-            this.Assert(Task.CurrentId != null, "Only machines can " +
-                "wait to receive an event.");
-            this.Assert(this.TaskMap.ContainsKey((int)Task.CurrentId),
-                "Only machines can wait to receive an event; task " +
-                $"{(int)Task.CurrentId} does not correspond to a machine.");
+			throw new NotImplementedException();
+            //this.Assert(Task.CurrentId != null, "Only machines can " +
+            //    "wait to receive an event.");
+            //this.Assert(this.TaskMap.ContainsKey((int)Task.CurrentId),
+            //    "Only machines can wait to receive an event; task " +
+            //    $"{(int)Task.CurrentId} does not correspond to a machine.");
 
-            Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return await machine.Receive(eventTypes);
+            //Machine machine = this.TaskMap[(int)Task.CurrentId];
+            //return await machine.Receive(eventTypes);
         }
 
         /// <summary>
@@ -248,16 +211,17 @@ namespace Microsoft.PSharp
         /// <param name="eventType">Event type</param>
         /// <param name="predicate">Predicate</param>
         /// <returns>Received event</returns>
-        public virtual async Task<Event> Receive(Type eventType, Func<Event, bool> predicate)
+        public virtual async Task<Event> ReceiveEventAsync(Type eventType, Func<Event, bool> predicate)
         {
-            this.Assert(Task.CurrentId != null, "Only machines can " +
-                "wait to receive an event.");
-            this.Assert(this.TaskMap.ContainsKey((int)Task.CurrentId),
-                "Only machines can wait to receive an event; task " +
-                $"{(int)Task.CurrentId} does not belong to a machine.");
+			throw new NotImplementedException();
+            //this.Assert(Task.CurrentId != null, "Only machines can " +
+            //    "wait to receive an event.");
+            //this.Assert(this.TaskMap.ContainsKey((int)Task.CurrentId),
+            //    "Only machines can wait to receive an event; task " +
+            //    $"{(int)Task.CurrentId} does not belong to a machine.");
 
-            Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return await machine.Receive(eventType, predicate);
+            //Machine machine = this.TaskMap[(int)Task.CurrentId];
+            //return await machine.Receive(eventType, predicate);
         }
 
         /// <summary>
@@ -266,25 +230,26 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="events">Event types and predicates</param>
         /// <returns>Received event</returns>
-        public virtual async Task<Event> Receive(params Tuple<Type, Func<Event, bool>>[] events)
+        public virtual async Task<Event> ReceiveEventAsync(params Tuple<Type, Func<Event, bool>>[] events)
         {
-            this.Assert(Task.CurrentId != null, "Only machines can " +
-                "wait to receive an event.");
-            this.Assert(this.TaskMap.ContainsKey((int)Task.CurrentId),
-                "Only machines can wait to receive an event; task " +
-                $"{(int)Task.CurrentId} does not belong to a machine.");
+			throw new NotImplementedException();
+            //this.Assert(Task.CurrentId != null, "Only machines can " +
+            //    "wait to receive an event.");
+            //this.Assert(this.TaskMap.ContainsKey((int)Task.CurrentId),
+            //    "Only machines can wait to receive an event; task " +
+            //    $"{(int)Task.CurrentId} does not belong to a machine.");
 
-            Machine machine = this.TaskMap[(int)Task.CurrentId];
-            return await machine.Receive(events);
+            //Machine machine = this.TaskMap[(int)Task.CurrentId];
+            //return await machine.Receive(events);
         }
 
         /// <summary>
         /// Registers a new specification monitor of the specified type.
         /// </summary>
         /// <param name="type">Type of the monitor</param>
-        public virtual void RegisterMonitor(Type type)
+		public virtual async Task RegisterMonitorAsync(Type type)
         {
-            this.TryCreateMonitor(type);
+            await this.TryCreateMonitor(type);
         }
 
         /// <summary>
@@ -292,11 +257,11 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <typeparam name="T">Type of the monitor</typeparam>
         /// <param name="e">Event</param>
-        public virtual void InvokeMonitor<T>(Event e)
+		public virtual async Task InvokeMonitorAsync<T>(Event e)
         {
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot monitor a null event.");
-            this.Monitor<T>(null, e);
+            await this.Monitor<T>(null, e);
         }
 
         /// <summary>
@@ -394,29 +359,29 @@ namespace Microsoft.PSharp
         /// </summary>
         public void Wait()
         {
-            Task[] taskArray = null;
+            //Task[] taskArray = null;
 
-            while (true)
-            {
-                taskArray = this.MachineTasks.ToArray();
+            //while (true)
+            //{
+            //    taskArray = this.MachineTasks.ToArray();
 
-                try
-                {
-                    Task.WaitAll(taskArray);
-                }
-                catch (AggregateException)
-                {
-                    this.MachineTasks = new ConcurrentBag<Task>(
-                        this.MachineTasks.Where(val => !val.IsCompleted));
+            //    try
+            //    {
+            //        Task.WaitAll(taskArray);
+            //    }
+            //    catch (AggregateException)
+            //    {
+            //        this.MachineTasks = new ConcurrentBag<Task>(
+            //            this.MachineTasks.Where(val => !val.IsCompleted));
 
-                    continue;
-                }
+            //        continue;
+            //    }
 
-                if (taskArray.Length == this.MachineTasks.Count)
-                {
-                    break;
-                }
-            }
+            //    if (taskArray.Length == this.MachineTasks.Count)
+            //    {
+            //        break;
+            //    }
+            //}
         }
 
         #endregion
@@ -426,7 +391,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Constructor.
         /// </summary>
-        protected PSharpRuntime()
+		internal Runtime()
         {
             this.Configuration = Configuration.Create();
             this.NetworkProvider = new DefaultNetworkProvider(this);
@@ -437,7 +402,7 @@ namespace Microsoft.PSharp
         /// Constructor.
         /// </summary>
         /// <param name="netProvider">NetworkProvider</param>
-        protected PSharpRuntime(INetworkProvider netProvider)
+        internal Runtime(INetworkProvider netProvider)
         {
             this.Configuration = Configuration.Create();
             this.NetworkProvider = netProvider;
@@ -448,7 +413,7 @@ namespace Microsoft.PSharp
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        protected PSharpRuntime(Configuration configuration)
+        internal Runtime(Configuration configuration)
         {
             this.Configuration = configuration;
             this.NetworkProvider = new DefaultNetworkProvider(this);
@@ -460,7 +425,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="netProvider">NetworkProvider</param>
-        protected PSharpRuntime(Configuration configuration, INetworkProvider netProvider)
+        internal Runtime(Configuration configuration, INetworkProvider netProvider)
         {
             this.Configuration = configuration;
             this.NetworkProvider = netProvider;
@@ -472,10 +437,10 @@ namespace Microsoft.PSharp
         /// </summary>
         private void Initialize()
         {
-            this.MachineMap = new ConcurrentDictionary<int, Machine>();
-            this.TaskMap = new ConcurrentDictionary<int, Machine>();
-            this.MachineTasks = new ConcurrentBag<Task>();
-            this.Monitors = new List<Monitor>();
+            this.MachineMap = new AsyncDictionary<int, Machine>();
+            //this.TaskMap = new ConcurrentDictionary<int, Machine>();
+            //this.MachineTasks = new ConcurrentBag<Task>();
+            this.Monitors = new AsyncList<Monitor>();
         }
 
         #endregion
@@ -488,19 +453,20 @@ namespace Microsoft.PSharp
         /// <returns>Machine or null, if not present</returns>
         internal virtual Machine GetCurrentMachine()
         {
-            //  The current task does not correspond to a machine.
-            if (Task.CurrentId == null)
-            {
-                return null;
-            }
+			throw new NotImplementedException();
+            ////  The current task does not correspond to a machine.
+            //if (Task.CurrentId == null)
+            //{
+            //    return null;
+            //}
 
-            // The current task does not correspond to a machine.
-            if (!this.TaskMap.ContainsKey((int)Task.CurrentId))
-            {
-                return null;
-            }
+            //// The current task does not correspond to a machine.
+            //if (!this.TaskMap.ContainsKey((int)Task.CurrentId))
+            //{
+            //    return null;
+            //}
 
-            return this.TaskMap[(int)Task.CurrentId];
+            //return this.TaskMap[(int)Task.CurrentId];
         }
 
         /// <summary>
@@ -518,21 +484,25 @@ namespace Microsoft.PSharp
                 $"Type '{type.Name}' is not a machine.");
             
             MachineId mid = new MachineId(type, friendlyName, this);
-            
-            if (!MachineConstructorMap.ContainsKey(type))
-            {
-                Func<Machine> constructor = Expression.Lambda<Func<Machine>>(
-                    Expression.New(type.GetConstructor(Type.EmptyTypes))).Compile();
-                MachineConstructorMap[type] = constructor;
-            }
-            
-            Machine machine = MachineConstructorMap[type]();
-            
+			Machine machine = null;
+
+			var result = await MachineConstructorMap.TryGetValue(type);
+			if (!result.Item1)
+			{
+				Func<Machine> constructor = Expression.Lambda<Func<Machine>>(
+					Expression.New(type.GetConstructor(Type.EmptyTypes))).Compile();
+				await MachineConstructorMap.Add(type, constructor);
+				machine = constructor();
+			}
+			else
+			{
+				machine = result.Item2();
+			}
+
             machine.SetMachineId(mid);
             machine.InitializeStateInformation();
-            
-            bool result = this.MachineMap.TryAdd(mid.Value, machine);
-            this.Assert(result, $"Machine '{mid}' was already created.");
+
+			await this.MachineMap.Add(mid.Value, machine);
 
             this.Log($"<CreateLog> Machine '{mid}' is created.");
 
@@ -566,9 +536,9 @@ namespace Microsoft.PSharp
         /// Tries to create a new monitor of the specified type.
         /// </summary>
         /// <param name="type">Type of the monitor</param>
-        internal virtual void TryCreateMonitor(Type type)
+        internal virtual async Task TryCreateMonitor(Type type)
         {
-            if(!this.Configuration.EnableMonitorsInProduction)
+            if (!this.Configuration.EnableMonitorsInProduction)
             {
                 // No-op in production.
                 return;
@@ -582,10 +552,7 @@ namespace Microsoft.PSharp
             (monitor as Monitor).SetMachineId(mid);
             (monitor as Monitor).InitializeStateInformation();
 
-            lock (this.Monitors)
-            {
-                this.Monitors.Add(monitor as Monitor);
-            }
+			await this.Monitors.Add(monitor as Monitor);
 
             this.Log($"<CreateLog> Monitor '{type.Name}' is created.");
 
@@ -613,10 +580,13 @@ namespace Microsoft.PSharp
             EventInfo eventInfo = new EventInfo(e, null);
 
             Machine machine = null;
-            if (!this.MachineMap.TryGetValue(mid.Value, out machine))
+			var result = await this.MachineMap.TryGetValue(mid.Value);
+			if (!result.Item1)
             {
                 return;
             }
+
+			machine = result.Item2;
 
             if (sender != null)
             {
@@ -695,7 +665,7 @@ namespace Microsoft.PSharp
         /// <param name="sender">Sender machine</param>
         /// <typeparam name="T">Type of the monitor</typeparam>
         /// <param name="e">Event</param>
-        internal virtual void Monitor<T>(AbstractMachine sender, Event e)
+        internal virtual async Task Monitor<T>(AbstractMachine sender, Event e)
         {
             if (!this.Configuration.EnableMonitorsInProduction)
             {
@@ -703,26 +673,10 @@ namespace Microsoft.PSharp
                 return;
             }
 
-            Monitor monitor = null;
-
-            lock (this.Monitors)
-            {
-                foreach (var m in this.Monitors)
-                {
-                    if (m.GetType() == typeof(T))
-                    {
-                        monitor = m;
-                        break;
-                    }
-                }
-            }
-
+			Monitor monitor = await this.Monitors.Get(m => m.GetType() == typeof(T));
             if (monitor != null)
             {
-                lock (monitor)
-                {
-                    monitor.MonitorEvent(e);
-                }
+				await monitor.MonitorEvent(e);
             }
         }
 
@@ -1004,10 +958,10 @@ namespace Microsoft.PSharp
         /// Notifies that a machine has halted.
         /// </summary>
         /// <param name="machine">Machine</param>
-        internal virtual void NotifyHalted(Machine machine)
+        internal virtual async Task NotifyHalted(Machine machine)
         {
             this.Log($"<HaltLog> Machine '{machine.Id}' halted.");
-            this.MachineMap.TryRemove(machine.Id.Value, out machine);
+			await this.MachineMap.Remove(machine.Id.Value);
         }
 
         /// <summary>

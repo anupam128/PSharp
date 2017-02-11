@@ -30,7 +30,7 @@ namespace Microsoft.PSharp.TestingServices.StateCaching
         /// <summary>
         /// The P# runtime.
         /// </summary>
-        private PSharpBugFindingRuntime Runtime;
+        private BugFindingRuntime Runtime;
 
         /// <summary>
         /// A map from schedule steps to states.
@@ -44,8 +44,8 @@ namespace Microsoft.PSharp.TestingServices.StateCaching
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpBugFindingRuntime</param>
-        internal StateCache(PSharpBugFindingRuntime runtime)
+        /// <param name="runtime">BugFindingRuntime</param>
+        internal StateCache(BugFindingRuntime runtime)
         {
             this.Runtime = runtime;
             this.StateMap = new Dictionary<ScheduleStep, State>();

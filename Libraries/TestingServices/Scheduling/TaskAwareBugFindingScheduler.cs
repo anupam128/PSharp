@@ -48,9 +48,9 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpBugFindingRuntime</param>
+        /// <param name="runtime">BugFindingRuntime</param>
         /// <param name="strategy">SchedulingStrategy</param>
-        internal TaskAwareBugFindingScheduler(PSharpBugFindingRuntime runtime, ISchedulingStrategy strategy)
+        internal TaskAwareBugFindingScheduler(BugFindingRuntime runtime, ISchedulingStrategy strategy)
             : base(runtime, strategy)
         {
             this.UserTasks = new ConcurrentBag<Task>();

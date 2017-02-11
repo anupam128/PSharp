@@ -32,7 +32,7 @@ namespace Microsoft.PSharp.Remote
         /// <summary>
         /// Instance of the P# runtime.
         /// </summary>
-        private PSharpRuntime Runtime;
+        private Runtime Runtime;
 
         /// <summary>
         /// The local id address.
@@ -72,9 +72,9 @@ namespace Microsoft.PSharp.Remote
         /// <summary>
         /// Initializes the network provider.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
+        /// <param name="runtime">Runtime</param>
         /// <param name="applicationAssembly">ApplicationAssembly</param>
-        public void Initialize(PSharpRuntime runtime, Assembly applicationAssembly)
+        public void Initialize(Runtime runtime, Assembly applicationAssembly)
         {
             this.Runtime = runtime;
             this.ApplicationAssembly = applicationAssembly;

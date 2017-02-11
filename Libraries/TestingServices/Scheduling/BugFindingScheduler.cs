@@ -32,7 +32,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// The P# runtime.
         /// </summary>
-        protected PSharpBugFindingRuntime Runtime;
+        protected BugFindingRuntime Runtime;
 
         /// <summary>
         /// The scheduling strategy to be used for bug-finding.
@@ -85,9 +85,9 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpBugFindingRuntime</param>
+        /// <param name="runtime">BugFindingRuntime</param>
         /// <param name="strategy">SchedulingStrategy</param>
-        internal BugFindingScheduler(PSharpBugFindingRuntime runtime, ISchedulingStrategy strategy)
+        internal BugFindingScheduler(BugFindingRuntime runtime, ISchedulingStrategy strategy)
         {
             this.Runtime = runtime;
             this.Strategy = strategy;

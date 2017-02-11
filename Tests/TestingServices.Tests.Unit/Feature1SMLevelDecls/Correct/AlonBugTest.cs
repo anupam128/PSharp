@@ -66,7 +66,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(PSharpRuntime runtime)
+            public static void Execute(Runtime runtime)
             {
                 runtime.CreateMachine(typeof(Program));
             }

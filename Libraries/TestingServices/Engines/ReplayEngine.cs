@@ -57,7 +57,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
         /// <returns>ReplayEngine</returns>
-        public static ReplayEngine Create(Configuration configuration, Action<PSharpRuntime> action)
+        public static ReplayEngine Create(Configuration configuration, Action<Runtime> action)
         {
             return new ReplayEngine(configuration, action);
         }
@@ -120,7 +120,7 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
-        private ReplayEngine(Configuration configuration, Action<PSharpRuntime> action)
+        private ReplayEngine(Configuration configuration, Action<Runtime> action)
             : base(configuration, action)
         {
 
@@ -138,7 +138,7 @@ namespace Microsoft.PSharp.TestingServices
         {
             Task task = new Task(() =>
             {
-                var runtime = new PSharpBugFindingRuntime(base.Configuration, base.Strategy);
+                var runtime = new BugFindingRuntime(base.Configuration, base.Strategy);
 
                 StringWriter sw = null;
                 if (base.Configuration.RedirectTestConsoleOutput &&

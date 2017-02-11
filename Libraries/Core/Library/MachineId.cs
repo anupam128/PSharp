@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="MachineId.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
@@ -27,9 +27,10 @@ namespace Microsoft.PSharp
         #region fields
 
         /// <summary>
-        /// The P# runtime that executes the machine with this id.
+        /// Handle to the P# runtime that executes
+		/// the machine with this id.
         /// </summary>
-        public readonly PSharpRuntime Runtime;
+        internal readonly Runtime RuntimeHandle;
 
         /// <summary>
         /// Name of the machine.
@@ -63,6 +64,21 @@ namespace Microsoft.PSharp
 
         #endregion
 
+		#region properties
+
+        /// <summary>
+        /// The P# runtime that executes the machine with this id.
+        /// </summary>
+        public IPSharpRuntime Runtime
+		{
+			get
+			{
+				return this.RuntimeHandle;
+			}
+		}
+
+        #endregion
+
         #region static fields
 
         /// <summary>
@@ -87,14 +103,14 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="type">Machine type</param>
         /// <param name="friendlyName">Friendly machine name</param>
-        /// <param name="runtime">PSharpRuntime</param>
-        internal MachineId(Type type, string friendlyName, PSharpRuntime runtime)
+        /// <param name="runtime">Runtime</param>
+        internal MachineId(Type type, string friendlyName, Runtime runtime)
         {
             this.FriendlyName = friendlyName;
-            this.Runtime = runtime;
+            this.RuntimeHandle = runtime;
 
             this.Type = type.FullName;
-            this.EndPoint = this.Runtime.NetworkProvider.GetLocalEndPoint();
+            this.EndPoint = this.RuntimeHandle.NetworkProvider.GetLocalEndPoint();
             
             this.Value = Interlocked.Increment(ref IdCounter);
 
