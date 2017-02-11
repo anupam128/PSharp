@@ -105,16 +105,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\RandomNumberGenerator.cs" />
     <Compile Include="Collections\AsyncDictionary.cs" />
+    <Compile Include="Collections\AsyncList.cs" />
     <Compile Include="Runtime\IPSharpRuntime.cs" />
     <Compile Include="Runtime\PSharpRuntime.cs" />
-    <Compile Include="Collections\AsyncList.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PSharp.snk" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Collections\" />
-    <Folder Include="Collections\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
