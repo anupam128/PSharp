@@ -7,32 +7,16 @@ namespace PingPong
 {
     internal class Server : Machine
     {
-        MachineId Client;
+		internal class Pong : Event { }
 
 		[Start]
-        [OnEntry(nameof(InitOnEntry))]
-        [OnEventGotoState(typeof(Unit), typeof(Active))]
-        class Init : MachineState { }
-
-		async Task InitOnEntry()
-        {
-            this.Client = await this.CreateMachine(typeof(Client));
-            await this.Send(this.Client, new Config(this.Id));
-            this.Raise(new Unit());
-        }
-
-        [OnEntry(nameof(ActiveOnEntry))]
-        [OnEventDoAction(typeof(Pong), nameof(SendPing))]
+        [OnEventDoAction(typeof(Client.Ping), nameof(SendPong))]
         class Active : MachineState { }
 
-        async Task ActiveOnEntry()
+        async Task SendPong()
         {
-            await this.SendPing();
-        }
-
-        async Task SendPing()
-        {
-            await this.Send(this.Client, new Ping());
+			var client = (this.ReceivedEvent as Client.Ping).Client;
+			await this.Send(client, new Pong());
         }
     }
 }

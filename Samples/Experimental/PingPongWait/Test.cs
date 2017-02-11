@@ -21,8 +21,8 @@ namespace PingPong
         [Microsoft.PSharp.Test]
         public static void Execute(PSharpRuntime runtime)
         {
-            var task = runtime.CreateMachine(typeof(Server));
-			task.Wait();
+            var task = runtime.CreateMachine(typeof(Environment));
+			//task.Wait();
         }
     }
 }

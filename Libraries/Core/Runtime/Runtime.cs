@@ -536,33 +536,10 @@ namespace Microsoft.PSharp
 
             this.Log($"<CreateLog> Machine '{mid}' is created.");
 
-			//Task task = new Task(() =>
-			//{
-			//    try
-			//    {
-			//        await machine.GotoStartState(e);
-			//        await machine.RunEventHandler();
-			//    }
-			//    catch (Exception)
-			//    {
-			//        if (this.Configuration.ThrowInternalExceptions)
-			//        {
-			//            throw;
-			//        }
-			//    }
-			//    finally
-			//    {
-			//        this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
-			//    }
-			//});
+			this.RunMachineEventHandler(machine, e, true);
 
 			//this.MachineTasks.Add(task);
 			//this.TaskMap.TryAdd(task.Id, machine);
-
-			//task.Start();
-
-			await machine.GotoStartState(e).ConfigureAwait(false);
-			await machine.RunEventHandler().ConfigureAwait(false);
 
             return mid;
         }
@@ -652,38 +629,53 @@ namespace Microsoft.PSharp
             }
 
             bool runHandler = await machine.Enqueue(eventInfo);
-
             if (!runHandler)
             {
                 return;
             }
 
-			await machine.RunEventHandler();
-
-            //Task task = new Task(() =>
-            //{
-            //    try
-            //    {
-            //        machine.RunEventHandler();
-            //    }
-            //    catch (Exception)
-            //    {
-            //        if (this.Configuration.ThrowInternalExceptions)
-            //        {
-            //            throw;
-            //        }
-            //    }
-            //    finally
-            //    {
-            //        this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
-            //    }
-            //});
+			this.RunMachineEventHandler(machine);
             
             //this.MachineTasks.Add(task);
             //this.TaskMap.TryAdd(task.Id, machine);
-            
-            //task.Start();
         }
+
+		/// <summary>
+		/// Runs a new asynchronous machine event handler.
+		/// This is a fire and forget invocation.
+		/// </summary>
+		/// <param name="machine">Machine</param>
+		/// <param name="e">Event</param>
+		/// <param name="isFresh">Is a new machine</param>
+		private void RunMachineEventHandler(Machine machine, Event e = null, bool isFresh = false)
+		{
+			Task.Run(async () =>
+			{
+				try
+				{
+					if (isFresh)
+					{
+						await machine.GotoStartState(e).ConfigureAwait(false);
+					}
+
+					await machine.RunEventHandler().ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					// TODO: DEBUG
+					Console.WriteLine("<<<<<<<<<< EXCEPTION in RunMachineEventHandler >>>>>>>>>>");
+					Console.WriteLine(ex);
+					if (this.Configuration.ThrowInternalExceptions)
+					{
+						throw ex;
+					}
+				}
+				finally
+				{
+					//this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
+				}
+			});
+		}
 
         /// <summary>
         /// Sends an asynchronous event to a remote machine.

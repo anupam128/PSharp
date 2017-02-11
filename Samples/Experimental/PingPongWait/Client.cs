@@ -7,6 +7,28 @@ namespace PingPong
 {
     internal class Client : Machine
     {
+		internal class Unit : Event { }
+
+		internal class Config : Event
+		{
+			public MachineId Id;
+
+			public Config(MachineId id)
+			{
+				this.Id = id;
+			}
+		}
+
+		internal class Ping : Event
+		{
+			public MachineId Client;
+
+			public Ping(MachineId client)
+			{
+				this.Client = client;
+			}
+		}
+
         private MachineId Server;
         private int Counter;
 
@@ -30,18 +52,18 @@ namespace PingPong
         {
             while (this.Counter < 5)
             {
-                await this.Receive(typeof(Ping));
-                await this.SendPong();
+				await this.SendPing();
+                await this.Receive(typeof(Server.Pong));
             }
 
             this.Raise(new Halt());
         }
 
-        private async Task SendPong()
+        private async Task SendPing()
         {
             this.Counter++;
-            Console.WriteLine("\nTurns: {0} / 5\n", this.Counter);
-            await this.Send(this.Server, new Pong());
+			Console.WriteLine($"\n'{this.Id}' turns: {this.Counter} / 5\n");
+			await this.Send(this.Server, new Ping(this.Id));
         }
     }
 }

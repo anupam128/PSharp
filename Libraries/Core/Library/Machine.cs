@@ -249,7 +249,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         protected async Task<MachineId> CreateMachine(Type type, Event e = null)
         {
-            return await base.Runtime.TryCreateMachine(this, type, null, e);
+			return await base.Runtime.TryCreateMachine(this, type, null, e);
         }
 
         /// <summary>
@@ -390,7 +390,7 @@ namespace Microsoft.PSharp
 				this.InboxLock.Release();
 			}
 
-            return await this.WaitOnEvent();
+			return await this.WaitOnEvent().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -415,7 +415,7 @@ namespace Microsoft.PSharp
 				this.InboxLock.Release();
 			}
 
-            return await this.WaitOnEvent();
+            return await this.WaitOnEvent().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace Microsoft.PSharp
 				this.InboxLock.Release();
 			}
 
-            return await this.WaitOnEvent();
+            return await this.WaitOnEvent().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -948,7 +948,6 @@ namespace Microsoft.PSharp
         private async Task<Event> WaitOnEvent()
         {
             bool isWaiting = true;
-
 			await this.InboxLock.WaitAsync();
 			try
 			{
@@ -1271,7 +1270,7 @@ namespace Microsoft.PSharp
             }
             catch (Exception ex)
             {
-                this.IsHalted = true;
+				this.IsHalted = true;
 
                 Exception innerException = ex;
                 while (innerException is TargetInvocationException)
