@@ -15,11 +15,12 @@ namespace PingPong
         [OnEventGotoState(typeof(Unit), typeof(Active))]
         class Init : MachineState { }
 
-        void Configure()
+        Task Configure()
         {
             this.Server = (this.ReceivedEvent as Config).Id;
             this.Counter = 0;
             this.Raise(new Unit());
+			return this.DoneTask;
         }
 
         [OnEntry(nameof(ActiveOnEntry))]

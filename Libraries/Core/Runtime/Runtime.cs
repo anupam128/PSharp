@@ -132,9 +132,9 @@ namespace Microsoft.PSharp
         /// <param name="type">Type of the machine</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual MachineId CreateMachine(Type type, Event e = null)
+        public virtual async Task<MachineId> CreateMachine(Type type, Event e = null)
         {
-            return this.TryCreateMachine(null, type, null, e);
+            return await this.TryCreateMachine(null, type, null, e);
         }
 
         /// <summary>
@@ -146,9 +146,9 @@ namespace Microsoft.PSharp
         /// <param name="friendlyName">Friendly machine name used for logging</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual MachineId CreateMachine(Type type, string friendlyName, Event e = null)
+        public virtual async Task<MachineId> CreateMachine(Type type, string friendlyName, Event e = null)
         {
-            return this.TryCreateMachine(null, type, friendlyName, e);
+            return await this.TryCreateMachine(null, type, friendlyName, e);
         }
 
         /// <summary>
@@ -160,9 +160,9 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual MachineId RemoteCreateMachine(Type type, string endpoint, Event e = null)
+        public virtual async Task<MachineId> RemoteCreateMachine(Type type, string endpoint, Event e = null)
         {
-            return this.TryCreateRemoteMachine(null, type, null, endpoint, e);
+            return await this.TryCreateRemoteMachine(null, type, null, endpoint, e);
         }
 
         /// <summary>
@@ -175,10 +175,10 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public virtual MachineId RemoteCreateMachine(Type type, string friendlyName,
+        public virtual async Task<MachineId> RemoteCreateMachine(Type type, string friendlyName,
             string endpoint, Event e = null)
         {
-            return this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e);
+            return await this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e);
         }
 
         /// <summary>
@@ -200,13 +200,13 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        public virtual void SendEvent(MachineId target, Event e)
+        public virtual async Task SendEvent(MachineId target, Event e)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
             // If the event is null then report an error and exit.
             this.Assert(e != null, "Cannot send a null event.");
-            this.Send(null, target, e, false);
+            await this.Send(null, target, e, false);
         }
 
         /// <summary>
@@ -511,7 +511,7 @@ namespace Microsoft.PSharp
         /// <param name="friendlyName">Friendly machine name used for logging</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        internal virtual MachineId TryCreateMachine(Machine creator, Type type,
+        internal virtual async Task<MachineId> TryCreateMachine(Machine creator, Type type,
             string friendlyName, Event e)
         {
             this.Assert(type.IsSubclassOf(typeof(Machine)),
@@ -536,30 +536,33 @@ namespace Microsoft.PSharp
 
             this.Log($"<CreateLog> Machine '{mid}' is created.");
 
-            Task task = new Task(() =>
-            {
-                try
-                {
-                    machine.GotoStartState(e);
-                    machine.RunEventHandler();
-                }
-                catch (Exception)
-                {
-                    if (this.Configuration.ThrowInternalExceptions)
-                    {
-                        throw;
-                    }
-                }
-                finally
-                {
-                    this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
-                }
-            });
-            
-            this.MachineTasks.Add(task);
-            this.TaskMap.TryAdd(task.Id, machine);
-            
-            task.Start();
+			//Task task = new Task(() =>
+			//{
+			//    try
+			//    {
+			//        await machine.GotoStartState(e);
+			//        await machine.RunEventHandler();
+			//    }
+			//    catch (Exception)
+			//    {
+			//        if (this.Configuration.ThrowInternalExceptions)
+			//        {
+			//            throw;
+			//        }
+			//    }
+			//    finally
+			//    {
+			//        this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
+			//    }
+			//});
+
+			//this.MachineTasks.Add(task);
+			//this.TaskMap.TryAdd(task.Id, machine);
+
+			//task.Start();
+
+			await machine.GotoStartState(e).ConfigureAwait(false);
+			await machine.RunEventHandler().ConfigureAwait(false);
 
             return mid;
         }
@@ -573,12 +576,12 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        internal virtual MachineId TryCreateRemoteMachine(Machine creator, Type type,
+        internal virtual async Task<MachineId> TryCreateRemoteMachine(Machine creator, Type type,
             string friendlyName, string endpoint, Event e)
         {
             this.Assert(type.IsSubclassOf(typeof(Machine)),
                 $"Type '{type.Name}' is not a machine.");
-            return this.NetworkProvider.RemoteCreateMachine(type, friendlyName, endpoint, e);
+            return await this.NetworkProvider.RemoteCreateMachine(type, friendlyName, endpoint, e);
         }
 
         /// <summary>
@@ -627,7 +630,7 @@ namespace Microsoft.PSharp
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
         /// <param name="isStarter">Is starting a new operation</param>
-        internal virtual void Send(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
+        internal virtual async Task Send(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
         {
             EventInfo eventInfo = new EventInfo(e, null);
 
@@ -655,29 +658,31 @@ namespace Microsoft.PSharp
                 return;
             }
 
-            Task task = new Task(() =>
-            {
-                try
-                {
-                    machine.RunEventHandler();
-                }
-                catch (Exception)
-                {
-                    if (this.Configuration.ThrowInternalExceptions)
-                    {
-                        throw;
-                    }
-                }
-                finally
-                {
-                    this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
-                }
-            });
+			await machine.RunEventHandler();
+
+            //Task task = new Task(() =>
+            //{
+            //    try
+            //    {
+            //        machine.RunEventHandler();
+            //    }
+            //    catch (Exception)
+            //    {
+            //        if (this.Configuration.ThrowInternalExceptions)
+            //        {
+            //            throw;
+            //        }
+            //    }
+            //    finally
+            //    {
+            //        this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
+            //    }
+            //});
             
-            this.MachineTasks.Add(task);
-            this.TaskMap.TryAdd(task.Id, machine);
+            //this.MachineTasks.Add(task);
+            //this.TaskMap.TryAdd(task.Id, machine);
             
-            task.Start();
+            //task.Start();
         }
 
         /// <summary>
@@ -687,9 +692,9 @@ namespace Microsoft.PSharp
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
         /// <param name="isStarter">Is starting a new operation</param>
-        internal virtual void SendRemotely(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
+        internal virtual async Task SendRemotely(AbstractMachine sender, MachineId mid, Event e, bool isStarter)
         {
-            this.NetworkProvider.RemoteSend(mid, e);
+            await this.NetworkProvider.RemoteSend(mid, e);
         }
 
         /// <summary>

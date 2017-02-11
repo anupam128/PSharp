@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -32,7 +31,7 @@ namespace Microsoft.PSharp
     /// </summary>
     public abstract class Machine : AbstractMachine
     {
-        #region fields
+        #region static fields
 
         /// <summary>
         /// Is the machine state cached yet?
@@ -56,6 +55,16 @@ namespace Microsoft.PSharp
         /// available actions.
         /// </summary>
         private static ConcurrentDictionary<Type, Dictionary<string, MethodInfo>> MachineActionMap;
+
+		/// <summary>
+		/// A special task that is already in the RunToCompletion state.
+		/// Equivalent to Task.FromResult(1).
+		/// </summary>
+		private static readonly Task<int> CompletedTask;
+
+		#endregion
+
+		#region fields
 
         /// <summary>
         /// A stack of machine states. The state on the top of
@@ -122,6 +131,10 @@ namespace Microsoft.PSharp
         /// </summary>
         private TaskCompletionSource<Event> ReceiveCompletionSource;
 
+		#endregion
+
+		#region properties
+
         /// <summary>
         /// Gets the current state.
         /// </summary>
@@ -172,6 +185,17 @@ namespace Microsoft.PSharp
         /// </summary>
         protected internal Event ReceivedEvent { get; private set; }
 
+		/// <summary>
+		/// A special task that is already in the RunToCompletion state.
+		/// </summary>
+		protected Task DoneTask
+		{
+			get
+			{
+				return CompletedTask;
+			}
+		}
+
         #endregion
 
         #region constructors
@@ -185,6 +209,7 @@ namespace Microsoft.PSharp
             StateTypeMap = new ConcurrentDictionary<Type, HashSet<Type>>();
             StateMap = new ConcurrentDictionary<Type, HashSet<MachineState>>();
             MachineActionMap = new ConcurrentDictionary<Type, Dictionary<string, MethodInfo>>();
+			CompletedTask = Task.FromResult(1);
         }
 
         /// <summary>
@@ -215,9 +240,9 @@ namespace Microsoft.PSharp
         /// <param name="type">Type of the machine</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        protected MachineId CreateMachine(Type type, Event e = null)
+        protected async Task<MachineId> CreateMachine(Type type, Event e = null)
         {
-            return base.Runtime.TryCreateMachine(this, type, null, e);
+            return await base.Runtime.TryCreateMachine(this, type, null, e);
         }
 
         /// <summary>
@@ -229,9 +254,9 @@ namespace Microsoft.PSharp
         /// <param name="friendlyName">Friendly machine name used for logging</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        protected MachineId CreateMachine(Type type, string friendlyName, Event e = null)
+        protected async Task<MachineId> CreateMachine(Type type, string friendlyName, Event e = null)
         {
-            return base.Runtime.TryCreateMachine(this, type, friendlyName, e);
+            return await base.Runtime.TryCreateMachine(this, type, friendlyName, e);
         }
 
         /// <summary>
@@ -243,9 +268,9 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        protected MachineId CreateRemoteMachine(Type type, string endpoint, Event e = null)
+        protected async Task<MachineId> CreateRemoteMachine(Type type, string endpoint, Event e = null)
         {
-            return base.Runtime.TryCreateRemoteMachine(this, type, null, endpoint, e);
+            return await base.Runtime.TryCreateRemoteMachine(this, type, null, endpoint, e);
         }
 
         /// <summary>
@@ -258,10 +283,10 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        protected MachineId CreateRemoteMachine(Type type, string friendlyName,
+        protected async Task<MachineId> CreateRemoteMachine(Type type, string friendlyName,
             string endpoint, Event e = null)
         {
-            return base.Runtime.TryCreateRemoteMachine(this, type, friendlyName, endpoint, e);
+            return await base.Runtime.TryCreateRemoteMachine(this, type, friendlyName, endpoint, e);
         }
 
         /// <summary>
@@ -270,13 +295,13 @@ namespace Microsoft.PSharp
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
         /// <param name="isStarter">Is starting a new operation</param>
-        protected void Send(MachineId mid, Event e, bool isStarter = false)
+        protected async Task Send(MachineId mid, Event e, bool isStarter = false)
         {
             // If the target machine is null, then report an error and exit.
             this.Assert(mid != null, $"Machine '{base.Id}' is sending to a null machine.");
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            base.Runtime.Send(this, mid, e, isStarter);
+            await base.Runtime.Send(this, mid, e, isStarter);
         }
 
         /// <summary>
@@ -401,12 +426,12 @@ namespace Microsoft.PSharp
         /// Pops the current state from the state stack
         /// at the end of the current action.
         /// </summary>
-        protected void Pop()
+        protected async Task Pop()
         {
             base.Runtime.NotifyPop(this, this.CurrentState, this.StateStack.ElementAtOrDefault(1)?.GetType());
 
             // The machine performs the on exit action of the current state.
-            this.ExecuteCurrentStateOnExit(null);
+            await this.ExecuteCurrentStateOnExit(null);
             if (this.IsHalted)
             {
                 return;
@@ -513,10 +538,10 @@ namespace Microsoft.PSharp
         /// entry action, if there is any.
         /// </summary>
         /// <param name="e">Event</param>
-        internal void GotoStartState(Event e)
+        internal async Task GotoStartState(Event e)
         {
             this.ReceivedEvent = e;
-            this.ExecuteCurrentStateOnEntry();
+            await this.ExecuteCurrentStateOnEntry();
         }
 
         /// <summary>
@@ -577,7 +602,7 @@ namespace Microsoft.PSharp
         /// Runs the event handler. The handler terminates if there
         /// is no next event to process or if the machine is halted.
         /// </summary>
-        internal void RunEventHandler()
+        internal async Task RunEventHandler()
         {
             if (this.IsHalted)
             {
@@ -631,7 +656,7 @@ namespace Microsoft.PSharp
                 this.ReceivedEvent = nextEventInfo.Event;
 
                 // Handles next event.
-                this.HandleEvent(nextEventInfo.Event);
+                await this.HandleEvent(nextEventInfo.Event);
 
                 // If the default event was handled, then notify the runtime.
                 // This is only used during bug-finding, because the runtime
@@ -831,7 +856,7 @@ namespace Microsoft.PSharp
         /// Handles the specified event.
         /// </summary>
         /// <param name="e">Event to handle</param>
-        private void HandleEvent(Event e)
+        private async Task HandleEvent(Event e)
         {
             base.CurrentActionCalledRGP = false;
 
@@ -862,48 +887,48 @@ namespace Microsoft.PSharp
                 if (e.GetType() == typeof(GotoStateEvent))
                 {
                     Type targetState = (e as GotoStateEvent).State;
-                    this.GotoState(targetState, null);
+                    await this.GotoState(targetState, null);
                 }
                 // Checks if the event can trigger a goto state transition.
                 else if (this.GotoTransitions.ContainsKey(e.GetType()))
                 {
                     var transition = this.GotoTransitions[e.GetType()];
-                    this.GotoState(transition.TargetState, transition.Lambda);
+                    await this.GotoState(transition.TargetState, transition.Lambda);
                 }
                 else if (this.GotoTransitions.ContainsKey(typeof(WildCardEvent)))
                 {
                     var transition = this.GotoTransitions[typeof(WildCardEvent)];
-                    this.GotoState(transition.TargetState, transition.Lambda);
+                    await this.GotoState(transition.TargetState, transition.Lambda);
                 }
                 // Checks if the event can trigger a push state transition.
                 else if (this.PushTransitions.ContainsKey(e.GetType()))
                 {
                     Type targetState = this.PushTransitions[e.GetType()].TargetState;
-                    this.PushState(targetState);
+                    await this.PushState(targetState);
                 }
                 else if (this.PushTransitions.ContainsKey(typeof(WildCardEvent)))
                 {
                     Type targetState = this.PushTransitions[typeof(WildCardEvent)].TargetState;
-                    this.PushState(targetState);
+                    await this.PushState(targetState);
                 }
                 // Checks if the event can trigger an action.
                 else if (this.CurrentActionHandlerMap.ContainsKey(e.GetType()) &&
                     this.CurrentActionHandlerMap[e.GetType()] is ActionBinding)
                 {
                     var handler = this.CurrentActionHandlerMap[e.GetType()] as ActionBinding;
-                    this.Do(handler.Name);
+                    await this.Do(handler.Name);
                 }
                 else if (this.CurrentActionHandlerMap.ContainsKey(typeof(WildCardEvent))
                     && this.CurrentActionHandlerMap[typeof(WildCardEvent)] is ActionBinding)
                 {
                     var handler = this.CurrentActionHandlerMap[typeof(WildCardEvent)] as ActionBinding;
-                    this.Do(handler.Name);
+                    await this.Do(handler.Name);
                 }
                 // If the current state cannot handle the event.
                 else
                 {
                     // The machine performs the on exit action of the current state.
-                    this.ExecuteCurrentStateOnExit(null);
+                    await this.ExecuteCurrentStateOnExit(null);
                     if (this.IsHalted)
                     {
                         return;
@@ -1043,10 +1068,10 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="s">Type of the state</param>
         /// <param name="onExitActionName">Action name</param>
-        private void GotoState(Type s, string onExitActionName)
+        private async Task GotoState(Type s, string onExitActionName)
         {
             // The machine performs the on exit action of the current state.
-            this.ExecuteCurrentStateOnExit(onExitActionName);
+            await this.ExecuteCurrentStateOnExit(onExitActionName);
             if (this.IsHalted)
             {
                 return;
@@ -1061,14 +1086,14 @@ namespace Microsoft.PSharp
             this.DoStatePush(nextState);
 
             // The machine performs the on entry action of the new state.
-            this.ExecuteCurrentStateOnEntry();
+            await this.ExecuteCurrentStateOnEntry();
         }
 
         /// <summary>
         /// Performs a push transition to the specified state.
         /// </summary>
         /// <param name="s">Type of the state</param>
-        private void PushState(Type s)
+        private async Task PushState(Type s)
         {
             base.Runtime.Log($"<PushLog> Machine '{base.Id}' pushed.");
 
@@ -1076,7 +1101,7 @@ namespace Microsoft.PSharp
             this.DoStatePush(nextState);
 
             // The machine performs the on entry statements of the new state.
-            this.ExecuteCurrentStateOnEntry();
+            await this.ExecuteCurrentStateOnEntry();
         }
 
         /// <summary>
@@ -1084,18 +1109,14 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="actionName">Action name</param>
         [DebuggerStepThrough]
-        private void Do(string actionName)
+        private async Task Do(string actionName)
         {
             MethodInfo action = this.ActionMap[actionName];
             base.Runtime.NotifyInvokedAction(this, action, this.ReceivedEvent);
 
             try
             {
-                object result = action.Invoke(this, null);
-                if (result is Task)
-                {
-                    (result as Task).Wait();
-                }
+				await (Task)action.Invoke(this, null);
             }
             catch (Exception ex)
             {
@@ -1235,7 +1256,7 @@ namespace Microsoft.PSharp
         /// Executes the on entry function of the current state.
         /// </summary>
         [DebuggerStepThrough]
-        private void ExecuteCurrentStateOnEntry()
+        private async Task ExecuteCurrentStateOnEntry()
         {
             base.Runtime.NotifyEnteredState(this);
             
@@ -1252,11 +1273,7 @@ namespace Microsoft.PSharp
                 if (entryAction != null)
                 {
                     base.Runtime.NotifyInvokedAction(this, entryAction, this.ReceivedEvent);
-                    object result = entryAction.Invoke(this, null);
-                    if (result is Task)
-                    {
-                        (result as Task).Wait();
-                    }
+					await (Task)entryAction.Invoke(this, null);
                 }
             }
             catch (Exception ex)
@@ -1303,7 +1320,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="eventHandlerExitActionName">Action name</param>
         [DebuggerStepThrough]
-        private void ExecuteCurrentStateOnExit(string eventHandlerExitActionName)
+        private async Task ExecuteCurrentStateOnExit(string eventHandlerExitActionName)
         {
             base.Runtime.NotifyExitedState(this);
 
@@ -1322,11 +1339,7 @@ namespace Microsoft.PSharp
                 if (exitAction != null)
                 {
                     base.Runtime.NotifyInvokedAction(this, exitAction, this.ReceivedEvent);
-                    object result = exitAction.Invoke(this, null);
-                    if (result is Task)
-                    {
-                        (result as Task).Wait();
-                    }
+                    await (Task)exitAction.Invoke(this, null);
                 }
 
                 // Invokes the exit action of the event handler,
@@ -1335,11 +1348,7 @@ namespace Microsoft.PSharp
                 {
                     MethodInfo eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
                     base.Runtime.NotifyInvokedAction(this, eventHandlerExitAction, this.ReceivedEvent);
-                    object result = eventHandlerExitAction.Invoke(this, null);
-                    if (result is Task)
-                    {
-                        (result as Task).Wait();
-                    }
+                    await (Task)eventHandlerExitAction.Invoke(this, null);
                 }
             }
             catch (Exception ex)
@@ -1577,17 +1586,8 @@ namespace Microsoft.PSharp
                 "in machine '{1}'.", actionName, this.GetType().Name);
             this.Assert(method.GetParameters().Length == 0, "Action '{0}' in machine " +
                 "'{1}' must have 0 formal parameters.", method.Name, this.GetType().Name);
-
-            if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
-            {
-                this.Assert(method.ReturnType == typeof(Task), "Action '{0}' in machine " +
-                    "'{1}' must have 'Task' return type.", method.Name, this.GetType().Name);
-            }
-            else
-            {
-                this.Assert(method.ReturnType == typeof(void), "Action '{0}' in machine " +
-                    "'{1}' must have 'void' return type.", method.Name, this.GetType().Name);
-            }
+			this.Assert(method.ReturnType == typeof(Task), "Action '{0}' in machine " +
+			    "'{1}' must have 'Task' return type.", method.Name, this.GetType().Name);
             
             return method;
         }

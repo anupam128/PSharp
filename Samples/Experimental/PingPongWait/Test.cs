@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.PSharp;
+using Microsoft.PSharp.Utilities;
 
 namespace PingPong
 {
@@ -8,9 +9,12 @@ namespace PingPong
     {
         static void Main(string[] args)
         {
-            var runtime = PSharpRuntime.Create();
+			Configuration config = Configuration.Create().
+			    WithVerbosityEnabled(2).
+			    WithDebuggingEnabled();
+            var runtime = PSharpRuntime.Create(config);
             Test.Execute(runtime);
-            Console.ReadLine();
+			runtime.Wait();
         }
 
         [Microsoft.PSharp.Test]

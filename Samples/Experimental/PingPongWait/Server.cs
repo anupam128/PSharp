@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace PingPong
@@ -12,10 +14,10 @@ namespace PingPong
         [OnEventGotoState(typeof(Unit), typeof(Active))]
         class Init : MachineState { }
 
-		void InitOnEntry()
+		async Task InitOnEntry()
         {
-            this.Client = this.CreateMachine(typeof(Client));
-            this.Send(this.Client, new Config(this.Id));
+            this.Client = await this.CreateMachine(typeof(Client));
+            await this.Send(this.Client, new Config(this.Id));
             this.Raise(new Unit());
         }
 
@@ -23,14 +25,16 @@ namespace PingPong
         [OnEventDoAction(typeof(Pong), nameof(SendPing))]
         class Active : MachineState { }
 
-        void ActiveOnEntry()
+        Task ActiveOnEntry()
         {
             this.SendPing();
+			return this.DoneTask;
         }
 
-        void SendPing()
+        Task SendPing()
         {
             this.Send(this.Client, new Ping());
+			return this.DoneTask;
         }
     }
 }
