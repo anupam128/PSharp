@@ -58,7 +58,7 @@ namespace Raft
             }
 
             //await this.Send(this.Id, new TickEvent());
-            this.Raise(new CancelTimer());
+            await this.Raise(new CancelTimer());
         }
 
         [OnEventGotoState(typeof(StartTimer), typeof(Active))]

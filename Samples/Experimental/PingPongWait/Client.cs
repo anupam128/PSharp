@@ -37,12 +37,11 @@ namespace PingPong
         [OnEventGotoState(typeof(Unit), typeof(Active))]
         class Init : MachineState { }
 
-        Task Configure()
+        async Task Configure()
         {
             this.Server = (this.ReceivedEvent as Config).Id;
             this.Counter = 0;
-            this.Raise(new Unit());
-			return this.DoneTask;
+            await this.Raise(new Unit());
         }
 
         [OnEntry(nameof(ActiveOnEntry))]
@@ -56,10 +55,10 @@ namespace PingPong
                 await this.Receive(typeof(Server.Pong));
             }
 
-            this.Raise(new Halt());
+            await this.Raise(new Halt());
         }
 
-        private async Task SendPing()
+        async Task SendPing()
         {
             this.Counter++;
 			Console.WriteLine($"\n'{this.Id}' turns: {this.Counter} / 5\n");

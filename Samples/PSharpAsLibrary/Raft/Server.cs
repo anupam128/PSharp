@@ -249,7 +249,7 @@ namespace Raft
             this.PeriodicTimer = await this.CreateMachine(typeof(PeriodicTimer));
             await this.Send(this.PeriodicTimer, new PeriodicTimer.ConfigureEvent(this.Id));
 
-            this.Raise(new BecomeFollower());
+            await this.Raise(new BecomeFollower());
         }
 
         #endregion
@@ -291,8 +291,7 @@ namespace Raft
 
         async Task StartLeaderElection()
         {
-            this.Raise(new BecomeCandidate());
-			await this.DoneTask;
+            await this.Raise(new BecomeCandidate());
         }
 
         async Task VoteAsFollower()
@@ -401,7 +400,7 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
                 await this.Vote(this.ReceivedEvent as VoteRequest);
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
             }
             else
             {
@@ -416,7 +415,7 @@ namespace Raft
             {
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
                 return;
             }
             else if (request.Term != this.CurrentTerm)
@@ -432,11 +431,9 @@ namespace Raft
                     Console.WriteLine("\n [Leader] " + this.ServerId + " | term " + this.CurrentTerm +
                         " | election votes " + this.VotesReceived + " | log " + this.Logs.Count + "\n");
                     this.VotesReceived = 0;
-                    this.Raise(new BecomeLeader());
+                    await this.Raise(new BecomeLeader());
                 }
             }
-
-			await this.DoneTask;
         }
 
         async Task AppendEntriesAsCandidate()
@@ -447,7 +444,7 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
                 await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
             }
             else
             {
@@ -462,10 +459,8 @@ namespace Raft
             {
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
             }
-
-			await this.DoneTask;
         }
 
         #endregion
@@ -560,7 +555,7 @@ namespace Raft
                 await this.RedirectLastClientRequestToClusterManager();
                 await this.Vote(this.ReceivedEvent as VoteRequest);
 
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
             }
             else
             {
@@ -577,7 +572,7 @@ namespace Raft
                 this.VotedFor = null;
 
                 await this.RedirectLastClientRequestToClusterManager();
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
             }
         }
 
@@ -592,7 +587,7 @@ namespace Raft
                 await this.RedirectLastClientRequestToClusterManager();
                 await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
 
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
             }
         }
         
@@ -605,7 +600,7 @@ namespace Raft
                 this.VotedFor = null;
                 
                 await this.RedirectLastClientRequestToClusterManager();
-                this.Raise(new BecomeFollower());
+                await this.Raise(new BecomeFollower());
                 return;
             }
             else if (request.Term != this.CurrentTerm)
@@ -798,8 +793,7 @@ namespace Raft
         {
             await this.Send(this.ElectionTimer, new Halt());
             await this.Send(this.PeriodicTimer, new Halt());
-
-            this.Raise(new Halt());
+            await this.Raise(new Halt());
         }
 
         #endregion

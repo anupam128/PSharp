@@ -40,8 +40,7 @@ namespace PingPong
         {
             this.Server = (this.ReceivedEvent as Config).Id;
             this.Counter = 0;
-            this.Goto(typeof(Active));
-			await this.DoneTask;
+            await this.Goto(typeof(Active));
         }
 
         [OnEntry(nameof(ActiveOnEntry))]
@@ -62,7 +61,7 @@ namespace PingPong
 
 			if (this.Counter == 5)
 			{
-				this.Raise(new Halt());
+				await this.Raise(new Halt());
 			}
         }
     }

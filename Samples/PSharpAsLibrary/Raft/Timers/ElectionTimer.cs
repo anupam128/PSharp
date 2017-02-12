@@ -34,7 +34,7 @@ namespace Raft
         async Task Configure()
         {
             this.Target = (this.ReceivedEvent as ConfigureEvent).Target;
-			//this.Raise(new StartTimer());
+			//await this.Raise(new StartTimer());
 			await this.DoneTask;
         }
 
@@ -58,7 +58,7 @@ namespace Raft
             }
 
             //await this.Send(this.Id, new TickEvent());
-            this.Raise(new CancelTimer());
+            await this.Raise(new CancelTimer());
         }
 
         [OnEventGotoState(typeof(StartTimer), typeof(Active))]

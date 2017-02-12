@@ -72,8 +72,7 @@ namespace Raft
         async Task Configure()
         {
             this.Cluster = (this.ReceivedEvent as ConfigureEvent).Cluster;
-            this.Raise(new LocalEvent());
-			await this.DoneTask;
+            await this.Raise(new LocalEvent());
         }
 
         [OnEntry(nameof(PumpRequestOnEntry))]
@@ -96,11 +95,11 @@ namespace Raft
             if (this.Counter == 3)
             {
                 await this.Send(this.Cluster, new ClusterManager.ShutDown());
-                this.Raise(new Halt());
+                await this.Raise(new Halt());
             }
             else
             {
-                this.Raise(new LocalEvent());
+                await this.Raise(new LocalEvent());
             }
         }
 

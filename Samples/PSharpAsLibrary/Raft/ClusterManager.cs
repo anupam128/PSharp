@@ -64,21 +64,13 @@ namespace Raft
             
             this.Servers = new MachineId[this.NumberOfServers];
 
-			var tasks = new Task<MachineId>[this.NumberOfServers];
             for (int idx = 0; idx < this.NumberOfServers; idx++)
             {
-                tasks[idx] = this.CreateMachine(typeof(Server));
+                this.Servers[idx] = await this.CreateMachine(typeof(Server));
             }
 
-			await Task.WhenAll(tasks);
-			for (int idx = 0; idx < this.NumberOfServers; idx++)
-			{
-				this.Servers[idx] = await tasks[idx];
-			}
-
             this.Client = await this.CreateMachine(typeof(Client));
-
-            this.Raise(new LocalEvent());
+            await this.Raise(new LocalEvent());
         }
 
         [OnEntry(nameof(ConfiguringOnInit))]
@@ -87,16 +79,13 @@ namespace Raft
 
         async Task ConfiguringOnInit()
         {
-			var tasks = new Task[this.NumberOfServers];
             for (int idx = 0; idx < this.NumberOfServers; idx++)
             {
-                tasks[idx] = this.Send(this.Servers[idx], new Server.ConfigureEvent(idx, this.Servers, this.Id));
+                await this.Send(this.Servers[idx], new Server.ConfigureEvent(idx, this.Servers, this.Id));
             }
 
-			await Task.WhenAll(tasks);
             await this.Send(this.Client, new Client.ConfigureEvent(this.Id));
-
-            this.Raise(new LocalEvent());
+            await this.Raise(new LocalEvent());
         }
 
         class Availability : StateGroup
@@ -119,8 +108,7 @@ namespace Raft
         async Task BecomeAvailable()
         {
             this.UpdateLeader(this.ReceivedEvent as NotifyLeaderUpdate);
-            this.Raise(new LocalEvent());
-			await this.DoneTask;
+            await this.Raise(new LocalEvent());
         }
 
 
@@ -152,7 +140,7 @@ namespace Raft
                 await this.Send(this.Servers[idx], new Server.ShutDown());
             }
 
-            this.Raise(new Halt());
+            await this.Raise(new Halt());
         }
 
         #endregion

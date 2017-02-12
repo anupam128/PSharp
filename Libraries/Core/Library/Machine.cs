@@ -341,27 +341,28 @@ namespace Microsoft.PSharp
         /// at the end of the current action.
         /// </summary>
         /// <param name="s">Type of the state</param>
-        protected void Goto(Type s)
+        protected Task Goto(Type s)
         {
             // If the state is not a state of the machine, then report an error and exit.
             this.Assert(StateTypeMap[this.GetType()].Any(val
                 => val.DeclaringType.Equals(s.DeclaringType) &&
                 val.Name.Equals(s.Name)), $"Machine '{base.Id}' " +
                 $"is trying to transition to non-existing state '{s.Name}'.");
-            this.Raise(new GotoStateEvent(s));
+            return this.Raise(new GotoStateEvent(s));
         }
 
         /// <summary>
         /// Raises an event internally at the end of the current action.
         /// </summary>
         /// <param name="e">Event</param>
-        protected void Raise(Event e)
+        protected Task Raise(Event e)
         {
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is raising a null event.");
             this.RaisedEvent = new EventInfo(e, new EventOriginInfo(
                 base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
             base.Runtime.NotifyRaisedEvent(this, this.RaisedEvent);
+			return this.DoneTask;
         }
 
         /// <summary>
