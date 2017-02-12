@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace Raft
@@ -30,10 +31,11 @@ namespace Raft
         [OnEventGotoState(typeof(StartTimer), typeof(Active))]
         class Init : MachineState { }
 
-        void Configure()
+        async Task Configure()
         {
             this.Target = (this.ReceivedEvent as ConfigureEvent).Target;
             //this.Raise(new StartTimer());
+			await this.DoneTask;
         }
 
         [OnEntry(nameof(ActiveOnEntry))]
@@ -42,20 +44,20 @@ namespace Raft
         [IgnoreEvents(typeof(StartTimer))]
         class Active : MachineState { }
 
-        void ActiveOnEntry()
+        async Task ActiveOnEntry()
         {
-            this.Send(this.Id, new TickEvent());
+            await this.Send(this.Id, new TickEvent());
         }
 
-        void Tick()
+        async Task Tick()
         {
             if (this.Random())
             {
                 Console.WriteLine("\n [PeriodicTimer] " + this.Target + " | timed out\n");
-                this.Send(this.Target, new Timeout(), true);
+                await this.Send(this.Target, new Timeout());
             }
 
-            //this.Send(this.Id, new TickEvent());
+            //await this.Send(this.Id, new TickEvent());
             this.Raise(new CancelTimer());
         }
 

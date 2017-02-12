@@ -19,7 +19,6 @@ namespace Raft
 
         private class LocalEvent : Event { }
 
-        private int CurrentTerm;
         private HashSet<int> TermsWithLeader;
 
         [Start]
@@ -29,7 +28,6 @@ namespace Raft
 
         void InitOnEntry()
         {
-            this.CurrentTerm = -1;
             this.TermsWithLeader = new HashSet<int>();
             this.Raise(new LocalEvent());
         }

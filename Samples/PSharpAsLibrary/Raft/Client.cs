@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace Raft
@@ -61,16 +62,18 @@ namespace Raft
         [OnEventGotoState(typeof(LocalEvent), typeof(PumpRequest))]
         class Init : MachineState { }
 
-        void InitOnEntry()
+		async Task InitOnEntry()
         {
             this.LatestCommand = -1;
             this.Counter = 0;
+			await this.DoneTask;
         }
 
-        void Configure()
+        async Task Configure()
         {
             this.Cluster = (this.ReceivedEvent as ConfigureEvent).Cluster;
             this.Raise(new LocalEvent());
+			await this.DoneTask;
         }
 
         [OnEntry(nameof(PumpRequestOnEntry))]
@@ -78,21 +81,21 @@ namespace Raft
         [OnEventGotoState(typeof(LocalEvent), typeof(PumpRequest))]
         class PumpRequest : MachineState { }
 
-        void PumpRequestOnEntry()
+        async Task PumpRequestOnEntry()
         {
-            this.LatestCommand = this.RandomInteger(100); //new Random().Next(100);
+            this.LatestCommand = this.RandomInteger(100);
             this.Counter++;
 
             Console.WriteLine("\n [Client] new request " + this.LatestCommand + "\n");
 
-            this.Send(this.Cluster, new Request(this.Id, this.LatestCommand), true);
+			await this.Send(this.Cluster, new Request(this.Id, this.LatestCommand));
         }
 
-        void ProcessResponse()
+        async Task ProcessResponse()
         {
             if (this.Counter == 3)
             {
-                this.Send(this.Cluster, new ClusterManager.ShutDown());
+                await this.Send(this.Cluster, new ClusterManager.ShutDown());
                 this.Raise(new Halt());
             }
             else

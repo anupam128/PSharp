@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace Raft
@@ -218,7 +220,7 @@ namespace Raft
         [DeferEvents(typeof(VoteRequest), typeof(AppendEntriesRequest))]
         class Init : MachineState { }
 
-        void EntryOnInit()
+        async Task EntryOnInit()
         {
             this.CurrentTerm = 0;
 
@@ -232,19 +234,20 @@ namespace Raft
 
             this.NextIndex = new Dictionary<MachineId, int>();
             this.MatchIndex = new Dictionary<MachineId, int>();
+			await this.DoneTask;
         }
 
-        void Configure()
+        async Task Configure()
         {
             this.ServerId = (this.ReceivedEvent as ConfigureEvent).Id;
             this.Servers = (this.ReceivedEvent as ConfigureEvent).Servers;
             this.ClusterManager = (this.ReceivedEvent as ConfigureEvent).ClusterManager;
 
-            this.ElectionTimer = this.CreateMachine(typeof(ElectionTimer));
-            this.Send(this.ElectionTimer, new ElectionTimer.ConfigureEvent(this.Id));
+            this.ElectionTimer = await this.CreateMachine(typeof(ElectionTimer));
+            await this.Send(this.ElectionTimer, new ElectionTimer.ConfigureEvent(this.Id));
 
-            this.PeriodicTimer = this.CreateMachine(typeof(PeriodicTimer));
-            this.Send(this.PeriodicTimer, new PeriodicTimer.ConfigureEvent(this.Id));
+            this.PeriodicTimer = await this.CreateMachine(typeof(PeriodicTimer));
+            await this.Send(this.PeriodicTimer, new PeriodicTimer.ConfigureEvent(this.Id));
 
             this.Raise(new BecomeFollower());
         }
@@ -266,32 +269,33 @@ namespace Raft
         [IgnoreEvents(typeof(PeriodicTimer.Timeout))]
         class Follower : MachineState { }
 
-        void FollowerOnInit()
+		async Task FollowerOnInit()
         {
             this.LeaderId = null;
             this.VotesReceived = 0;
 
-            this.Send(this.ElectionTimer, new ElectionTimer.StartTimer());
+            await this.Send(this.ElectionTimer, new ElectionTimer.StartTimer());
         }
 
-        void RedirectClientRequest()
+        async Task RedirectClientRequest()
         {
             if (this.LeaderId != null)
             {
-                this.Send(this.LeaderId, this.ReceivedEvent);
+                await this.Send(this.LeaderId, this.ReceivedEvent);
             }
             else
             {
-                this.Send(this.ClusterManager, new ClusterManager.RedirectRequest(this.ReceivedEvent));
+                await this.Send(this.ClusterManager, new ClusterManager.RedirectRequest(this.ReceivedEvent));
             }
         }
 
-        void StartLeaderElection()
+        async Task StartLeaderElection()
         {
             this.Raise(new BecomeCandidate());
+			await this.DoneTask;
         }
 
-        void VoteAsFollower()
+        async Task VoteAsFollower()
         {
             var request = this.ReceivedEvent as VoteRequest;
             if (request.Term > this.CurrentTerm)
@@ -300,10 +304,10 @@ namespace Raft
                 this.VotedFor = null;
             }
 
-            this.Vote(this.ReceivedEvent as VoteRequest);
+            await this.Vote(this.ReceivedEvent as VoteRequest);
         }
 
-        void RespondVoteAsFollower()
+        async Task RespondVoteAsFollower()
         {
             var request = this.ReceivedEvent as VoteResponse;
             if (request.Term > this.CurrentTerm)
@@ -311,9 +315,11 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
             }
+
+			await this.DoneTask;
         }
 
-        void AppendEntriesAsFollower()
+        async Task AppendEntriesAsFollower()
         {
             var request = this.ReceivedEvent as AppendEntriesRequest;
             if (request.Term > this.CurrentTerm)
@@ -322,10 +328,10 @@ namespace Raft
                 this.VotedFor = null;
             }
 
-            this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
+            await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
         }
 
-        void RespondAppendEntriesAsFollower()
+        async Task RespondAppendEntriesAsFollower()
         {
             var request = this.ReceivedEvent as AppendEntriesResponse;
             if (request.Term > this.CurrentTerm)
@@ -333,6 +339,8 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
             }
+
+			await this.DoneTask;
         }
 
         #endregion
@@ -353,24 +361,24 @@ namespace Raft
         [OnEventGotoState(typeof(BecomeCandidate), typeof(Candidate))]
         class Candidate : MachineState { }
 
-        void CandidateOnInit()
+        async Task CandidateOnInit()
         {
             this.CurrentTerm++;
             this.VotedFor = this.Id;
             this.VotesReceived = 1;
 
-            this.Send(this.ElectionTimer, new ElectionTimer.StartTimer());
+            await this.Send(this.ElectionTimer, new ElectionTimer.StartTimer());
 
             Console.WriteLine("\n [Candidate] " + this.ServerId + " | term " + this.CurrentTerm +
                 " | election votes " + this.VotesReceived + " | log " + this.Logs.Count + "\n");
 
-            this.BroadcastVoteRequests();
+            await this.BroadcastVoteRequests();
         }
 
-        void BroadcastVoteRequests()
+        async Task BroadcastVoteRequests()
         {
             // BUG: duplicate votes from same follower
-            this.Send(this.PeriodicTimer, new PeriodicTimer.StartTimer());
+            await this.Send(this.PeriodicTimer, new PeriodicTimer.StartTimer());
 
             for (int idx = 0; idx < this.Servers.Length; idx++)
             {
@@ -380,28 +388,28 @@ namespace Raft
                 var lastLogIndex = this.Logs.Count;
                 var lastLogTerm = this.GetLogTermForIndex(lastLogIndex);
 
-                this.Send(this.Servers[idx], new VoteRequest(this.CurrentTerm, this.Id,
+                await this.Send(this.Servers[idx], new VoteRequest(this.CurrentTerm, this.Id,
                     lastLogIndex, lastLogTerm));
             }
         }
 
-        void VoteAsCandidate()
+        async Task VoteAsCandidate()
         {
             var request = this.ReceivedEvent as VoteRequest;
             if (request.Term > this.CurrentTerm)
             {
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
-                this.Vote(this.ReceivedEvent as VoteRequest);
+                await this.Vote(this.ReceivedEvent as VoteRequest);
                 this.Raise(new BecomeFollower());
             }
             else
             {
-                this.Vote(this.ReceivedEvent as VoteRequest);
+                await this.Vote(this.ReceivedEvent as VoteRequest);
             }
         }
 
-        void RespondVoteAsCandidate()
+        async Task RespondVoteAsCandidate()
         {
             var request = this.ReceivedEvent as VoteResponse;
             if (request.Term > this.CurrentTerm)
@@ -424,28 +432,30 @@ namespace Raft
                     Console.WriteLine("\n [Leader] " + this.ServerId + " | term " + this.CurrentTerm +
                         " | election votes " + this.VotesReceived + " | log " + this.Logs.Count + "\n");
                     this.VotesReceived = 0;
-                    this.Raise(new BecomeLeader(), true);
+                    this.Raise(new BecomeLeader());
                 }
             }
+
+			await this.DoneTask;
         }
 
-        void AppendEntriesAsCandidate()
+        async Task AppendEntriesAsCandidate()
         {
             var request = this.ReceivedEvent as AppendEntriesRequest;
             if (request.Term > this.CurrentTerm)
             {
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
-                this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
+                await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
                 this.Raise(new BecomeFollower());
             }
             else
             {
-                this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
+                await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
             }
         }
 
-        void RespondAppendEntriesAsCandidate()
+        async Task RespondAppendEntriesAsCandidate()
         {
             var request = this.ReceivedEvent as AppendEntriesResponse;
             if (request.Term > this.CurrentTerm)
@@ -454,6 +464,8 @@ namespace Raft
                 this.VotedFor = null;
                 this.Raise(new BecomeFollower());
             }
+
+			await this.DoneTask;
         }
 
         #endregion
@@ -471,10 +483,10 @@ namespace Raft
         [IgnoreEvents(typeof(ElectionTimer.Timeout), typeof(PeriodicTimer.Timeout))]
         class Leader : MachineState { }
 
-        void LeaderOnInit()
+        async Task LeaderOnInit()
         {
-            this.Monitor<SafetyMonitor>(new SafetyMonitor.NotifyLeaderElected(this.CurrentTerm));
-            this.Send(this.ClusterManager, new ClusterManager.NotifyLeaderUpdate(this.Id, this.CurrentTerm));
+            await this.Monitor<SafetyMonitor>(new SafetyMonitor.NotifyLeaderElected(this.CurrentTerm));
+            await this.Send(this.ClusterManager, new ClusterManager.NotifyLeaderUpdate(this.Id, this.CurrentTerm));
 
             var logIndex = this.Logs.Count;
             var logTerm = this.GetLogTermForIndex(logIndex);
@@ -493,22 +505,22 @@ namespace Raft
             {
                 if (idx == this.ServerId)
                     continue;
-                this.Send(this.Servers[idx], new AppendEntriesRequest(this.CurrentTerm, this.Id,
+                await this.Send(this.Servers[idx], new AppendEntriesRequest(this.CurrentTerm, this.Id,
                     logIndex, logTerm, new List<Log>(), this.CommitIndex, null));
             }
         }
 
-        void ProcessClientRequest()
+        async Task ProcessClientRequest()
         {
             this.LastClientRequest = this.ReceivedEvent as Client.Request;
 
             var log = new Log(this.CurrentTerm, this.LastClientRequest.Command);
             this.Logs.Add(log);
 
-            this.BroadcastLastClientRequest();
+            await this.BroadcastLastClientRequest();
         }
 
-        void BroadcastLastClientRequest()
+        async Task BroadcastLastClientRequest()
         {
             Console.WriteLine("\n [Leader] " + this.ServerId + " sends append requests | term " +
                 this.CurrentTerm + " | log " + this.Logs.Count + "\n");
@@ -531,12 +543,12 @@ namespace Raft
                 var prevLogIndex = this.NextIndex[server] - 1;
                 var prevLogTerm = this.GetLogTermForIndex(prevLogIndex);
 
-                this.Send(server, new AppendEntriesRequest(this.CurrentTerm, this.Id, prevLogIndex,
+                await this.Send(server, new AppendEntriesRequest(this.CurrentTerm, this.Id, prevLogIndex,
                     prevLogTerm, logs, this.CommitIndex, this.LastClientRequest.Client));
             }
         }
 
-        void VoteAsLeader()
+        async Task VoteAsLeader()
         {
             var request = this.ReceivedEvent as VoteRequest;
 
@@ -545,18 +557,18 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
 
-                this.RedirectLastClientRequestToClusterManager();
-                this.Vote(this.ReceivedEvent as VoteRequest);
+                await this.RedirectLastClientRequestToClusterManager();
+                await this.Vote(this.ReceivedEvent as VoteRequest);
 
                 this.Raise(new BecomeFollower());
             }
             else
             {
-                this.Vote(this.ReceivedEvent as VoteRequest);
+                await this.Vote(this.ReceivedEvent as VoteRequest);
             }
         }
 
-        void RespondVoteAsLeader()
+        async Task RespondVoteAsLeader()
         {
             var request = this.ReceivedEvent as VoteResponse;
             if (request.Term > this.CurrentTerm)
@@ -564,12 +576,12 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
 
-                this.RedirectLastClientRequestToClusterManager();
+                await this.RedirectLastClientRequestToClusterManager();
                 this.Raise(new BecomeFollower());
             }
         }
 
-        void AppendEntriesAsLeader()
+        async Task AppendEntriesAsLeader()
         {
             var request = this.ReceivedEvent as AppendEntriesRequest;
             if (request.Term > this.CurrentTerm)
@@ -577,14 +589,14 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
 
-                this.RedirectLastClientRequestToClusterManager();
-                this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
+                await this.RedirectLastClientRequestToClusterManager();
+                await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
 
                 this.Raise(new BecomeFollower());
             }
         }
         
-        void RespondAppendEntriesAsLeader()
+        async Task RespondAppendEntriesAsLeader()
         {
             var request = this.ReceivedEvent as AppendEntriesResponse;
             if (request.Term > this.CurrentTerm)
@@ -592,7 +604,7 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
                 
-                this.RedirectLastClientRequestToClusterManager();
+                await this.RedirectLastClientRequestToClusterManager();
                 this.Raise(new BecomeFollower());
                 return;
             }
@@ -626,7 +638,7 @@ namespace Raft
                     this.VotesReceived = 0;
                     this.LastClientRequest = null;
 
-                    this.Send(request.ReceiverEndpoint, new Client.Response());
+                    await this.Send(request.ReceiverEndpoint, new Client.Response());
                 }
             }
             else
@@ -646,7 +658,7 @@ namespace Raft
                     this.Logs.Count + " | append votes " + this.VotesReceived +
                     " | append fail (next idx = " + this.NextIndex[request.Server] + ")\n");
 
-                this.Send(request.Server, new AppendEntriesRequest(this.CurrentTerm, this.Id, prevLogIndex,
+                await this.Send(request.Server, new AppendEntriesRequest(this.CurrentTerm, this.Id, prevLogIndex,
                     prevLogTerm, logs, this.CommitIndex, request.ReceiverEndpoint));
             }
         }
@@ -659,7 +671,7 @@ namespace Raft
         /// Processes the given vote request.
         /// </summary>
         /// <param name="request">VoteRequest</param>
-        void Vote(VoteRequest request)
+        async Task Vote(VoteRequest request)
         {
             var lastLogIndex = this.Logs.Count;
             var lastLogTerm = this.GetLogTermForIndex(lastLogIndex);
@@ -671,7 +683,7 @@ namespace Raft
             {
                 Console.WriteLine("\n [Server] " + this.ServerId + " | term " + this.CurrentTerm +
                     " | log " + this.Logs.Count + " | vote false\n");
-                this.Send(request.CandidateId, new VoteResponse(this.CurrentTerm, false));
+                await this.Send(request.CandidateId, new VoteResponse(this.CurrentTerm, false));
             }
             else
             {
@@ -681,7 +693,7 @@ namespace Raft
                 this.VotedFor = request.CandidateId;
                 this.LeaderId = null;
 
-                this.Send(request.CandidateId, new VoteResponse(this.CurrentTerm, true));
+                await this.Send(request.CandidateId, new VoteResponse(this.CurrentTerm, true));
             }
         }
 
@@ -689,14 +701,14 @@ namespace Raft
         /// Processes the given append entries request.
         /// </summary>
         /// <param name="request">AppendEntriesRequest</param>
-        void AppendEntries(AppendEntriesRequest request)
+        async Task AppendEntries(AppendEntriesRequest request)
         {
             if (request.Term < this.CurrentTerm)
             {
                 Console.WriteLine("\n [Server] " + this.ServerId + " | term " + this.CurrentTerm + " | log " +
                     this.Logs.Count + " | last applied: " + this.LastApplied + " | append false (< term)\n");
 
-                this.Send(request.LeaderId, new AppendEntriesResponse(this.CurrentTerm, false,
+                await this.Send(request.LeaderId, new AppendEntriesResponse(this.CurrentTerm, false,
                     this.Id, request.ReceiverEndpoint));
             }
             else
@@ -708,7 +720,7 @@ namespace Raft
                     Console.WriteLine("\n [Server] " + this.ServerId + " | term " + this.CurrentTerm + " | log " +
                         this.Logs.Count + " | last applied: " + this.LastApplied + " | append false (not in log)\n");
 
-                    this.Send(request.LeaderId, new AppendEntriesResponse(this.CurrentTerm,
+                    await this.Send(request.LeaderId, new AppendEntriesResponse(this.CurrentTerm,
                         false, this.Id, request.ReceiverEndpoint));
                 }
                 else
@@ -752,17 +764,17 @@ namespace Raft
                         this.LastApplied + " | append true\n");
 
                     this.LeaderId = request.LeaderId;
-                    this.Send(request.LeaderId, new AppendEntriesResponse(this.CurrentTerm,
+                    await this.Send(request.LeaderId, new AppendEntriesResponse(this.CurrentTerm,
                         true, this.Id, request.ReceiverEndpoint));
                 }
             }
         }
 
-        void RedirectLastClientRequestToClusterManager()
+        async Task RedirectLastClientRequestToClusterManager()
         {
             if (this.LastClientRequest != null)
             {
-                this.Send(this.ClusterManager, this.LastClientRequest);
+                await this.Send(this.ClusterManager, this.LastClientRequest);
             }
         }
 
@@ -782,10 +794,10 @@ namespace Raft
             return logTerm;
         }
 
-        void ShuttingDown()
+        async Task ShuttingDown()
         {
-            this.Send(this.ElectionTimer, new Halt());
-            this.Send(this.PeriodicTimer, new Halt());
+            await this.Send(this.ElectionTimer, new Halt());
+            await this.Send(this.PeriodicTimer, new Halt());
 
             this.Raise(new Halt());
         }

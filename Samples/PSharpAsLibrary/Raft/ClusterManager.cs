@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp;
 
 namespace Raft
@@ -56,19 +57,26 @@ namespace Raft
         [OnEventGotoState(typeof(LocalEvent), typeof(Configuring))]
         class Init : MachineState { }
 
-        void EntryOnInit()
+        async Task EntryOnInit()
         {
             this.NumberOfServers = 5;
             this.LeaderTerm = 0;
             
             this.Servers = new MachineId[this.NumberOfServers];
 
+			var tasks = new Task<MachineId>[this.NumberOfServers];
             for (int idx = 0; idx < this.NumberOfServers; idx++)
             {
-                this.Servers[idx] = this.CreateMachine(typeof(Server));
+                tasks[idx] = this.CreateMachine(typeof(Server));
             }
 
-            this.Client = this.CreateMachine(typeof(Client));
+			await Task.WhenAll(tasks);
+			for (int idx = 0; idx < this.NumberOfServers; idx++)
+			{
+				this.Servers[idx] = await tasks[idx];
+			}
+
+            this.Client = await this.CreateMachine(typeof(Client));
 
             this.Raise(new LocalEvent());
         }
@@ -77,14 +85,16 @@ namespace Raft
         [OnEventGotoState(typeof(LocalEvent), typeof(Availability.Unavailable))]
         class Configuring : MachineState { }
 
-        void ConfiguringOnInit()
+        async Task ConfiguringOnInit()
         {
+			var tasks = new Task[this.NumberOfServers];
             for (int idx = 0; idx < this.NumberOfServers; idx++)
             {
-                this.Send(this.Servers[idx], new Server.ConfigureEvent(idx, this.Servers, this.Id));
+                tasks[idx] = this.Send(this.Servers[idx], new Server.ConfigureEvent(idx, this.Servers, this.Id));
             }
 
-            this.Send(this.Client, new Client.ConfigureEvent(this.Id));
+			await Task.WhenAll(tasks);
+            await this.Send(this.Client, new Client.ConfigureEvent(this.Id));
 
             this.Raise(new LocalEvent());
         }
@@ -106,38 +116,40 @@ namespace Raft
             public class Available : MachineState { }
         }
 
-        void BecomeAvailable()
+        async Task BecomeAvailable()
         {
             this.UpdateLeader(this.ReceivedEvent as NotifyLeaderUpdate);
             this.Raise(new LocalEvent());
+			await this.DoneTask;
         }
 
 
-        void SendClientRequestToLeader()
+        async Task SendClientRequestToLeader()
         {
-            this.Send(this.Leader, this.ReceivedEvent);
+            await this.Send(this.Leader, this.ReceivedEvent);
         }
 
-        void RedirectClientRequest()
+        async Task RedirectClientRequest()
         {
-            this.Send(this.Id, (this.ReceivedEvent as RedirectRequest).Request);
+            await this.Send(this.Id, (this.ReceivedEvent as RedirectRequest).Request);
         }
         
-        void RefreshLeader()
+        async Task RefreshLeader()
         {
             this.UpdateLeader(this.ReceivedEvent as NotifyLeaderUpdate);
+			await this.DoneTask;
         }
 
-        void BecomeUnavailable()
+        async Task BecomeUnavailable()
         {
-
+			await this.DoneTask;
         }
 
-        void ShuttingDown()
+        async Task ShuttingDown()
         {
             for (int idx = 0; idx < this.NumberOfServers; idx++)
             {
-                this.Send(this.Servers[idx], new Server.ShutDown());
+                await this.Send(this.Servers[idx], new Server.ShutDown());
             }
 
             this.Raise(new Halt());
