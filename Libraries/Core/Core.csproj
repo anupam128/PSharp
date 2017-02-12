@@ -108,6 +108,7 @@
     <Compile Include="Collections\AsyncList.cs" />
     <Compile Include="Runtime\IPSharpRuntime.cs" />
     <Compile Include="Runtime\PSharpRuntime.cs" />
+    <Compile Include="Library\MachineFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PSharp.snk" />

@@ -22,7 +22,7 @@ namespace Microsoft.PSharp.Collections
 	/// <summary>
 	/// Implementation of an asynchronous list.
 	/// </summary>
-	public sealed class AsyncList<TValue>
+	internal sealed class AsyncList<TValue>
 	{
 		#region fields
 

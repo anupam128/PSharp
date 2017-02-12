@@ -28,15 +28,6 @@ namespace Microsoft.PSharp
     /// </summary>
 	internal class Runtime : IPSharpRuntime
     {
-		#region static fields
-
-		/// <summary>
-		/// Cache storing machine constructors.
-		/// </summary>
-		protected static AsyncDictionary<Type, Func<Machine>> MachineConstructorCache;
-
-		#endregion
-
         #region fields
 
         /// <summary>
@@ -63,18 +54,6 @@ namespace Microsoft.PSharp
 		/// Network provider for remote communication.
 		/// </summary>
 		internal INetworkProvider NetworkProvider;
-
-        #endregion
-
-        #region constructors
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static Runtime()
-        {
-            MachineConstructorCache = new AsyncDictionary<Type, Func<Machine>>();
-        }
 
         #endregion
 
@@ -448,20 +427,7 @@ namespace Microsoft.PSharp
                 $"Type '{type.Name}' is not a machine.");
             
             MachineId mid = new MachineId(type, friendlyName, this);
-			Machine machine = null;
-
-			var result = await MachineConstructorCache.TryGetValue(type);
-			if (!result.Item1)
-			{
-				Func<Machine> constructor = Expression.Lambda<Func<Machine>>(
-					Expression.New(type.GetConstructor(Type.EmptyTypes))).Compile();
-				await MachineConstructorCache.Add(type, constructor);
-				machine = constructor();
-			}
-			else
-			{
-				machine = result.Item2();
-			}
+			Machine machine = await MachineFactory.Create(type);
 
             machine.SetMachineId(mid);
             machine.InitializeStateInformation();

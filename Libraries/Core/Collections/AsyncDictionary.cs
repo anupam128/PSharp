@@ -22,7 +22,7 @@ namespace Microsoft.PSharp.Collections
 	/// <summary>
 	/// Implementation of an asynchronous dictionary.
 	/// </summary>
-	public sealed class AsyncDictionary<TKey, TValue>
+	internal sealed class AsyncDictionary<TKey, TValue>
 	{
 		#region fields
 
