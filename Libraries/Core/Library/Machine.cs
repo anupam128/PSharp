@@ -1097,53 +1097,12 @@ namespace Microsoft.PSharp
         /// Invokes an action.
         /// </summary>
         /// <param name="actionName">Action name</param>
-        [DebuggerStepThrough]
         private async Task Do(string actionName)
         {
             MethodInfo action = this.ActionMap[actionName];
             base.Runtime.NotifyInvokedAction(this, action, this.ReceivedEvent);
+			await this.ExecuteAction(action);
 
-            try
-            {
-				await (Task)action.Invoke(this, null);
-            }
-            catch (Exception ex)
-            {
-                this.IsHalted = true;
-
-                Exception innerException = ex;
-                while (innerException is TargetInvocationException)
-                {
-                    innerException = innerException.InnerException;
-                }
-
-                if (innerException is AggregateException)
-                {
-                    innerException = innerException.InnerException;
-                }
-
-                if (innerException is OperationCanceledException)
-                {
-                    IO.Debug("<Exception> OperationCanceledException was " +
-                        $"thrown from Machine '{base.Id}'.");
-                }
-                else if (innerException is TaskSchedulerException)
-                {
-                    IO.Debug("<Exception> TaskSchedulerException was thrown from " +
-                        $"thrown from Machine '{base.Id}'.");
-                }
-                else
-                {
-                    if (Debugger.IsAttached ||
-                        base.Runtime.Configuration.ThrowInternalExceptions)
-                    {
-                        throw innerException;
-                    }
-                    
-                    // Handles generic exception.
-                    this.ReportGenericAssertion(innerException);
-                }
-            }
         }
 
         #endregion
@@ -1244,7 +1203,6 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Executes the on entry function of the current state.
         /// </summary>
-        [DebuggerStepThrough]
         private async Task ExecuteCurrentStateOnEntry()
         {
             base.Runtime.NotifyEnteredState(this);
@@ -1255,60 +1213,19 @@ namespace Microsoft.PSharp
                 entryAction = this.ActionMap[this.StateStack.Peek().EntryAction];
             }
 
-            try
-            {
-                // Invokes the entry action of the new state,
-                // if there is one available.
-                if (entryAction != null)
-                {
-                    base.Runtime.NotifyInvokedAction(this, entryAction, this.ReceivedEvent);
-					await (Task)entryAction.Invoke(this, null);
-                }
-            }
-            catch (Exception ex)
-            {
-				this.IsHalted = true;
-
-                Exception innerException = ex;
-                while (innerException is TargetInvocationException)
-                {
-                    innerException = innerException.InnerException;
-                }
-
-                if (innerException is AggregateException)
-                {
-                    innerException = innerException.InnerException;
-                }
-
-                if (innerException is OperationCanceledException)
-                {
-                    IO.Debug("<Exception> OperationCanceledException was " +
-                        $"thrown from Machine '{base.Id}'.");
-                }
-                else if (innerException is TaskSchedulerException)
-                {
-                    IO.Debug("<Exception> TaskSchedulerException was thrown from " +
-                        $"thrown from Machine '{base.Id}'.");
-                }
-                else
-                {
-                    if (Debugger.IsAttached ||
-                        base.Runtime.Configuration.ThrowInternalExceptions)
-                    {
-                        throw innerException;
-                    }
-
-                    // Handles generic exception.
-                    this.ReportGenericAssertion(innerException);
-                }
-            }
+			// Invokes the entry action of the new state,
+			// if there is one available.
+			if (entryAction != null)
+			{
+				base.Runtime.NotifyInvokedAction(this, entryAction, this.ReceivedEvent);
+				await this.ExecuteAction(entryAction);
+			}
         }
 
         /// <summary>
         /// Executes the on exit function of the current state.
         /// </summary>
         /// <param name="eventHandlerExitActionName">Action name</param>
-        [DebuggerStepThrough]
         private async Task ExecuteCurrentStateOnExit(string eventHandlerExitActionName)
         {
             base.Runtime.NotifyExitedState(this);
@@ -1319,69 +1236,77 @@ namespace Microsoft.PSharp
                 exitAction = this.ActionMap[this.StateStack.Peek().ExitAction];
             }
 
-            try
-            {
-                base.InsideOnExit = true;
+			base.IsInsideOnExit = true;
 
-                // Invokes the exit action of the current state,
-                // if there is one available.
-                if (exitAction != null)
-                {
-                    base.Runtime.NotifyInvokedAction(this, exitAction, this.ReceivedEvent);
-                    await (Task)exitAction.Invoke(this, null);
-                }
+			// Invokes the exit action of the current state,
+			// if there is one available.
+			if (exitAction != null)
+			{
+				base.Runtime.NotifyInvokedAction(this, exitAction, this.ReceivedEvent);
+				await this.ExecuteAction(exitAction);
+			}
 
-                // Invokes the exit action of the event handler,
-                // if there is one available.
-                if (eventHandlerExitActionName != null)
-                {
-                    MethodInfo eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
-                    base.Runtime.NotifyInvokedAction(this, eventHandlerExitAction, this.ReceivedEvent);
-                    await (Task)eventHandlerExitAction.Invoke(this, null);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.IsHalted = true;
+			// Invokes the exit action of the event handler,
+			// if there is one available.
+			if (eventHandlerExitActionName != null)
+			{
+				MethodInfo eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
+				base.Runtime.NotifyInvokedAction(this, eventHandlerExitAction, this.ReceivedEvent);
+				await this.ExecuteAction(eventHandlerExitAction);
+			}
 
-                Exception innerException = ex;
-                while (innerException is TargetInvocationException)
-                {
-                    innerException = innerException.InnerException;
-                }
-
-                if (innerException is AggregateException)
-                {
-                    innerException = innerException.InnerException;
-                }
-
-                if (innerException is OperationCanceledException)
-                {
-                    IO.Debug("<Exception> OperationCanceledException was " +
-                        $"thrown from Machine '{base.Id}'.");
-                }
-                else if (innerException is TaskSchedulerException)
-                {
-                    IO.Debug("<Exception> TaskSchedulerException was thrown from " +
-                        $"thrown from Machine '{base.Id}'.");
-                }
-                else
-                {
-                    if (Debugger.IsAttached ||
-                        base.Runtime.Configuration.ThrowInternalExceptions)
-                    {
-                        throw innerException;
-                    }
-
-                    // Handles generic exception.
-                    this.ReportGenericAssertion(innerException);
-                }
-            }
-            finally
-            {
-                base.InsideOnExit = false;
-            }
+			base.IsInsideOnExit = false;
         }
+
+		/// <summary>
+		/// Executes the specified action.
+		/// </summary>
+		/// <param name="action">MethodInfo</param>
+		[DebuggerStepThrough]
+		private async Task ExecuteAction(MethodInfo action)
+		{
+			try
+			{
+				await (Task)action.Invoke(this, null);
+			}
+			catch (Exception ex)
+			{
+				this.IsHalted = true;
+
+				Exception innerException = ex;
+				while (innerException is TargetInvocationException)
+				{
+					innerException = innerException.InnerException;
+				}
+
+				if (innerException is AggregateException)
+				{
+					innerException = innerException.InnerException;
+				}
+
+				if (innerException is OperationCanceledException)
+				{
+					IO.Debug("<Exception> OperationCanceledException was " +
+						$"thrown from Machine '{base.Id}'.");
+				}
+				else if (innerException is TaskSchedulerException)
+				{
+					IO.Debug("<Exception> TaskSchedulerException was thrown from " +
+						$"thrown from Machine '{base.Id}'.");
+				}
+				else
+				{
+					if (Debugger.IsAttached ||
+						base.Runtime.Configuration.ThrowInternalExceptions)
+					{
+						throw innerException;
+					}
+
+					// Handles generic exception.
+					this.ReportGenericAssertion(innerException, action.Name);
+				}
+			}
+		}
 
         /// <summary>
         /// Initializes information about the states of the machine.
@@ -1656,10 +1581,18 @@ namespace Microsoft.PSharp
         /// runtime assertion error.
         /// </summary>
         /// <param name="ex">Exception</param>
-        private void ReportGenericAssertion(Exception ex)
+		/// <param name="actionName">Action name</param>
+        private void ReportGenericAssertion(Exception ex, string actionName)
         {
+			string state = "<unknown>";
+			if (this.CurrentState != null)
+			{
+				state = this.CurrentStateName;
+			}
+
             this.Assert(false, $"Exception '{ex.GetType()}' was thrown " +
-                $"in machine '{base.Id}', '{ex.Source}':\n" +
+			    $"in machine '{base.Id}', state '{state}', action '{actionName}', " +
+			    $"'{ex.Source}':\n" +
                 $"   {ex.Message}\n" +
                 $"The stack trace is:\n{ex.StackTrace}");
         }

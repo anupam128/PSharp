@@ -38,14 +38,9 @@ namespace Microsoft.PSharp
         protected internal MachineId Id { get; private set; }
 
         /// <summary>
-        /// The operation id.
-        /// </summary>
-        internal int OperationId { get; private set; }
-
-        /// <summary>
         /// Checks if the machine is executing an OnExit method.
         /// </summary>
-        internal bool InsideOnExit;
+        internal bool IsInsideOnExit;
 
         /// <summary>
         /// Checks if the current machine action called
@@ -68,8 +63,7 @@ namespace Microsoft.PSharp
         /// </summary>
         public AbstractMachine()
         {
-            this.OperationId = 0;
-            this.InsideOnExit = false;
+            this.IsInsideOnExit = false;
             this.CurrentActionCalledRGP = false;
         }
 
@@ -129,33 +123,12 @@ namespace Microsoft.PSharp
         }
 
         /// <summary>
-        /// Sets the operation id of this machine.
-        /// </summary>
-        /// <param name="opid">OperationId</param>
-        internal void SetOperationId(int opid)
-        {
-            this.OperationId = opid;
-        }
-
-        /// <summary>
-        /// Returns true if the given operation id is pending
-        /// execution by the machine.
-        /// </summary>
-        /// <param name="opid">OperationId</param>
-        /// <returns>Boolean</returns>
-        internal virtual bool IsOperationPending(int opid)
-        {
-            return false;
-        }
-
-
-        /// <summary>
         /// Asserts that a Raise/Goto/Pop hasn't already been called.
         /// Records that RGP has been called.
         /// </summary>
         internal void AssertCorrectRGPInvocation()
         {
-            this.Runtime.Assert(!this.InsideOnExit, "Machine '{0}' has called raise/goto/pop " +
+            this.Runtime.Assert(!this.IsInsideOnExit, "Machine '{0}' has called raise/goto/pop " +
                 "inside an OnExit method.", this.Id.Name);
             this.Runtime.Assert(!this.CurrentActionCalledRGP, "Machine '{0}' has called multiple " +
                 "raise/goto/pop in the same action.", this.Id.Name);

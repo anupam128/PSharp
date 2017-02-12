@@ -414,40 +414,16 @@ namespace Microsoft.PSharp
         /// Invokes an action.
         /// </summary>
         /// <param name="actionName">Action name</param>
-        [DebuggerStepThrough]
         private void Do(string actionName)
         {
             MethodInfo action = this.ActionMap[actionName];
             base.Runtime.NotifyInvokedAction(this, action, ReceivedEvent);
-
-            try
-            {
-                action.Invoke(this, null);
-            }
-            catch (OperationCanceledException ex)
-            {
-                throw ex;
-            }
-            catch (TaskSchedulerException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                if (Debugger.IsAttached)
-                {
-                    throw ex;
-                }
-
-                // Handles generic exception.
-                this.ReportGenericAssertion(ex);
-            }
+			this.ExecuteAction(action);
         }
 
         /// <summary>
         /// Executes the on entry function of the current state.
         /// </summary>
-        [DebuggerStepThrough]
         private void ExecuteCurrentStateOnEntry()
         {
             base.Runtime.NotifyEnteredState(this);
@@ -458,37 +434,18 @@ namespace Microsoft.PSharp
                 entryAction = this.ActionMap[this.State.EntryAction];
             }
 
-            try
-            {
-                // Invokes the entry action of the new state,
-                // if there is one available.
-                entryAction?.Invoke(this, null);
-            }
-            catch (OperationCanceledException ex)
-            {
-                throw ex;
-            }
-            catch (TaskSchedulerException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                if (Debugger.IsAttached)
-                {
-                    throw ex;
-                }
-
-                // Handles generic exception.
-                this.ReportGenericAssertion(ex);
-            }
+			// Invokes the entry action of the new state,
+			// if there is one available.
+			if (entryAction != null)
+			{
+				this.ExecuteAction(entryAction);
+			}
         }
 
         /// <summary>
         /// Executes the on exit function of the current state.
         /// </summary>
         /// <param name="eventHandlerExitActionName">Action name</param>
-        [DebuggerStepThrough]
         private void ExecuteCurrentStateOnExit(string eventHandlerExitActionName)
         {
             base.Runtime.NotifyExitedState(this);
@@ -499,45 +456,56 @@ namespace Microsoft.PSharp
                 exitAction = this.ActionMap[this.State.ExitAction];
             }
 
-            try
-            {
-                base.InsideOnExit = true;
+			base.IsInsideOnExit = true;
 
-                // Invokes the exit action of the current state,
-                // if there is one available.
-                exitAction?.Invoke(this, null);
+			// Invokes the exit action of the current state,
+			// if there is one available.
+			if (exitAction != null)
+			{
+				this.ExecuteAction(exitAction);
+			}
 
-                // Invokes the exit action of the event handler,
-                // if there is one available.
-                if (eventHandlerExitActionName != null)
-                {
-                    MethodInfo eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
-                    eventHandlerExitAction.Invoke(this, null);
-                }
-            }
-            catch (OperationCanceledException ex)
-            {
-                throw ex;
-            }
-            catch (TaskSchedulerException ex)
-            {
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                if (Debugger.IsAttached)
-                {
-                    throw ex;
-                }
+			// Invokes the exit action of the event handler,
+			// if there is one available.
+			if (eventHandlerExitActionName != null)
+			{
+				MethodInfo eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
+				this.ExecuteAction(eventHandlerExitAction);
+			}
 
-                // Handles generic exception.
-                this.ReportGenericAssertion(ex);
-            }
-            finally
-            {
-                base.InsideOnExit = false;
-            }
+			base.IsInsideOnExit = false;
         }
+
+		/// <summary>
+		/// Executes the specified action.
+		/// </summary>
+		/// <param name="action">MethodInfo</param>
+		[DebuggerStepThrough]
+		private void ExecuteAction(MethodInfo action)
+		{
+			try
+			{
+				action.Invoke(this, null);
+			}
+			catch (OperationCanceledException ex)
+			{
+				throw ex;
+			}
+			catch (TaskSchedulerException ex)
+			{
+				throw ex;
+			}
+			catch (Exception ex)
+			{
+				if (Debugger.IsAttached)
+				{
+					throw ex;
+				}
+
+				// Handles generic exception.
+				this.ReportGenericAssertion(ex, action.Name);
+			}
+		}
 
         #endregion
 
@@ -795,12 +763,20 @@ namespace Microsoft.PSharp
         /// runtime assertion error.
         /// </summary>
         /// <param name="ex">Exception</param>
-        private void ReportGenericAssertion(Exception ex)
+		/// <param name="actionName">Action name</param>
+        private void ReportGenericAssertion(Exception ex, string actionName)
         {
-            this.Assert(false, $"Exception '{ex.GetType()}' was thrown " +
-                $"in monitor '{this.GetType().Name}', '{ex.Source}':\n" +
-                $"   {ex.Message}\n" +
-                $"The stack trace is:\n{ex.StackTrace}");
+			string state = "<unknown>";
+			if (this.CurrentState != null)
+			{
+				state = this.CurrentStateName;
+			}
+
+			this.Assert(false, $"Exception '{ex.GetType()}' was thrown " +
+				$"in monitor '{base.Id}', state '{state}', action '{actionName}', " +
+				$"'{ex.Source}':\n" +
+				$"   {ex.Message}\n" +
+				$"The stack trace is:\n{ex.StackTrace}");
         }
 
         #endregion
