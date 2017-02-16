@@ -1,24 +1,18 @@
-﻿using System;
+﻿using Microsoft.PSharp;
+using System;
 using System.Collections.Generic;
-using Microsoft.PSharp;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Chord1
+namespace ChordTON
 {
-    /// <summary>
-    /// How to run:
-    /// 
-    /// .\PSharpTester.exe /test:PSharp\Samples\PSharpAsLibrary\Binaries\Debug\Chord.dll /i:100 /max-steps:1000
-    /// 
-    /// Liveness bug found in:
-    ///  
-    /// Client.cs, line 53
-    /// </summary>
-    public class Test
+    class Program
     {
         static void Main(string[] args)
         {
             var runtime = PSharpRuntime.Create();
-            Test.Execute(runtime);
+            Program.Execute(runtime);
             Console.ReadLine();
         }
 
