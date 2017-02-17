@@ -68,7 +68,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         public virtual async Task<MachineId> CreateMachineAsync(Type type, Event e = null)
         {
-			return await this.TryCreateMachine(null, type, null, e).ConfigureAwait(false);
+			return await this.TryCreateMachine(null, type, null, e);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         public virtual async Task<MachineId> CreateMachineAsync(Type type, string friendlyName, Event e = null)
         {
-            return await this.TryCreateMachine(null, type, friendlyName, e).ConfigureAwait(false);
+            return await this.TryCreateMachine(null, type, friendlyName, e);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         public virtual async Task<MachineId> RemoteCreateMachineAsync(Type type, string endpoint, Event e = null)
         {
-            return await this.TryCreateRemoteMachine(null, type, null, endpoint, e).ConfigureAwait(false);
+            return await this.TryCreateRemoteMachine(null, type, null, endpoint, e);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Microsoft.PSharp
         public virtual async Task<MachineId> RemoteCreateMachineAsync(Type type, string friendlyName,
             string endpoint, Event e = null)
         {
-            return await this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e).ConfigureAwait(false);
+            return await this.TryCreateRemoteMachine(null, type, friendlyName, endpoint, e);
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace Microsoft.PSharp
 
         #endregion
 
-        #region initialization
+        #region constructors
 
         /// <summary>
         /// Constructor.
@@ -373,16 +373,6 @@ namespace Microsoft.PSharp
             this.Configuration = configuration;
             this.NetworkProvider = netProvider;
             this.Initialize();
-        }
-
-        /// <summary>
-        /// Initializes various components of the runtime.
-        /// </summary>
-        private void Initialize()
-        {
-            this.MachineMap = new AsyncDictionary<int, Machine>();
-            //this.TaskMap = new ConcurrentDictionary<int, Machine>();
-            this.Monitors = new AsyncList<Monitor>();
         }
 
         #endregion
@@ -436,8 +426,6 @@ namespace Microsoft.PSharp
             this.Log($"<CreateLog> Machine '{mid}' is created.");
 
 			this.RunMachineEventHandler(machine, e, true);
-
-			//this.TaskMap.TryAdd(task.Id, machine);
 
             return mid;
         }
@@ -526,52 +514,11 @@ namespace Microsoft.PSharp
             }
 
             bool runHandler = await machine.Enqueue(eventInfo);
-            if (!runHandler)
+            if (runHandler)
             {
-                return;
+                this.RunMachineEventHandler(machine);
             }
-
-			this.RunMachineEventHandler(machine);
-            
-            //this.TaskMap.TryAdd(task.Id, machine);
         }
-
-		/// <summary>
-		/// Runs a new asynchronous machine event handler.
-		/// This is a fire and forget invocation.
-		/// </summary>
-		/// <param name="machine">Machine</param>
-		/// <param name="e">Event</param>
-		/// <param name="isFresh">Is a new machine</param>
-		private void RunMachineEventHandler(Machine machine, Event e = null, bool isFresh = false)
-		{
-			Task.Run(async () =>
-			{
-				try
-				{
-					if (isFresh)
-					{
-						await machine.GotoStartState(e).ConfigureAwait(false);
-					}
-
-					await machine.RunEventHandler().ConfigureAwait(false);
-				}
-				catch (Exception ex)
-				{
-					// TODO: DEBUG
-					Console.WriteLine("<<<<<<<<<< EXCEPTION in RunMachineEventHandler >>>>>>>>>>");
-					Console.WriteLine(ex);
-					if (this.Configuration.ThrowInternalExceptions)
-					{
-						throw ex;
-					}
-				}
-				finally
-				{
-					//this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
-				}
-			});
-		}
 
         /// <summary>
         /// Sends an asynchronous event to a remote machine.
@@ -894,6 +841,59 @@ namespace Microsoft.PSharp
         internal virtual void NotifyDefaultHandlerFired()
         {
             // No-op in production.
+        }
+
+        #endregion
+
+        #region private methods
+
+        /// <summary>
+        /// Initializes various components of the runtime.
+        /// </summary>
+        private void Initialize()
+        {
+            this.MachineMap = new AsyncDictionary<int, Machine>();
+            //this.TaskMap = new ConcurrentDictionary<int, Machine>();
+            this.Monitors = new AsyncList<Monitor>();
+        }
+
+        /// <summary>
+		/// Runs a new asynchronous machine event handler.
+		/// This is a fire and forget invocation.
+		/// </summary>
+		/// <param name="machine">Machine</param>
+		/// <param name="e">Event</param>
+		/// <param name="isFresh">Is a new machine</param>
+		private void RunMachineEventHandler(Machine machine, Event e = null, bool isFresh = false)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    if (isFresh)
+                    {
+                        await machine.GotoStartState(e);
+                    }
+
+                    await machine.RunEventHandler();
+                }
+                catch (Exception ex)
+                {
+                    // TODO: DEBUG
+                    Console.WriteLine("<<<<<<<<<< EXCEPTION in RunMachineEventHandler >>>>>>>>>>");
+                    Console.WriteLine(ex);
+                    if (this.Configuration.ThrowInternalExceptions)
+                    {
+                        throw ex;
+                    }
+                }
+                finally
+                {
+                    //this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
+                }
+            });
+
+            //this.TaskMap.TryAdd(task.Id, machine);
         }
 
         #endregion

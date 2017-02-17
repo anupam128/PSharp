@@ -55,7 +55,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="action">Action</param>
         /// <returns>BugFindingEngine</returns>
         public static ITestingEngine CreateBugFindingEngine(
-            Configuration configuration, Action<Runtime> action)
+            Configuration configuration, Action<IPSharpRuntime> action)
         {
             return BugFindingEngine.Create(configuration, action);
         }
@@ -88,7 +88,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="action">Action</param>
         /// <returns>BugFindingEngine</returns>
         public static ITestingEngine CreateReplayEngine(Configuration configuration,
-            Action<Runtime> action)
+            Action<IPSharpRuntime> action)
         {
             return ReplayEngine.Create(configuration, action);
         }

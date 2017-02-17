@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -312,15 +313,6 @@ namespace Microsoft.PSharp.TestingServices
                 var strategy2 = new RandomStrategy(this.Configuration);
                 this.Strategy = new ComboStrategy(this.Configuration, strategy1, strategy2);
             }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.RandomOperationBounding)
-            {
-                this.Strategy = new RandomOperationBoundingStrategy(this.Configuration);
-            }
-            else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.PrioritizedOperationBounding)
-            {
-                this.Strategy = new PrioritizedOperationBoundingStrategy(this.Configuration,
-                    this.Configuration.PrioritySwitchBound);
-            }
             else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.MaceMC)
             {
                 this.Strategy = new MaceMCStrategy(this.Configuration);
@@ -450,18 +442,19 @@ namespace Microsoft.PSharp.TestingServices
                     $"/method flag to qualify the test method name you wish to use.");
             }
 
-            if (testMethods[0].ReturnType != typeof(void) ||
+            if (testMethods[0].GetCustomAttribute(typeof(AsyncStateMachineAttribute)) == null ||
+                testMethods[0].ReturnType != typeof(Task) ||
                 testMethods[0].ContainsGenericParameters ||
                 testMethods[0].IsAbstract || testMethods[0].IsVirtual ||
                 testMethods[0].IsConstructor ||
                 !testMethods[0].IsPublic || !testMethods[0].IsStatic ||
                 testMethods[0].GetParameters().Length != 1 ||
-                testMethods[0].GetParameters()[0].ParameterType != typeof(Runtime))
+                testMethods[0].GetParameters()[0].ParameterType != typeof(IPSharpRuntime))
             {
                 IO.Error.ReportAndExit("Incorrect test method declaration. Please " +
                     "declare the test method as follows:\n" +
-                    $"  [{typeof(Test).FullName}] public static void " +
-                    $"void {testMethods[0].Name}(Runtime runtime) {{ ... }}");
+                    $"  [{typeof(Test).FullName}] public static async Task " +
+                    $"{testMethods[0].Name}(IPSharpRuntime runtime) {{ ... }}");
             }
 
             this.TestMethod = testMethods[0];
@@ -486,7 +479,8 @@ namespace Microsoft.PSharp.TestingServices
                     $"'{testMethods.Count}' test methods were found instead.");
             }
 
-            if (testMethods[0].ReturnType != typeof(void) ||
+            if (testMethods[0].GetCustomAttribute(typeof(AsyncStateMachineAttribute)) == null ||
+                testMethods[0].ReturnType != typeof(Task) ||
                 testMethods[0].ContainsGenericParameters ||
                 testMethods[0].IsAbstract || testMethods[0].IsVirtual ||
                 testMethods[0].IsConstructor ||
@@ -495,8 +489,8 @@ namespace Microsoft.PSharp.TestingServices
             {
                 IO.Error.ReportAndExit("Incorrect test method declaration. Please " +
                     "declare the test method as follows:\n" +
-                    $"  [{attribute.FullName}] public static " +
-                    $"void {testMethods[0].Name}() {{ ... }}");
+                    $"  [{attribute.FullName}] public static async Task " +
+                    $"{testMethods[0].Name}() {{ ... }}");
             }
 
             return testMethods[0];

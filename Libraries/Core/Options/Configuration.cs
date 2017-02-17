@@ -295,12 +295,6 @@ namespace Microsoft.PSharp.Utilities
         public bool EnableCycleReplayingStrategy;
 
         /// <summary>
-        /// If true, then the P# tester will try to bound
-        /// the interleavings between operations.
-        /// </summary>
-        public bool BoundOperations;
-
-        /// <summary>
         /// If true, the runtime can reorder events in machine
         /// queues dynamically, depending on priorities.
         /// </summary>
@@ -489,7 +483,6 @@ namespace Microsoft.PSharp.Utilities
             this.LivenessTemperatureThreshold = 0;
             this.CacheProgramState = false;
             this.EnableCycleReplayingStrategy = false;
-            this.BoundOperations = false;
             this.DynamicEventQueuePrioritization = false;
 
             this.EnableMonitorsInProduction = false;

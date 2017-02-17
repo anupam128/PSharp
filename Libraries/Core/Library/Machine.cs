@@ -388,7 +388,7 @@ namespace Microsoft.PSharp
 				this.InboxLock.Release();
 			}
 
-			return await this.WaitOnEvent().ConfigureAwait(false);
+			return await this.WaitOnEvent();
         }
 
         /// <summary>
@@ -413,7 +413,7 @@ namespace Microsoft.PSharp
 				this.InboxLock.Release();
 			}
 
-            return await this.WaitOnEvent().ConfigureAwait(false);
+            return await this.WaitOnEvent();
         }
 
         /// <summary>
@@ -440,7 +440,7 @@ namespace Microsoft.PSharp
 				this.InboxLock.Release();
 			}
 
-            return await this.WaitOnEvent().ConfigureAwait(false);
+            return await this.WaitOnEvent();
         }
 
         /// <summary>
@@ -735,25 +735,16 @@ namespace Microsoft.PSharp
 
         /// <summary>
         /// Returns the names of the events that the machine
-        /// is waiting to receive.
+        /// is waiting to receive. This is not thread safe.
         /// </summary>
         /// <returns>String</returns>
-        internal async Task<string> GetEventWaitHandlerNames()
+        internal string GetEventWaitHandlerNames()
         {
             string events = "";
-
-			await this.InboxLock.WaitAsync();
-			try
-			{
-				foreach (var ewh in this.EventWaitHandlers)
-				{
-					events += " '" + ewh.EventType.FullName + "'";
-				}
-			}
-			finally
-			{
-				this.InboxLock.Release();
-			}
+            foreach (var ewh in this.EventWaitHandlers)
+            {
+                events += " '" + ewh.EventType.FullName + "'";
+            }
 
             return events;
         }
@@ -1501,9 +1492,12 @@ namespace Microsoft.PSharp
                 "in machine '{1}'.", actionName, this.GetType().Name);
             this.Assert(method.GetParameters().Length == 0, "Action '{0}' in machine " +
                 "'{1}' must have 0 formal parameters.", method.Name, this.GetType().Name);
-			this.Assert(method.ReturnType == typeof(Task), "Action '{0}' in machine " +
+            this.Assert(method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null,
+                "Action '{0}' in machine '{1}' must be declared as 'async'.",
+                method.Name, this.GetType().Name);
+            this.Assert(method.ReturnType == typeof(Task), "Action '{0}' in machine " +
 			    "'{1}' must have 'Task' return type.", method.Name, this.GetType().Name);
-            
+
             return method;
         }
 

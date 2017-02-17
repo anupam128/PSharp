@@ -81,11 +81,11 @@ namespace Microsoft.PSharp
 		}
 
 		/// <summary>
-		/// Checks if a machine of the specified type has been previously created.
+		/// Checks if the constructor of the specified machine type exists in the cache.
 		/// </summary>
 		/// <param name="type">Type</param>
 		/// <returns>Boolean</returns>
-		public static async Task<bool> Created(Type type)
+		internal static async Task<bool> IsCached(Type type)
 		{
 			await Lock.WaitAsync();
 			try

@@ -36,14 +36,40 @@ namespace Microsoft.PSharp.Collections
 		/// </summary>
 		private SemaphoreSlim Lock;
 
-		#endregion
+        #endregion
 
-		#region public methods
+        #region properties
 
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		public AsyncDictionary()
+        /// <summary>
+        /// The dictionary keys. This is not thread safe.
+        /// </summary>
+        internal IEnumerable<TKey> Keys
+        {
+            get
+            {
+                return this.Dictionary.Keys;
+            }
+        }
+
+        /// <summary>
+        /// The dictionary values. This is not thread safe.
+        /// </summary>
+        internal IEnumerable<TValue> Values
+        {
+            get
+            {
+                return this.Dictionary.Values;
+            }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public AsyncDictionary()
 		{
 			this.Dictionary = new Dictionary<TKey, TValue>();
 			this.Lock = new SemaphoreSlim(1, 1);

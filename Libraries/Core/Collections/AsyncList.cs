@@ -36,21 +36,36 @@ namespace Microsoft.PSharp.Collections
 		/// </summary>
 		private SemaphoreSlim Lock;
 
-		#endregion
+        #endregion
 
-		#region public methods
+        #region properties
 
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		public AsyncList()
+        /// <summary>
+        /// The list values. This is not thread safe.
+        /// </summary>
+        internal IEnumerable<TValue> Values
+        {
+            get
+            {
+                return this.List;
+            }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public AsyncList()
 		{
 			this.List = new List<TValue>();
 			this.Lock = new SemaphoreSlim(1, 1);
 		}
 
 		/// <summary>
-		/// Add a new item to the list.
+		/// Add a new value to the list.
 		/// </summary>
 		/// <param name="value">TValue</param>
 		public async Task Add(TValue value)
@@ -67,7 +82,7 @@ namespace Microsoft.PSharp.Collections
 		}
 
 		/// <summary>
-		/// Returns the item stored at the specified index.
+		/// Returns the value stored at the specified index.
 		/// </summary>
 		/// <param name="index">Index</param>
 		/// <returns>TValue</returns>
@@ -85,7 +100,7 @@ namespace Microsoft.PSharp.Collections
 		}
 
 		/// <summary>
-		/// Returns the first item that satisfies the specified predicate.
+		/// Returns the first value that satisfies the specified predicate.
 		/// </summary>
 		/// <param name="predicate">Predicate</param>
 		/// <returns>TValue</returns>
@@ -94,11 +109,11 @@ namespace Microsoft.PSharp.Collections
 			await this.Lock.WaitAsync();
 			try
 			{
-				foreach (var item in this.List)
+				foreach (var value in this.List)
 				{
-					if (predicate(item))
+					if (predicate(value))
 					{
-						return item;
+						return value;
 					}
 				}
 
@@ -111,7 +126,7 @@ namespace Microsoft.PSharp.Collections
 		}
 
 		/// <summary>
-		/// Removes the item at the specified index.
+		/// Removes the value at the specified index.
 		/// </summary>
 		/// <param name="index">Index</param>
 		public async Task RemoveAt(int index)
@@ -126,6 +141,14 @@ namespace Microsoft.PSharp.Collections
 				this.Lock.Release();
 			}
 		}
+
+        /// <summary>
+        /// Clears the list. This is not thread safe.
+        /// </summary>
+        internal void Clear()
+        {
+            this.List.Clear();
+        }
 
 		#endregion
 	}
