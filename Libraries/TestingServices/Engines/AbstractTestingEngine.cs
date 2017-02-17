@@ -67,7 +67,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <summary>
         /// A P# test action.
         /// </summary>
-        internal Action<Runtime> TestAction;
+        internal Action<IPSharpRuntime> TestAction;
 
         /// <summary>
         /// The bug-finding scheduling strategy.
@@ -211,7 +211,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
         protected AbstractTestingEngine(Configuration configuration,
-            Action<Runtime> action)
+            Action<IPSharpRuntime> action)
         {
             this.Profiler = new Profiler();
             this.Configuration = configuration;

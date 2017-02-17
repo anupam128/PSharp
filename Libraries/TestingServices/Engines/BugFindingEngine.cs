@@ -62,7 +62,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="action">Action</param>
         /// <returns>BugFindingEngine</returns>
         public static BugFindingEngine Create(Configuration configuration,
-            Action<Runtime> action)
+            Action<IPSharpRuntime> action)
         {
             return new BugFindingEngine(configuration, action);
         }
@@ -181,7 +181,7 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
-        private BugFindingEngine(Configuration configuration, Action<Runtime> action)
+        private BugFindingEngine(Configuration configuration, Action<IPSharpRuntime> action)
             : base(configuration, action)
         {
             this.Initialize();
@@ -270,7 +270,8 @@ namespace Microsoft.PSharp.TestingServices
                     {
                         try
                         {
-                            base.TestMethod.Invoke(null, new object[] { runtime });
+                            Task awaiter = (Task)base.TestMethod.Invoke(null, new object[] { runtime });
+                            awaiter.Wait();
                         }
                         catch (TargetInvocationException ex)
                         {
@@ -282,7 +283,7 @@ namespace Microsoft.PSharp.TestingServices
                     }
 
                     // Wait for the test to terminate.
-                    runtime.Wait();
+                    runtime.Wait().Wait();
 
                     if (this.Configuration.EnableDataRaceDetection)
                     {

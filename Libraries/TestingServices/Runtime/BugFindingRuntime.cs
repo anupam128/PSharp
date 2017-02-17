@@ -15,9 +15,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq.Expressions;
+using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.PSharp.TestingServices.Coverage;
@@ -341,7 +340,7 @@ namespace Microsoft.PSharp.TestingServices
                 }
             }
 
-            this.RunMachineEventHandler(machine);
+            this.RunMachineEventHandler(machine, e, true);
             this.BugFinder.Schedule();
 
             return mid;
@@ -501,8 +500,10 @@ namespace Microsoft.PSharp.TestingServices
                 return;
             }
 
+            machine = result.Item2;
+
             bool runHandler = await machine.Enqueue(eventInfo);
-            if (!runHandler)
+            if (runHandler)
             {
                 this.RunMachineEventHandler(machine);
             }
@@ -928,32 +929,34 @@ namespace Microsoft.PSharp.TestingServices
 		/// <summary>
 		/// Waits until the bug-finding runtime has finished execution.
 		/// </summary>
-		internal void Wait()
+		internal async Task Wait()
 		{
-			//Task[] taskArray = null;
+            Task[] taskArray = null;
 
-			//while (true)
-			//{
-			//    taskArray = this.MachineTasks.ToArray();
+            while (true)
+            {
+                taskArray = this.MachineTasks.ToArray();
 
-			//    try
-			//    {
-			//        Task.WaitAll(taskArray);
-			//    }
-			//    catch (AggregateException)
-			//    {
-			//        this.MachineTasks = new ConcurrentBag<Task>(
-			//            this.MachineTasks.Where(val => !val.IsCompleted));
+                try
+                {
+                    Console.WriteLine("WAIT BEFORE");
+                    await Task.WhenAll(taskArray);
+                    Console.WriteLine("WAIT AFTER");
+                }
+                catch (AggregateException)
+                {
+                    this.MachineTasks = new ConcurrentBag<Task>(
+                        this.MachineTasks.Where(val => !val.IsCompleted));
 
-			//        continue;
-			//    }
+                    continue;
+                }
 
-			//    if (taskArray.Length == this.MachineTasks.Count)
-			//    {
-			//        break;
-			//    }
-			//}
-		}
+                if (taskArray.Length == this.MachineTasks.Count)
+                {
+                    break;
+                }
+            }
+        }
 
         #endregion
 
@@ -982,6 +985,11 @@ namespace Microsoft.PSharp.TestingServices
                     await machine.RunEventHandler();
 
                     this.BugFinder.NotifyTaskCompleted();
+                }
+                catch (OperationCanceledException)
+                {
+                    IO.Debug("<Exception> OperationCanceledException was " +
+                        $"thrown from Machine '{machine.Id}'.");
                 }
                 finally
                 {

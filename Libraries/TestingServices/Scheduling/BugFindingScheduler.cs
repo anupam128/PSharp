@@ -277,7 +277,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         internal HashSet<MachineId> GetEnabledMachines()
         {
             var enabledMachines = new HashSet<MachineId>();
-            foreach (var machineInfo in this.TaskMap.Values)
+            foreach (MachineInfo machineInfo in this.TaskMap.Values)
             {
                 if (machineInfo.IsEnabled && !machineInfo.IsWaitingToReceive)
                 {
@@ -295,7 +295,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <param name="machine">Machine</param>
         internal virtual void NotifyNewTaskCreated(int id, AbstractMachine machine)
         {
-            var machineInfo = new MachineInfo(id, machine);
+            MachineInfo machineInfo = new MachineInfo(id, machine);
 
             IO.Debug($"<ScheduleDebug> Created task '{machineInfo.Id}' for machine " +
                 $"'{machineInfo.Machine.Id}'.");
@@ -319,7 +319,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 return;
             }
 
-            var machineInfo = this.TaskMap[(int)id];
+            MachineInfo machineInfo = this.TaskMap[(int)id];
 
             IO.Debug($"<ScheduleDebug> Started task '{machineInfo.Id}' of machine " +
                 $"'{machineInfo.Machine.Id}'.");
@@ -350,7 +350,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <param name="id">TaskId</param>
         internal void NotifyTaskBlockedOnEvent(int? id)
         {
-            var machineInfo = this.TaskMap[(int)id];
+            MachineInfo machineInfo = this.TaskMap[(int)id];
             machineInfo.IsWaitingToReceive = true;
 
             IO.Debug($"<ScheduleDebug> Task '{machineInfo.Id}' of machine " +
@@ -363,7 +363,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <param name="machine">Machine</param>
         internal void NotifyTaskReceivedEvent(AbstractMachine machine)
         {
-            var machineInfo = this.TaskMap.Values.First(mi => mi.Machine.Equals(machine) && !mi.IsCompleted);
+            MachineInfo machineInfo = this.TaskMap.Values.First(mi => mi.Machine.Equals(machine) && !mi.IsCompleted);
             machineInfo.IsWaitingToReceive = false;
 
             IO.Debug($"<ScheduleDebug> Task '{machineInfo.Id}' of machine " +
@@ -381,7 +381,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 return;
             }
 
-            var machineInfo = this.TaskMap[(int)id];
+            MachineInfo machineInfo = this.TaskMap[(int)id];
 
             IO.Debug($"<ScheduleDebug> Completed task '{machineInfo.Id}' of machine " +
                 $"'{machineInfo.Machine.Id}'.");
@@ -403,7 +403,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <param name="id">TaskId</param>
         internal void WaitForTaskToStart(int id)
         {
-            var machineInfo = this.TaskMap[id];
+            MachineInfo machineInfo = this.TaskMap[id];
             lock (machineInfo)
             {
                 while (!machineInfo.HasStarted)
@@ -592,7 +592,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// </summary>
         protected void KillRemainingMachines()
         {
-            foreach (var machineInfo in this.TaskMap.Values)
+            foreach (MachineInfo machineInfo in this.TaskMap.Values)
             {
                 machineInfo.IsActive = true;
                 machineInfo.IsEnabled = false;
