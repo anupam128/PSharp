@@ -57,12 +57,6 @@ namespace Microsoft.PSharp
         /// </summary>
         private static ConcurrentDictionary<Type, Dictionary<string, MethodInfo>> MachineActionMap;
 
-		/// <summary>
-		/// A special task that is already in the RunToCompletion state.
-		/// Equivalent to Task.FromResult(1).
-		/// </summary>
-		private static readonly Task<int> CompletedTask;
-
 		#endregion
 
 		#region fields
@@ -191,17 +185,6 @@ namespace Microsoft.PSharp
         /// </summary>
         protected internal Event ReceivedEvent { get; private set; }
 
-		/// <summary>
-		/// A special task that is already in the RunToCompletion state.
-		/// </summary>
-		protected Task DoneTask
-		{
-			get
-			{
-				return CompletedTask;
-			}
-		}
-
         #endregion
 
         #region constructors
@@ -215,7 +198,6 @@ namespace Microsoft.PSharp
             StateTypeMap = new ConcurrentDictionary<Type, HashSet<Type>>();
             StateMap = new ConcurrentDictionary<Type, HashSet<MachineState>>();
             MachineActionMap = new ConcurrentDictionary<Type, Dictionary<string, MethodInfo>>();
-			CompletedTask = Task.FromResult(1);
         }
 
         /// <summary>
@@ -341,28 +323,27 @@ namespace Microsoft.PSharp
         /// at the end of the current action.
         /// </summary>
         /// <param name="s">Type of the state</param>
-        protected Task Goto(Type s)
+        protected void Goto(Type s)
         {
             // If the state is not a state of the machine, then report an error and exit.
             this.Assert(StateTypeMap[this.GetType()].Any(val
                 => val.DeclaringType.Equals(s.DeclaringType) &&
                 val.Name.Equals(s.Name)), $"Machine '{base.Id}' " +
                 $"is trying to transition to non-existing state '{s.Name}'.");
-            return this.Raise(new GotoStateEvent(s));
+            this.Raise(new GotoStateEvent(s));
         }
 
         /// <summary>
         /// Raises an event internally at the end of the current action.
         /// </summary>
         /// <param name="e">Event</param>
-        protected Task Raise(Event e)
+        protected void Raise(Event e)
         {
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is raising a null event.");
             this.RaisedEvent = new EventInfo(e, new EventOriginInfo(
                 base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
             base.Runtime.NotifyRaisedEvent(this, this.RaisedEvent);
-			return this.DoneTask;
         }
 
         /// <summary>
@@ -1492,11 +1473,17 @@ namespace Microsoft.PSharp
                 "in machine '{1}'.", actionName, this.GetType().Name);
             this.Assert(method.GetParameters().Length == 0, "Action '{0}' in machine " +
                 "'{1}' must have 0 formal parameters.", method.Name, this.GetType().Name);
-            this.Assert(method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null,
-                "Action '{0}' in machine '{1}' must be declared as 'async'.",
-                method.Name, this.GetType().Name);
-            this.Assert(method.ReturnType == typeof(Task), "Action '{0}' in machine " +
-			    "'{1}' must have 'Task' return type.", method.Name, this.GetType().Name);
+
+            if (method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null)
+            {
+                this.Assert(method.ReturnType == typeof(Task), "Async action '{0}' in machine " +
+                    "'{1}' must have 'Task' return type.", method.Name, this.GetType().Name);
+            }
+            else
+            {
+                this.Assert(method.ReturnType == typeof(void), "Action '{0}' in machine " +
+                    "'{1}' must have 'void' return type.", method.Name, this.GetType().Name);
+            }
 
             return method;
         }
