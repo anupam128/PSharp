@@ -939,9 +939,7 @@ namespace Microsoft.PSharp.TestingServices
 
                 try
                 {
-                    Console.WriteLine("WAIT BEFORE");
                     await Task.WhenAll(taskArray);
-                    Console.WriteLine("WAIT AFTER");
                 }
                 catch (AggregateException)
                 {

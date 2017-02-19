@@ -139,7 +139,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
             if (next.IsWaitingToReceive)
             {
-                string message = IO.Format("Livelock detected. Machine " +
+                string message = IO.Format("Detected livelock. Machine " +
                     $"'{next.Machine.Id}' is waiting for an event, " +
                     "but no other machine is enabled.");
                 base.Runtime.BugFinder.NotifyAssertionFailure(message, true);

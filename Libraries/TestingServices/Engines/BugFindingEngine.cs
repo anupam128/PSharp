@@ -59,12 +59,12 @@ namespace Microsoft.PSharp.TestingServices
         /// Creates a new P# bug-finding engine.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
+        /// <param name="callback">Callback</param>
         /// <returns>BugFindingEngine</returns>
         public static BugFindingEngine Create(Configuration configuration,
-            Action<IPSharpRuntime> action)
+            Func<IPSharpRuntime, Task> callback)
         {
-            return new BugFindingEngine(configuration, action);
+            return new BugFindingEngine(configuration, callback);
         }
 
         /// <summary>
@@ -180,9 +180,9 @@ namespace Microsoft.PSharp.TestingServices
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
-        private BugFindingEngine(Configuration configuration, Action<IPSharpRuntime> action)
-            : base(configuration, action)
+        /// <param name="callback">Callback</param>
+        private BugFindingEngine(Configuration configuration, Func<IPSharpRuntime, Task> callback)
+            : base(configuration, callback)
         {
             this.Initialize();
         }
@@ -262,9 +262,10 @@ namespace Microsoft.PSharp.TestingServices
                     }
 
                     // Starts the test.
-                    if (base.TestAction != null)
+                    if (base.TestCallback != null)
                     {
-                        base.TestAction(runtime);
+                        Task awaiter = base.TestCallback(runtime);
+                        awaiter.Wait();
                     }
                     else
                     {

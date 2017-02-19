@@ -14,6 +14,7 @@
 
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Microsoft.PSharp.Utilities;
 
@@ -52,12 +53,12 @@ namespace Microsoft.PSharp.TestingServices
         /// Creates a new P# bug-finding engine.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
+        /// <param name="callback">Callback</param>
         /// <returns>BugFindingEngine</returns>
-        public static ITestingEngine CreateBugFindingEngine(
-            Configuration configuration, Action<IPSharpRuntime> action)
+        public static ITestingEngine CreateBugFindingEngine(Configuration configuration,
+            Func<IPSharpRuntime, Task> callback)
         {
-            return BugFindingEngine.Create(configuration, action);
+            return BugFindingEngine.Create(configuration, callback);
         }
 
         /// <summary>
@@ -85,12 +86,12 @@ namespace Microsoft.PSharp.TestingServices
         /// Creates a new P# replay engine.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
+        /// <param name="callback">Callback</param>
         /// <returns>BugFindingEngine</returns>
         public static ITestingEngine CreateReplayEngine(Configuration configuration,
-            Action<IPSharpRuntime> action)
+            Func<IPSharpRuntime, Task> callback)
         {
-            return ReplayEngine.Create(configuration, action);
+            return ReplayEngine.Create(configuration, callback);
         }
 
         #endregion

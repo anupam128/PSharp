@@ -65,9 +65,9 @@ namespace Microsoft.PSharp.TestingServices
         internal MethodInfo TestIterationDisposeMethod;
 
         /// <summary>
-        /// A P# test action.
+        /// The P# test callback method.
         /// </summary>
-        internal Action<IPSharpRuntime> TestAction;
+        internal Func<IPSharpRuntime, Task> TestCallback;
 
         /// <summary>
         /// The bug-finding scheduling strategy.
@@ -209,14 +209,14 @@ namespace Microsoft.PSharp.TestingServices
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
+        /// <param name="callback">Callback</param>
         protected AbstractTestingEngine(Configuration configuration,
-            Action<IPSharpRuntime> action)
+            Func<IPSharpRuntime, Task> callback)
         {
             this.Profiler = new Profiler();
             this.Configuration = configuration;
             this.PerIterationCallbacks = new HashSet<Action<int>>();
-            this.TestAction = action;
+            this.TestCallback = callback;
             this.Initialize();
         }
 

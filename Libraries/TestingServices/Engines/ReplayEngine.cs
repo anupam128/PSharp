@@ -55,11 +55,12 @@ namespace Microsoft.PSharp.TestingServices
         /// Creates a new P# replaying engine.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
+        /// <param name="callback">Callback</param>
         /// <returns>ReplayEngine</returns>
-        public static ReplayEngine Create(Configuration configuration, Action<IPSharpRuntime> action)
+        public static ReplayEngine Create(Configuration configuration,
+            Func<IPSharpRuntime, Task> callback)
         {
-            return new ReplayEngine(configuration, action);
+            return new ReplayEngine(configuration, callback);
         }
 
         /// <summary>
@@ -119,9 +120,9 @@ namespace Microsoft.PSharp.TestingServices
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        /// <param name="action">Action</param>
-        private ReplayEngine(Configuration configuration, Action<IPSharpRuntime> action)
-            : base(configuration, action)
+        /// <param name="callback">Callback</param>
+        private ReplayEngine(Configuration configuration, Func<IPSharpRuntime, Task> callback)
+            : base(configuration, callback)
         {
 
         }
@@ -149,9 +150,10 @@ namespace Microsoft.PSharp.TestingServices
                 }
                 
                 // Start the test.
-                if (base.TestAction != null)
+                if (base.TestCallback != null)
                 {
-                    base.TestAction(runtime);
+                    Task awaiter = base.TestCallback(runtime);
+                    awaiter.Wait();
                 }
                 else
                 {
@@ -164,7 +166,8 @@ namespace Microsoft.PSharp.TestingServices
                         }
 
                         // Starts the test.
-                        base.TestMethod.Invoke(null, new object[] { runtime });
+                        Task awaiter = (Task)base.TestMethod.Invoke(null, new object[] { runtime });
+                        awaiter.Wait();
 
                     }
                     catch (TargetInvocationException ex)
@@ -177,7 +180,7 @@ namespace Microsoft.PSharp.TestingServices
                 }
 
                 // Wait for the test to terminate.
-                runtime.Wait();
+                runtime.Wait().Wait();
 
                 try
                 {

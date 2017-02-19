@@ -103,10 +103,25 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         internal virtual void Schedule()
         {
             int? id = Task.CurrentId;
-            if (id == null || id == this.Runtime.RootTaskId)
+
+            // If the caller is the root task, then return.
+            if (id != null && id == this.Runtime.RootTaskId)
             {
                 return;
             }
+
+            // Checks if synchronisation not controlled by P# was used.
+            if (id == null)
+            {
+                string message = IO.Format("Detected synchronization context " +
+                    "that is not controlled by the P# runtime.");
+                this.Runtime.BugFinder.NotifyAssertionFailure(message, true);
+            }
+
+            //if (id == null || id == this.Runtime.RootTaskId)
+            //{
+            //    return;
+            //}
 
             if (this.BugFound || !this.IsSchedulerRunning)
             {
@@ -149,7 +164,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
             if (next.IsWaitingToReceive)
             {
-                string message = IO.Format("Livelock detected. Machine " +
+                string message = IO.Format("Detected livelock. Machine " +
                     $"'{next.Machine.Id}' is waiting for an event, " +
                     "but no other machine is enabled.");
                 this.Runtime.BugFinder.NotifyAssertionFailure(message, true);
