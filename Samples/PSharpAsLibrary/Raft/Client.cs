@@ -62,17 +62,16 @@ namespace Raft
         [OnEventGotoState(typeof(LocalEvent), typeof(PumpRequest))]
         class Init : MachineState { }
 
-		async Task InitOnEntry()
+		void InitOnEntry()
         {
             this.LatestCommand = -1;
             this.Counter = 0;
-			await this.DoneTask;
         }
 
-        async Task Configure()
+        void Configure()
         {
             this.Cluster = (this.ReceivedEvent as ConfigureEvent).Cluster;
-            await this.Raise(new LocalEvent());
+            this.Raise(new LocalEvent());
         }
 
         [OnEntry(nameof(PumpRequestOnEntry))]
@@ -95,11 +94,11 @@ namespace Raft
             if (this.Counter == 3)
             {
                 await this.Send(this.Cluster, new ClusterManager.ShutDown());
-                await this.Raise(new Halt());
+                this.Raise(new Halt());
             }
             else
             {
-                await this.Raise(new LocalEvent());
+                this.Raise(new LocalEvent());
             }
         }
 

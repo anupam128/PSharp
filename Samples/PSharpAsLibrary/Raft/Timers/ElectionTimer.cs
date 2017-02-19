@@ -31,11 +31,10 @@ namespace Raft
         [OnEventGotoState(typeof(StartTimer), typeof(Active))]
         class Init : MachineState { }
 
-        async Task Configure()
+        void Configure()
         {
             this.Target = (this.ReceivedEvent as ConfigureEvent).Target;
 			//await this.Raise(new StartTimer());
-			await this.DoneTask;
         }
 
         [OnEntry(nameof(ActiveOnEntry))]
@@ -58,7 +57,7 @@ namespace Raft
             }
 
             //await this.Send(this.Id, new TickEvent());
-            await this.Raise(new CancelTimer());
+            this.Raise(new CancelTimer());
         }
 
         [OnEventGotoState(typeof(StartTimer), typeof(Active))]

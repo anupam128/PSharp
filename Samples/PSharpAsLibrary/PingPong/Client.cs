@@ -36,11 +36,11 @@ namespace PingPong
         [OnEventDoAction(typeof(Config), nameof(Configure))]
         class Init : MachineState { }
 
-        async Task Configure()
+        void Configure()
         {
             this.Server = (this.ReceivedEvent as Config).Id;
             this.Counter = 0;
-            await this.Goto(typeof(Active));
+            this.Goto(typeof(Active));
         }
 
         [OnEntry(nameof(ActiveOnEntry))]
@@ -61,7 +61,7 @@ namespace PingPong
 
 			if (this.Counter == 5)
 			{
-				await this.Raise(new Halt());
+				this.Raise(new Halt());
 			}
         }
     }

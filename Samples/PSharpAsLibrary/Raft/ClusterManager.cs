@@ -70,7 +70,7 @@ namespace Raft
             }
 
             this.Client = await this.CreateMachine(typeof(Client));
-            await this.Raise(new LocalEvent());
+            this.Raise(new LocalEvent());
         }
 
         [OnEntry(nameof(ConfiguringOnInit))]
@@ -85,7 +85,7 @@ namespace Raft
             }
 
             await this.Send(this.Client, new Client.ConfigureEvent(this.Id));
-            await this.Raise(new LocalEvent());
+            this.Raise(new LocalEvent());
         }
 
         class Availability : StateGroup
@@ -105,10 +105,10 @@ namespace Raft
             public class Available : MachineState { }
         }
 
-        async Task BecomeAvailable()
+        void BecomeAvailable()
         {
             this.UpdateLeader(this.ReceivedEvent as NotifyLeaderUpdate);
-            await this.Raise(new LocalEvent());
+            this.Raise(new LocalEvent());
         }
 
 
@@ -122,16 +122,12 @@ namespace Raft
             await this.Send(this.Id, (this.ReceivedEvent as RedirectRequest).Request);
         }
         
-        async Task RefreshLeader()
+        void RefreshLeader()
         {
             this.UpdateLeader(this.ReceivedEvent as NotifyLeaderUpdate);
-			await this.DoneTask;
         }
 
-        async Task BecomeUnavailable()
-        {
-			await this.DoneTask;
-        }
+        void BecomeUnavailable() { }
 
         async Task ShuttingDown()
         {
@@ -140,7 +136,7 @@ namespace Raft
                 await this.Send(this.Servers[idx], new Server.ShutDown());
             }
 
-            await this.Raise(new Halt());
+            this.Raise(new Halt());
         }
 
         #endregion

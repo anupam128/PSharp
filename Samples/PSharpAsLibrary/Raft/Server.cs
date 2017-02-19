@@ -220,7 +220,7 @@ namespace Raft
         [DeferEvents(typeof(VoteRequest), typeof(AppendEntriesRequest))]
         class Init : MachineState { }
 
-        async Task EntryOnInit()
+        void EntryOnInit()
         {
             this.CurrentTerm = 0;
 
@@ -234,7 +234,6 @@ namespace Raft
 
             this.NextIndex = new Dictionary<MachineId, int>();
             this.MatchIndex = new Dictionary<MachineId, int>();
-			await this.DoneTask;
         }
 
         async Task Configure()
@@ -249,7 +248,7 @@ namespace Raft
             this.PeriodicTimer = await this.CreateMachine(typeof(PeriodicTimer));
             await this.Send(this.PeriodicTimer, new PeriodicTimer.ConfigureEvent(this.Id));
 
-            await this.Raise(new BecomeFollower());
+            this.Raise(new BecomeFollower());
         }
 
         #endregion
@@ -289,9 +288,9 @@ namespace Raft
             }
         }
 
-        async Task StartLeaderElection()
+        void StartLeaderElection()
         {
-            await this.Raise(new BecomeCandidate());
+            this.Raise(new BecomeCandidate());
         }
 
         async Task VoteAsFollower()
@@ -306,7 +305,7 @@ namespace Raft
             await this.Vote(this.ReceivedEvent as VoteRequest);
         }
 
-        async Task RespondVoteAsFollower()
+        void RespondVoteAsFollower()
         {
             var request = this.ReceivedEvent as VoteResponse;
             if (request.Term > this.CurrentTerm)
@@ -314,8 +313,6 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
             }
-
-			await this.DoneTask;
         }
 
         async Task AppendEntriesAsFollower()
@@ -330,7 +327,7 @@ namespace Raft
             await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
         }
 
-        async Task RespondAppendEntriesAsFollower()
+        void RespondAppendEntriesAsFollower()
         {
             var request = this.ReceivedEvent as AppendEntriesResponse;
             if (request.Term > this.CurrentTerm)
@@ -338,8 +335,6 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
             }
-
-			await this.DoneTask;
         }
 
         #endregion
@@ -400,7 +395,7 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
                 await this.Vote(this.ReceivedEvent as VoteRequest);
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
             }
             else
             {
@@ -408,14 +403,14 @@ namespace Raft
             }
         }
 
-        async Task RespondVoteAsCandidate()
+        void RespondVoteAsCandidate()
         {
             var request = this.ReceivedEvent as VoteResponse;
             if (request.Term > this.CurrentTerm)
             {
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
                 return;
             }
             else if (request.Term != this.CurrentTerm)
@@ -431,7 +426,7 @@ namespace Raft
                     Console.WriteLine("\n [Leader] " + this.ServerId + " | term " + this.CurrentTerm +
                         " | election votes " + this.VotesReceived + " | log " + this.Logs.Count + "\n");
                     this.VotesReceived = 0;
-                    await this.Raise(new BecomeLeader());
+                    this.Raise(new BecomeLeader());
                 }
             }
         }
@@ -444,7 +439,7 @@ namespace Raft
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
                 await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
             }
             else
             {
@@ -452,14 +447,14 @@ namespace Raft
             }
         }
 
-        async Task RespondAppendEntriesAsCandidate()
+        void RespondAppendEntriesAsCandidate()
         {
             var request = this.ReceivedEvent as AppendEntriesResponse;
             if (request.Term > this.CurrentTerm)
             {
                 this.CurrentTerm = request.Term;
                 this.VotedFor = null;
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
             }
         }
 
@@ -555,7 +550,7 @@ namespace Raft
                 await this.RedirectLastClientRequestToClusterManager();
                 await this.Vote(this.ReceivedEvent as VoteRequest);
 
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
             }
             else
             {
@@ -572,7 +567,7 @@ namespace Raft
                 this.VotedFor = null;
 
                 await this.RedirectLastClientRequestToClusterManager();
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
             }
         }
 
@@ -587,7 +582,7 @@ namespace Raft
                 await this.RedirectLastClientRequestToClusterManager();
                 await this.AppendEntries(this.ReceivedEvent as AppendEntriesRequest);
 
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
             }
         }
         
@@ -600,7 +595,7 @@ namespace Raft
                 this.VotedFor = null;
                 
                 await this.RedirectLastClientRequestToClusterManager();
-                await this.Raise(new BecomeFollower());
+                this.Raise(new BecomeFollower());
                 return;
             }
             else if (request.Term != this.CurrentTerm)
@@ -793,7 +788,7 @@ namespace Raft
         {
             await this.Send(this.ElectionTimer, new Halt());
             await this.Send(this.PeriodicTimer, new Halt());
-            await this.Raise(new Halt());
+            this.Raise(new Halt());
         }
 
         #endregion
