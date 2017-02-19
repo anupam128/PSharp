@@ -12,6 +12,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 namespace Microsoft.PSharp.Common
 {
     /// <summary>
@@ -75,14 +77,14 @@ namespace Microsoft.PSharp.Common
         [OnEventGotoState(typeof(NoiseEvent), typeof(Active))]
         private class Active : MachineState { }
 
-        private void ActiveOnEntry()
+        async Task ActiveOnEntry()
         {
-            this.Send(this.Id, new NoiseEvent());
+            await this.Send(this.Id, new NoiseEvent());
             this.Duration--;
 
             if (this.Duration <= 0)
             {
-                this.Send(this.Sender, new Done());
+                await this.Send(this.Sender, new Done());
                 this.Raise(new Halt());
             }
         }
