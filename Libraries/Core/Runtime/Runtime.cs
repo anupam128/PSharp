@@ -444,8 +444,7 @@ namespace Microsoft.PSharp
         {
             this.Assert(type.IsSubclassOf(typeof(Machine)),
                 $"Type '{type.Name}' is not a machine.");
-            return await this.NetworkProvider.RemoteCreateMachine(type, friendlyName, endpoint, e).
-			    ConfigureAwait(false);
+            return await this.NetworkProvider.RemoteCreateMachineAsync(type, friendlyName, endpoint, e);
         }
 
         /// <summary>
@@ -528,7 +527,7 @@ namespace Microsoft.PSharp
         /// <param name="e">Event</param>
         internal virtual async Task SendRemotely(AbstractMachine sender, MachineId mid, Event e)
         {
-            await this.NetworkProvider.RemoteSend(mid, e);
+            await this.NetworkProvider.RemoteSendEventAsync(mid, e);
         }
 
         /// <summary>

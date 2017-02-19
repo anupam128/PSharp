@@ -12,8 +12,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
 using System.ServiceModel;
+using System.Threading.Tasks;
 
 namespace Microsoft.PSharp.Remote
 {
@@ -35,7 +35,7 @@ namespace Microsoft.PSharp.Remote
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns> 
         [OperationContract]
-        MachineId CreateMachine(string typeName, string friendlyName, Event e);
+        Task<MachineId> CreateMachineAsync(string typeName, string friendlyName, Event e);
 
         /// <summary>
         /// Sends an asynchronous event to a machine.
@@ -44,6 +44,6 @@ namespace Microsoft.PSharp.Remote
         /// <param name="e">Event</param>
         //[OperationContract(IsOneWay = true)]
         [OperationContract]
-        void SendEvent(MachineId target, Event e);
+        Task SendEventAsync(MachineId target, Event e);
     }
 }

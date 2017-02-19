@@ -63,7 +63,7 @@ namespace Microsoft.PSharp.Net
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns> 
-        async Task<MachineId> INetworkProvider.RemoteCreateMachine(Type type, string friendlyName,
+        async Task<MachineId> INetworkProvider.RemoteCreateMachineAsync(Type type, string friendlyName,
             string endpoint, Event e)
         {
             return await this.Runtime.CreateMachineAsync(type, friendlyName, e);
@@ -74,7 +74,7 @@ namespace Microsoft.PSharp.Net
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        async Task INetworkProvider.RemoteSend(MachineId target, Event e)
+        async Task INetworkProvider.RemoteSendEventAsync(MachineId target, Event e)
         {
             await this.Runtime.SendEventAsync(target, e);
         }

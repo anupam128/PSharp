@@ -15,9 +15,9 @@
 using System;
 using System.Reflection;
 using System.ServiceModel;
+using System.Threading.Tasks;
 
 using Microsoft.PSharp.Net;
-using Microsoft.PSharp.Utilities;
 
 namespace Microsoft.PSharp.Remote
 {
@@ -116,10 +116,10 @@ namespace Microsoft.PSharp.Remote
         /// <param name="endpoint">Endpoint</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns> 
-        MachineId INetworkProvider.RemoteCreateMachine(Type type, string friendlyName,
+        async Task<MachineId> INetworkProvider.RemoteCreateMachineAsync(Type type, string friendlyName,
             string endpoint, Event e)
         {
-            return this.Channel.CreateMachine(type.FullName, friendlyName, e);
+            return await this.Channel.CreateMachineAsync(type.FullName, friendlyName, e);
         }
 
         /// <summary>
@@ -127,9 +127,9 @@ namespace Microsoft.PSharp.Remote
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        void INetworkProvider.RemoteSend(MachineId target, Event e)
+        async Task INetworkProvider.RemoteSendEventAsync(MachineId target, Event e)
         {
-            this.Channel.SendEvent(target, e);
+            await this.Channel.SendEventAsync(target, e);
         }
 
         /// <summary>
@@ -155,11 +155,11 @@ namespace Microsoft.PSharp.Remote
         /// <param name="friendlyName">Friendly machine name used for logging</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns> 
-        MachineId IRemoteCommunication.CreateMachine(string typeName, string friendlyName, Event e)
+        async Task<MachineId> IRemoteCommunication.CreateMachineAsync(string typeName, string friendlyName, Event e)
         {
             this.Runtime.Log("<RemoteLog> Received request to create remote machine of type {0}", typeName);
             var resolvedType = this.GetMachineType(typeName);
-            return this.Runtime.CreateMachine(resolvedType, friendlyName, e);
+            return await this.Runtime.CreateMachineAsync(resolvedType, friendlyName, e);
         }
 
         /// <summary>
@@ -167,10 +167,10 @@ namespace Microsoft.PSharp.Remote
         /// </summary>
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        void IRemoteCommunication.SendEvent(MachineId target, Event e)
+        async Task IRemoteCommunication.SendEventAsync(MachineId target, Event e)
         {
             this.Runtime.Log("<RemoteLog> Received remotely sent event {0}", e.GetType());
-            this.Runtime.SendEvent(target, e);
+            await this.Runtime.SendEventAsync(target, e);
         }
 
         #endregion
