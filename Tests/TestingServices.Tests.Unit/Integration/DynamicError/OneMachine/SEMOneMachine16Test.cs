@@ -12,6 +12,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 using Microsoft.PSharp.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -80,9 +82,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(Runtime runtime)
+            public static async Task Execute(IPSharpRuntime runtime)
             {
-                runtime.CreateMachine(typeof(Real1));
+                await runtime.CreateMachineAsync(typeof(Real1));
             }
         }
 

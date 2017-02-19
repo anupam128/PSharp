@@ -12,9 +12,10 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 using Microsoft.PSharp.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
 
 namespace Microsoft.PSharp.TestingServices.Tests.Unit
 {
@@ -69,9 +70,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(Runtime runtime)
+            public static async Task Execute(IPSharpRuntime runtime)
             {
-                runtime.CreateMachine(typeof(TaskCreator));
+                await runtime.CreateMachineAsync(typeof(TaskCreator));
             }
         }
 

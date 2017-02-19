@@ -12,6 +12,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 using Microsoft.PSharp.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -67,30 +69,32 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute1(Runtime runtime)
+            public static async Task Execute1(IPSharpRuntime runtime)
             {
                 ErrorTypeVal = ErrorType.CALL_GOTO;
-                runtime.CreateMachine(typeof(Program));
-            }
-            [Test]
-            public static void Execute2(Runtime runtime)
-            {
-                ErrorTypeVal = ErrorType.CALL_RAISE;
-                runtime.CreateMachine(typeof(Program));
-            }
-            [Test]
-            public static void Execute3(Runtime runtime)
-            {
-                ErrorTypeVal = ErrorType.CALL_SEND;
-                runtime.CreateMachine(typeof(Program));
-            }
-            [Test]
-            public static void Execute4(Runtime runtime)
-            {
-                ErrorTypeVal = ErrorType.ON_EXIT;
-                runtime.CreateMachine(typeof(Program));
+                await runtime.CreateMachineAsync(typeof(Program));
             }
 
+            [Test]
+            public static async Task Execute2(IPSharpRuntime runtime)
+            {
+                ErrorTypeVal = ErrorType.CALL_RAISE;
+                await runtime.CreateMachineAsync(typeof(Program));
+            }
+
+            [Test]
+            public static async Task Execute3(IPSharpRuntime runtime)
+            {
+                ErrorTypeVal = ErrorType.CALL_SEND;
+                await runtime.CreateMachineAsync(typeof(Program));
+            }
+
+            [Test]
+            public static async Task Execute4(IPSharpRuntime runtime)
+            {
+                ErrorTypeVal = ErrorType.ON_EXIT;
+                await runtime.CreateMachineAsync(typeof(Program));
+            }
         }
 
         [TestMethod]

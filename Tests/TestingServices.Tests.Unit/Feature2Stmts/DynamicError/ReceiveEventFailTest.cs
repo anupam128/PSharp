@@ -12,7 +12,6 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
 using System.Threading.Tasks;
 
 using Microsoft.PSharp.Utilities;
@@ -105,9 +104,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(Runtime runtime)
+            public static async Task Execute(IPSharpRuntime runtime)
             {
-                runtime.CreateMachine(typeof(Server));
+                await runtime.CreateMachineAsync(typeof(Server));
             }
         }
 
@@ -125,8 +124,8 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             var engine = TestingEngineFactory.CreateBugFindingEngine(
                 configuration, TestProgram.Execute);
             engine.Run();
-
-            var bugReport = "Livelock detected. Machine 'Microsoft.PSharp.TestingServices." +
+            
+            var bugReport = "Detected livelock. Machine 'Microsoft.PSharp.TestingServices." +
                 "Tests.Unit.ReceiveEventFailTest+Client(2)' is waiting for an event, but " +
                 "no other machine is enabled.";
             Assert.IsTrue(engine.TestReport.BugReports.Count == 1);

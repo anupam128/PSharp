@@ -74,9 +74,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(Runtime runtime)
+            public static async Task Execute(IPSharpRuntime runtime)
             {
-                runtime.CreateMachine(typeof(Harness));
+                await runtime.CreateMachineAsync(typeof(Harness));
             }
         }
 

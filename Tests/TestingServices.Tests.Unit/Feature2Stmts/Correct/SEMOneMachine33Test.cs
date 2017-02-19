@@ -12,10 +12,11 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.PSharp.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
 
 namespace Microsoft.PSharp.TestingServices.Tests.Unit
 {
@@ -104,9 +105,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public static class TestProgram
         {
             [Test]
-            public static void Execute(Runtime runtime)
+            public static async Task Execute(IPSharpRuntime runtime)
             {
-                runtime.CreateMachine(typeof(Entry));
+                await runtime.CreateMachineAsync(typeof(Entry));
             }
         }
 
