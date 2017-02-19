@@ -65,11 +65,11 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E4), nameof(Action1))] // E4, E3 have no effect on reachability of assert(false)
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                GhostMachine = this.CreateMachine(typeof(Ghost));
-                this.Send(GhostMachine, new Config(this.Id));
-                this.Send(GhostMachine, new E1());
+                GhostMachine = await this.CreateMachine(typeof(Ghost));
+                await this.Send(GhostMachine, new Config(this.Id));
+                await this.Send(GhostMachine, new E1());
             }
 
             void ExitInit()
@@ -97,9 +97,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Assert(false);
             }
 
-            void Action1()
+            async Task Action1()
             {
-                this.Send(GhostMachine, new E3());
+                await this.Send(GhostMachine, new E3());
             }
         }
 
@@ -121,10 +121,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(E3), typeof(S2))]
             class S1 : MachineState { }
 
-            void EntryS1()
+            async Task EntryS1()
             {
-                this.Send(RealMachine, new E4());
-                this.Send(RealMachine, new E2());
+                await this.Send(RealMachine, new E4());
+                await this.Send(RealMachine, new E2());
             }
 
             class S2 : MachineState { }

@@ -49,11 +49,11 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(EntryCall))]
             class Call : MachineState { }
 
-            void EntryCall()
+            async Task EntryCall()
             {
                 if (i == 3)
                 {
-                    this.Pop();
+                    await this.Pop();
                     return; // important if not compiling
                 }
                 else

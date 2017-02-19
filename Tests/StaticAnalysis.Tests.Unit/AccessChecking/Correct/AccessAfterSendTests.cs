@@ -54,8 +54,8 @@ class M : Machine
  void FirstOnEntryAction()
  {
   int value = 0;
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(value));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(value));
   value = 1;
  }
 }
@@ -109,13 +109,13 @@ class M : Machine
  void FirstOnEntryAction()
  {
   int value = 0;
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   this.Foo(value);
  }
 
  void Foo(int value)
  {
-  this.Send(this.Target, new eUnit(value));
+  await this.Send(this.Target, new eUnit(value));
   value = 1;
  }
 }

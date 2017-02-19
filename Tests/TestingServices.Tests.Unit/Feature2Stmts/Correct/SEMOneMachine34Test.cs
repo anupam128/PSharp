@@ -65,7 +65,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E4), nameof(Foo4))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
                 m = new Dictionary<int, int>();
                 s = new List<bool>();
@@ -74,10 +74,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 s.Add(true);
                 s.Add(false);
                 s.Add(true);
-                this.Send(this.Id, new E1(Tuple.Create(1, true)));
-                this.Send(this.Id, new E2(0, false));
-                this.Send(this.Id, new E3(1));
-                this.Send(this.Id, new E4(m, s));
+                await this.Send(this.Id, new E1(Tuple.Create(1, true)));
+                await this.Send(this.Id, new E2(0, false));
+                await this.Send(this.Id, new E3(1));
+                await this.Send(this.Id, new E4(m, s));
             }
 
             void Foo1()

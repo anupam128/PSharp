@@ -64,12 +64,12 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 10;
   for (int i = 0; i < k; i++)
   {
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
   }
  }
 }
@@ -140,12 +140,12 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 10;
   for (int i = 0; i < k; i++)
   {
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
   }
 
   letter.Text = ""Bangalore""; // ERROR
@@ -211,13 +211,13 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 10;
   for (int i = 0; i < k; i++)
   {
     letter.Text = ""Bangalore""; // ERROR
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
   }
  }
 }
@@ -281,12 +281,12 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 0;
   while (k < 10)
   {
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
     k++;
   }
   
@@ -353,13 +353,13 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 0;
   while (k < 10)
   {
     letter.Text = ""Bangalore""; // ERROR
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
     k++;
   }
  }
@@ -424,12 +424,12 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 0;
   do
   {
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
     k++;
   }
   while (k < 10);
@@ -497,13 +497,13 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   int k = 0;
   do
   {
     letter.Text = ""Bangalore""; // ERROR
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
     k++;
   }
   while (k < 10);
@@ -570,12 +570,12 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   List<int> dummies = new List<int>();
   foreach (var dummy in dummies)
   {
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
   }
   
   letter.Text = ""Bangalore""; // ERROR
@@ -642,13 +642,13 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   List<int> dummies = new List<int>();
   foreach (var dummy in dummies)
   {
     letter.Text = ""Bangalore""; // ERROR
-    this.Send(this.Target, new eUnit(letter)); // ERROR
+    await this.Send(this.Target, new eUnit(letter)); // ERROR
   }
  }
 }
@@ -711,13 +711,13 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   
   int k = 10;
   for (int i = 0; i < k; i++)
   {
     var letter = new Letter(""London"");
-    this.Send(this.Target, new eUnit(letter));
+    await this.Send(this.Target, new eUnit(letter));
     letter.Text = ""Bangalore"";
   }
  }
@@ -788,7 +788,7 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var letter = new Letter(""London"");
 
   int k = 10;
@@ -796,7 +796,7 @@ class M : Machine
   {
     var letter2 = letter;
     letter.Text = ""Bangalore"";
-    this.Send(this.Target, new eUnit(letter2));
+    await this.Send(this.Target, new eUnit(letter2));
   }
  }
 }

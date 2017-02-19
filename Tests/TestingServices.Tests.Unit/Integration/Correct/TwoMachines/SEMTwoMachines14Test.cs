@@ -36,10 +36,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(EntryInit))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                this.Monitor<M>(new Config(true));
-                this.Monitor<M>(new Config(test));
+                await this.Monitor<M>(new Config(true));
+                await this.Monitor<M>(new Config(test));
             }
         }
 

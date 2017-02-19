@@ -78,13 +78,13 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Envelope envelope = new Envelope(""London"", 0);
   Envelope otherEnvelope = envelope;
 
   this.Foo(otherEnvelope);
 
-  this.Send(this.Target, new eUnit(envelope));
+  await this.Send(this.Target, new eUnit(envelope));
 
   this.Bar(otherEnvelope.Letter);
   otherEnvelope.Letter.Text = ""text"";  // ERROR
@@ -200,10 +200,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   OtherClass oc = new OtherClass(letter);
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   oc.Foo();
  }
 }
@@ -294,10 +294,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   OtherClass oc = new OtherClass();
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   oc.Foo(letter);
  }
 }
@@ -388,10 +388,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   OtherClass oc = new OtherClass(letter);
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   oc.Foo();
  }
 }
@@ -478,10 +478,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   OtherClass oc = new OtherClass();
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   oc.Foo(letter);
  }
 }
@@ -563,10 +563,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   OtherClass oc = new OtherClass();
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   oc.Foo(letter);
  }
 }
@@ -642,9 +642,9 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   this.OC = new OtherClass();
   OC.Foo(letter);
  }
@@ -728,9 +728,9 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   this.OC = new OtherClass(letter);
  }
 }
@@ -813,11 +813,11 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   var oc = new OtherClass(letter);
   this.OC = oc;
-  this.Send(this.Target, new eUnit(letter)); // ERROR
+  await this.Send(this.Target, new eUnit(letter)); // ERROR
  }
 }
 }";
@@ -899,12 +899,12 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   var oc = new OtherClass();
   oc.Foo(letter);
   this.OC = oc;
-  this.Send(this.Target, new eUnit(letter)); // ERROR
+  await this.Send(this.Target, new eUnit(letter)); // ERROR
  }
 }
 }";
@@ -1002,10 +1002,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   var oc = new OtherClass();
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   oc.Foo(letter);
  }
 }

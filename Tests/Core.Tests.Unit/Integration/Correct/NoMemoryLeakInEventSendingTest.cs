@@ -51,7 +51,7 @@
 
 //                while (counter < 1000)
 //                {
-//                    this.Send(n, new E(this.Id));
+//                    await this.Send(n, new E(this.Id));
 //                    await this.Receive(typeof(E));
 //                    counter++;
 //                }
@@ -67,7 +67,7 @@
 //            void Act()
 //            {
 //                var sender = (this.ReceivedEvent as E).Id;
-//                this.Send(sender, new E(this.Id));
+//                await this.Send(sender, new E(this.Id));
 //            }
 //        }
 

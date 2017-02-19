@@ -44,9 +44,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Success), typeof(SendPing))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                PongId = this.CreateMachine(typeof(PONG));
+                PongId = await this.CreateMachine(typeof(PONG));
                 this.Raise(new Success());
             }
 
@@ -54,9 +54,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Success), typeof(WaitPong))]
             class SendPing : MachineState { }
 
-            void EntrySendPing()
+            async Task EntrySendPing()
             {
-                this.Send(PongId, new Ping(this.Id));
+                await this.Send(PongId, new Ping(this.Id));
                 this.Raise(new Success());
             }
 
@@ -82,18 +82,18 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(Halt), nameof(Action1))]
             class SendPong : MachineState { }
 
-            void EntrySendPong()
+            async Task EntrySendPong()
             {
                 Count2 = Count2 + 1;
 
                 if (Count2 == 1)
                 {
-                    this.Send((this.ReceivedEvent as Ping).Id, new Pong());
+                    await this.Send((this.ReceivedEvent as Ping).Id, new Pong());
                 }
 
                 if (Count2 == 2)
                 {
-                    this.Send((this.ReceivedEvent as Ping).Id, new Pong());
+                    await this.Send((this.ReceivedEvent as Ping).Id, new Pong());
                     this.Raise(new Halt());
                     return; // important if not compiling
                 }

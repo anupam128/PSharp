@@ -64,8 +64,8 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(this.Letter));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(this.Letter));
  }
 }
 }";
@@ -137,8 +137,8 @@ class M : Machine
  void FirstOnEntryAction()
  {
   this.Letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(this.Letter));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(this.Letter));
  }
 }
 }";
@@ -212,8 +212,8 @@ class M : Machine
  void FirstOnEntryAction()
  {
   this.Letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(this.Id, this.Letter));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(this.Id, this.Letter));
  }
 }
 }";
@@ -285,7 +285,7 @@ class M : Machine
  void FirstOnEntryAction()
  {
   this.Letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M), new eUnit(this.Letter));
+  this.Target = await this.CreateMachine(typeof(M), new eUnit(this.Letter));
  }
 }
 }";
@@ -359,7 +359,7 @@ class M : Machine
  void FirstOnEntryAction()
  {
   this.Letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M), new eUnit(this.Id, this.Letter));
+  this.Target = await this.CreateMachine(typeof(M), new eUnit(this.Id, this.Letter));
  }
 }
 }";

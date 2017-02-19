@@ -79,11 +79,11 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope = new SuperEnvelope();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -170,7 +170,7 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope;
   if (letter.Text == """")
@@ -182,7 +182,7 @@ class M : Machine
     envelope = new SuperEnvelope();
   }
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -269,7 +269,7 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope;
   if (letter.Text == """")
@@ -277,7 +277,7 @@ class M : Machine
   else
     envelope = new SuperEnvelope();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -365,11 +365,11 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope = this.Foo();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -469,11 +469,11 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope = this.Foo();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -578,11 +578,11 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope = this.Foo();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -695,11 +695,11 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""London"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
 
   Envelope envelope = this.Foo();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   envelope.Foo(letter); // ERROR
  }
@@ -802,11 +802,11 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var letter = new Letter(""London"");
   Envelope envelope = this.Foo();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   this.Bar(envelope, letter);
  }
@@ -921,11 +921,11 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var letter = new Letter(""London"");
   Envelope envelope = this.Foo();
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   this.Bar(envelope, letter);
  }

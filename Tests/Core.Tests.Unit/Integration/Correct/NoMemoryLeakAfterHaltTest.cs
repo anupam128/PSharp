@@ -46,7 +46,7 @@
 //                while (counter < 100)
 //                {
 //                    var n = CreateMachine(typeof(N));
-//                    this.Send(n, new E(this.Id));
+//                    await this.Send(n, new E(this.Id));
 //                    await this.Receive(typeof(E));
 //                    counter++;
 //                }
@@ -62,7 +62,7 @@
 //            [OnEventDoAction(typeof(E), nameof(Act))]
 //            class Init : MachineState { }
 
-//            void Configure()
+//            async Task Configure()
 //            {
 //                this.LargeArray = new int[10000000];
 //                this.LargeArray[this.LargeArray.Length - 1] = 1;
@@ -71,7 +71,7 @@
 //            void Act()
 //            {
 //                var sender = (this.ReceivedEvent as E).Id;
-//                this.Send(sender, new E(this.Id));
+//                await this.Send(sender, new E(this.Id));
 //                Raise(new Halt());
 //            }
 //        }

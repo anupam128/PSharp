@@ -43,9 +43,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnExit(nameof(ExitCall))]
             class Call : MachineState { }
 
-            void EntryCall()
+            async Task EntryCall()
             {
-                this.Pop();
+                await this.Pop();
             }
 
             void ExitCall()

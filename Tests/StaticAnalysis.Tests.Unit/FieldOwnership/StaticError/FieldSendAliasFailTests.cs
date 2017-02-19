@@ -67,9 +67,9 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   this.Foo(letter);
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
  }
 
  void Foo(Letter letter)
@@ -148,14 +148,14 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   this.Letter = letter;
   this.Foo(letter);
  }
 
  void Foo(Letter letter)
  {
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
  }
 }
 }";
@@ -229,14 +229,14 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   letter = this.Letter;
   this.Foo(letter);
  }
 
  void Foo(Letter letter)
  {
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
  }
 }
 }";
@@ -310,9 +310,9 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var otherLetter = this.Foo(letter);
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
  }
 
  Letter Foo(Letter letter)
@@ -400,10 +400,10 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var otherLetter = letter;
   letter = this.Foo(letter);
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
  }
 
  Letter Foo(Letter letter)
@@ -488,9 +488,9 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   this.Obj = (this.ReceivedEvent as eUnit).Letter;
-  this.Send(this.Target, new eUnit((this.ReceivedEvent as eUnit).Letter));
+  await this.Send(this.Target, new eUnit((this.ReceivedEvent as eUnit).Letter));
  }
 }
 }";
@@ -575,9 +575,9 @@ class M : Machine
  {
   var letter = new Letter(""test"", 0);
   var envelope = new Envelope(new Letter(""test2"", 1));
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   envelope.Letter = this.Foo(this.Letter);
-  this.Send(this.Target, new eUnit(envelope));
+  await this.Send(this.Target, new eUnit(envelope));
  }
 
  Letter Foo(Letter letter)

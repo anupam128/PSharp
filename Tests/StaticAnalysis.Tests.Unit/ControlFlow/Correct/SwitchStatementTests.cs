@@ -64,10 +64,10 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var letter = new Letter(""London"");
 
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
 
   switch (this.Num)
   {

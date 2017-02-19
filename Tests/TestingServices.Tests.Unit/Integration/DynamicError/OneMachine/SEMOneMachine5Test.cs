@@ -40,14 +40,14 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(E1), typeof(S1))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                this.Send(this.Id, new E1());
+                await this.Send(this.Id, new E1());
             }
 
-            void ExitInit()
+            async Task ExitInit()
             {
-                this.Send(this.Id, new E2());
+                await this.Send(this.Id, new E2());
             }
             
             class S1 : MachineState { }

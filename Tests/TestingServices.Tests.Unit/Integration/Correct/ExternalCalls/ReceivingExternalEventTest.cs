@@ -35,9 +35,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 
         class Engine
         {
-            public static void Send(Runtime runtime, MachineId target)
+            public static async Task Send(Runtime runtime, MachineId target)
             {
-                runtime.SendEvent(target, new E1(2));
+                await runtime.SendEventAsync(target, new E1(2));
             }
         }
 
@@ -48,9 +48,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E1), nameof(HandleEvent))]
             class Init : MachineState { }
 
-            void InitOnEntry()
+            async Task InitOnEntry()
             {
-                Engine.Send(this.Runtime, this.Id);
+                await Engine.Send(this.Runtime, this.Id);
             }
 
             void HandleEvent()

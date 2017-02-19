@@ -34,7 +34,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnExit(nameof(ExitMethod))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
                 this.Foo();
                 switch(ErrorTypeVal)
@@ -46,7 +46,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                         this.Raise(new E());
                         break;
                     case ErrorType.CALL_SEND:
-                        this.Send(Id, new E());
+                        await this.Send(Id, new E());
                         break;
                     case ErrorType.ON_EXIT:
                         break;

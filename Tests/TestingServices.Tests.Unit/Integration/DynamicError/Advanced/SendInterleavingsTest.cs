@@ -40,12 +40,12 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             class Init : MachineState { }
 
             int count1 = 0;
-            void Initialize()
+            async Task Initialize()
             {
-                var s1 = CreateMachine(typeof(Sender1));
-                this.Send(s1, new Config(this.Id));
-                var s2 = CreateMachine(typeof(Sender2));
-                this.Send(s2, new Config(this.Id));
+                var s1 = await this.CreateMachine(typeof(Sender1));
+                await this.Send(s1, new Config(this.Id));
+                var s2 = await this.CreateMachine(typeof(Sender2));
+                await this.Send(s2, new Config(this.Id));
             }
 
             void OnEvent1()
@@ -64,10 +64,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(Config), nameof(Run))]
             class State : MachineState { }
 
-            void Run()
+            async Task Run()
             {
-                Send((this.ReceivedEvent as Config).Id, new Event1());
-                Send((this.ReceivedEvent as Config).Id, new Event1());
+                await this.Send((this.ReceivedEvent as Config).Id, new Event1());
+                await this.Send((this.ReceivedEvent as Config).Id, new Event1());
             }
         }
 
@@ -77,9 +77,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(Config), nameof(Run))]
             class State : MachineState { }
 
-            void Run()
+            async Task Run()
             {
-                Send((this.ReceivedEvent as Config).Id, new Event2());
+                await this.Send((this.ReceivedEvent as Config).Id, new Event2());
             }
         }
 

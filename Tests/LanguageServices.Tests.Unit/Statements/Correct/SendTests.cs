@@ -75,7 +75,7 @@ class S : MachineState
 }
 protected void psharp_S_on_entry_action()
 {
-this.Send(this.Target,new e1());
+await this.Send(this.Target,new e1());
 }
 }
 }";
@@ -137,7 +137,7 @@ class S : MachineState
 }
 protected void psharp_S_on_entry_action()
 {
-this.Send(this.Target,new e1(10));
+await this.Send(this.Target,new e1(10));
 }
 }
 }";
@@ -203,7 +203,7 @@ class S : MachineState
 protected void psharp_S_on_entry_action()
 {
 string s = ""hello"";
-this.Send(this.Target,new e1(10, s));
+await this.Send(this.Target,new e1(10, s));
 }
 }
 }";

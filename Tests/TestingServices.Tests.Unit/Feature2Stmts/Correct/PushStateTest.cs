@@ -32,13 +32,11 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E3), nameof(bar))]
             class S1 : MachineState { }
 
-            void foo()
-            {
-            }
+            void foo() { }
 
-            void bar()
+            async Task bar()
             {
-                this.Pop();
+                await this.Pop();
             }
 
         }
@@ -58,12 +56,12 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(Conf))]
             class Init : MachineState { }
 
-            void Conf()
+            async Task Conf()
             {
-                var a = this.CreateMachine(typeof(A));
-                this.Send(a, new E2()); // push(S1)
-                this.Send(a, new E1()); // execute foo without popping
-                this.Send(a, new E3()); // can handle it because A is still in S1
+                var a = await this.CreateMachine(typeof(A));
+                await this.Send(a, new E2()); // push(S1)
+                await this.Send(a, new E1()); // execute foo without popping
+                await this.Send(a, new E3()); // can handle it because A is still in S1
             }
 
         }

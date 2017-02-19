@@ -49,19 +49,18 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Unit), typeof(Active))]
             class Init : MachineState { }
 
-            void InitOnEntry()
+            async Task InitOnEntry()
             {
                 this.Workers = new List<MachineId>();
 
                 for (int idx = 0; idx < 3; idx++)
                 {
-                    var worker = this.CreateMachine(typeof(Worker));
-                    this.Send(worker, new Config(this.Id));
+                    var worker = await this.CreateMachine(typeof(Worker));
+                    await this.Send(worker, new Config(this.Id));
                     this.Workers.Add(worker);
                 }
 
-                this.Monitor<M>(new MConfig(this.Workers));
-
+                await this.Monitor<M>(new MConfig(this.Workers));
                 this.Raise(new Unit());
             }
 
@@ -69,17 +68,17 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(FinishedProcessing), nameof(ProcessWorkerIsDone))]
             class Active : MachineState { }
 
-            void ActiveOnEntry()
+            async Task ActiveOnEntry()
             {
                 foreach (var worker in this.Workers)
                 {
-                    this.Send(worker, new DoProcessing());
+                    await this.Send(worker, new DoProcessing());
                 }
             }
 
-            void ProcessWorkerIsDone()
+            async Task ProcessWorkerIsDone()
             {
-                this.Monitor<M>(new NotifyWorkerIsDone());
+                await this.Monitor<M>(new NotifyWorkerIsDone());
             }
         }
 
@@ -104,11 +103,11 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(DoneOnEntry))]
             class Done : MachineState { }
 
-            void DoneOnEntry()
+            async Task DoneOnEntry()
             {
                 if (this.Random())
                 {
-                    this.Send(this.Master, new FinishedProcessing());
+                    await this.Send(this.Master, new FinishedProcessing());
                 }
 
                 this.Raise(new Halt());

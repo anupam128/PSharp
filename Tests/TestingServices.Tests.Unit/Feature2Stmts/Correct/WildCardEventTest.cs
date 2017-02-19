@@ -33,14 +33,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E3), nameof(bar))]
             class S1 : MachineState { }
 
-            void foo()
-            {
-            }
+            void foo() { }
 
-            void bar()
-            {
-            }
-
+            void bar() { }
         }
 
         class E1 : Event
@@ -53,15 +48,15 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         class B : Machine
         {
             [Start]
-            [OnEntry(nameof(Conf))]
+            [OnEntry(nameof(Configure))]
             class Init : MachineState { }
 
-            void Conf()
+            async Task Configure()
             {
-                var a = this.CreateMachine(typeof(A));
-                this.Send(a, new E3());
-                this.Send(a, new E1());
-                this.Send(a, new E2());
+                var a = await this.CreateMachine(typeof(A));
+                await this.Send(a, new E3());
+                await this.Send(a, new E1());
+                await this.Send(a, new E2());
             }
 
         }

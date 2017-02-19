@@ -75,7 +75,7 @@ class S : MachineState
 }
 protected void psharp_S_on_entry_action()
 {
-this.CreateMachine(typeof(M));
+await this.CreateMachine(typeof(M));
 }
 }
 }";
@@ -134,7 +134,7 @@ class S : MachineState
 }
 protected void psharp_S_on_entry_action()
 {
-this.CreateMachine(typeof(M),""NamedMachine"");
+await this.CreateMachine(typeof(M),""NamedMachine"");
 }
 }
 }";
@@ -196,7 +196,7 @@ class S : MachineState
 }
 protected void psharp_S_on_entry_action()
 {
-this.CreateMachine(typeof(M),new e1(10));
+await this.CreateMachine(typeof(M),new e1(10));
 }
 }
 }";
@@ -262,7 +262,7 @@ class S : MachineState
 protected void psharp_S_on_entry_action()
 {
 string s = ""hello"";
-this.CreateMachine(typeof(M),new e1(10, s));
+await this.CreateMachine(typeof(M),new e1(10, s));
 }
 }
 }";
@@ -324,7 +324,7 @@ class S : MachineState
 }
 protected void psharp_S_on_entry_action()
 {
-this.CreateMachine(typeof(M),""NamedMachine"",new e1(10));
+await this.CreateMachine(typeof(M),""NamedMachine"",new e1(10));
 }
 }
 }";
@@ -390,7 +390,7 @@ class S : MachineState
 protected void psharp_S_on_entry_action()
 {
 string s = ""hello"";
-this.CreateMachine(typeof(M),""NamedMachine"",new e1(10, s));
+await this.CreateMachine(typeof(M),""NamedMachine"",new e1(10, s));
 }
 }
 }";

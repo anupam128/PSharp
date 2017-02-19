@@ -42,13 +42,13 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(ActiveOnEntry))]
             class Active : MachineState { }
 
-            void ActiveOnEntry()
+            async Task ActiveOnEntry()
             {
-                Process();
+                await Process();
                 this.Assert(this.Value < 3, "Value is '{0}' (expected less than '3').", this.Value);
             }
 
-            async void Process()
+            async Task Process()
             {
                 Task t = Increment();
                 this.Value++;

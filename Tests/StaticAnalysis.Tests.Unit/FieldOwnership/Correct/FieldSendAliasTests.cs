@@ -67,10 +67,10 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var otherLetter = letter;
   letter = this.Foo(letter);
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
  }
 
  Letter Foo(Letter letter)

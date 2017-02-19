@@ -43,10 +43,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Unit), typeof(S2))]
             class S : MachineState { }
 
-            void SOnEntry()
+            async Task SOnEntry()
             {
-                this.N = this.CreateMachine(typeof(N));
-                this.Send(this.N, new E(this.Id));
+                this.N = await this.CreateMachine(typeof(N));
+                await this.Send(this.N, new E(this.Id));
                 this.Raise(new Unit());
             }
 
@@ -55,17 +55,17 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(E), typeof(S3))]
             class S2 : MachineState { }
 
-            void S2OnEntry()
+            async Task S2OnEntry()
             {
-                this.Send(this.Id, new Unit());
+                await this.Send(this.Id, new Unit());
             }
 
             [OnEntry(nameof(S3OnEntry))]
             class S3 : MachineState { }
 
-            void S3OnEntry()
+            async Task S3OnEntry()
             {
-                this.Monitor<LivenessMonitor>(new E(this.Id));
+                await this.Monitor<LivenessMonitor>(new E(this.Id));
                 this.Raise(new Halt());
             }
         }
@@ -76,9 +76,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(Unit), nameof(Foo))]
             class S : MachineState { }
 
-            void Foo()
+            async Task Foo()
             {
-                this.Send((this.ReceivedEvent as E).A, new E(this.Id));
+                await this.Send((this.ReceivedEvent as E).A, new E(this.Id));
             }
         }
 

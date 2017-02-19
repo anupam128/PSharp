@@ -46,10 +46,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Unit), typeof(Active))]
             class Init : MachineState { }
 
-            void InitOnEntry()
+            async Task InitOnEntry()
             {
-                this.Client = this.CreateMachine(typeof(Client));
-                this.Send(this.Client, new Config(this.Id));
+                this.Client = await this.CreateMachine(typeof(Client));
+                await this.Send(this.Client, new Config(this.Id));
                 this.Raise(new Unit());
             }
 
@@ -57,14 +57,14 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(Pong), nameof(SendPing))]
             class Active : MachineState { }
 
-            void ActiveOnEntry()
+            async Task ActiveOnEntry()
             {
-                this.SendPing();
+                await this.SendPing();
             }
 
-            void SendPing()
+            async Task SendPing()
             {
-                this.Send(this.Client, new Ping());
+                await this.Send(this.Client, new Ping());
             }
         }
 
@@ -93,16 +93,16 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 while (this.Counter < 5)
                 {
                     await this.Receive(typeof(Ping));
-                    this.SendPong();
+                    await this.SendPong();
                 }
 
                 this.Raise(new Halt());
             }
 
-            private void SendPong()
+            async Task SendPong()
             {
                 this.Counter++;
-                this.Send(this.Server, new Pong());
+                await this.Send(this.Server, new Pong());
             }
         }
 

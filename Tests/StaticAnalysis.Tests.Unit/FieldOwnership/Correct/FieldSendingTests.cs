@@ -53,8 +53,8 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(this.Id));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(this.Id));
  }
 }
 }";

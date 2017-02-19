@@ -45,15 +45,15 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E1), nameof(Action1))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                mac = this.CreateMachine(typeof(Real2));
+                mac = await this.CreateMachine(typeof(Real2));
                 this.Raise(new E1());
             }
 
-            void ExitInit()
+            async Task ExitInit()
             {
-                this.Send(mac, new E2(test));
+                await this.Send(mac, new E2(test));
             }
 
             class S1 : MachineState { }

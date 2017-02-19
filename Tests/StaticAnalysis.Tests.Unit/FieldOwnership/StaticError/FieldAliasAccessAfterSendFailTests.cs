@@ -67,9 +67,9 @@ class M : Machine
  void FirstOnEntryAction()
  {
   this.Letter = new Letter(""test"", 0);
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   var otherLetter = this.Letter;
-  this.Send(this.Target, new eUnit(this.Letter));
+  await this.Send(this.Target, new eUnit(this.Letter));
   otherLetter.Text = ""changed"";
   otherLetter.Num = 1;
  }
@@ -135,9 +135,9 @@ class M : Machine
 
  void FirstOnEntryAction()
  {
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   this.Letter = new Letter(""London"");
-  this.Send(this.Target, new eUnit(this.Letter));
+  await this.Send(this.Target, new eUnit(this.Letter));
   this.Foo();
  }
 

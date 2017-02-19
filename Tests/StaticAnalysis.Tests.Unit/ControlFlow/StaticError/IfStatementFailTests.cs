@@ -76,7 +76,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = letter;
 
@@ -89,7 +89,7 @@ class M : Machine
    otherLetter = new Letter(""Redmond"");
   }
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   letter.Text = ""text"";
  }
@@ -166,7 +166,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = letter;
 
@@ -175,7 +175,7 @@ class M : Machine
   else if (num == 1)
    otherLetter = new Letter(""Redmond"");
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   letter.Text = ""text"";
  }
@@ -252,7 +252,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = new Letter(""Bangalore"");
 
@@ -265,7 +265,7 @@ class M : Machine
    otherLetter = new Letter(""Redmond"");
   }
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   letter.Text = ""text"";
  }
@@ -342,7 +342,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = new Letter(""Bangalore"");
 
@@ -355,7 +355,7 @@ class M : Machine
    otherLetter = letter;
   }
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   letter.Text = ""text"";
  }
@@ -432,12 +432,12 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
 
   if (num == 0)
   {
-   this.Send(this.Target, new eUnit(letter));
+   await this.Send(this.Target, new eUnit(letter));
   }
   else
   {
@@ -519,7 +519,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
 
   if (num == 0)
@@ -528,7 +528,7 @@ class M : Machine
   }
   else
   {
-   this.Send(this.Target, new eUnit(letter));
+   await this.Send(this.Target, new eUnit(letter));
   }
 
   letter.Text = ""text"";
@@ -606,7 +606,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = new Letter(""Bangalore"");
 
@@ -625,7 +625,7 @@ class M : Machine
     otherLetter = new Letter(""Bangalore"");
    }
 
-   this.Send(this.Target, new eUnit(otherLetter));
+   await this.Send(this.Target, new eUnit(otherLetter));
   }
 
   letter.Text = ""text"";
@@ -704,7 +704,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = new Letter(""Bangalore"");
 
@@ -719,7 +719,7 @@ class M : Machine
    otherLetter = letter;
   }
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   this.Letter.Text = ""text"";
  }

@@ -64,8 +64,8 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(letter));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(letter));
   var text = letter.Text;
  }
 }
@@ -136,8 +136,8 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(letter));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(letter));
   var text = letter.Text;
  }
 }
@@ -209,8 +209,8 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M));
-  this.Send(this.Target, new eUnit(letter));
+  this.Target = await this.CreateMachine(typeof(M));
+  await this.Send(this.Target, new eUnit(letter));
   this.Text = letter.Text;
  }
 }
@@ -281,13 +281,13 @@ class M : Machine
  void FirstOnEntryAction()
  {
   var letter = new Letter(""test"");
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   this.Foo(letter);
  }
 
  void Foo(Letter letter)
  {
-  this.Send(this.Target, new eUnit(letter));
+  await this.Send(this.Target, new eUnit(letter));
   var text = letter.Text;
  }
 }

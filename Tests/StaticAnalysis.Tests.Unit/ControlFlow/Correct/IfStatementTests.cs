@@ -76,7 +76,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = letter;
 
@@ -89,7 +89,7 @@ class M : Machine
    otherLetter = new Letter(""Redmond"");
   }
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   letter.Text = ""text"";
  }
@@ -167,7 +167,7 @@ class M : Machine
  {
   int num = (this.ReceivedEvent as eReq).Value;
 
-  this.Target = this.CreateMachine(typeof(M));
+  this.Target = await this.CreateMachine(typeof(M));
   Letter letter = new Letter(""London"");
   Letter otherLetter = letter;
 
@@ -182,7 +182,7 @@ class M : Machine
 
   otherLetter = new Letter(""Bangalore"");
 
-  this.Send(this.Target, new eUnit(otherLetter));
+  await this.Send(this.Target, new eUnit(otherLetter));
 
   letter.Text = ""text"";
  }

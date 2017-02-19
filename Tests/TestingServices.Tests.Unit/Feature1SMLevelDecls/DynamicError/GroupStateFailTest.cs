@@ -63,9 +63,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Raise(new E());
             }
 
-            void States2S2OnEntry()
+            async Task States2S2OnEntry()
             {
-                this.Monitor<M>(new E());
+                await this.Monitor<M>(new E());
             }
         }
 

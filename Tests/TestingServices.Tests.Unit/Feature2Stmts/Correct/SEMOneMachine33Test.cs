@@ -47,7 +47,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEntry(nameof(EntryInit))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
                 l = new List<int>();
                 l.Insert(0, 12);
@@ -56,9 +56,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 l.Insert(0, 23);
                 l.Insert(0, 12);
                 l.Insert(0, 23);
-                mac = this.CreateMachine(typeof(Tester));
-                this.Send(mac, new Config(l, 1));
-                this.Send(mac, new SeqPayload(l));
+                mac = await this.CreateMachine(typeof(Tester));
+                await this.Send(mac, new Config(l, 1));
+                await this.Send(mac, new SeqPayload(l));
             }
         }
 

@@ -68,19 +68,19 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E2), nameof(Action1))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                GhostMachine = this.CreateMachine(typeof(Ghost));
-                this.Send(GhostMachine, new Config(this.Id));
+                GhostMachine = await this.CreateMachine(typeof(Ghost));
+                await this.Send(GhostMachine, new Config(this.Id));
                 this.Raise(new Unit());
             }
 
             [OnEntry(nameof(EntryS1))]
             class S1 : MachineState { }
 
-            void EntryS1()
+            async Task EntryS1()
             {
-                this.Send(GhostMachine, new E1());
+                await this.Send(GhostMachine, new E1());
             }
 
             [OnEntry(nameof(EntryS2))]
@@ -92,9 +92,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Assert(false);
             }
 
-            void Action1()
+            async Task Action1()
             {
-                this.Send(GhostMachine, new E3());
+                await this.Send(GhostMachine, new E3());
             }
         }
 
@@ -116,17 +116,17 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(E3), typeof(S2))]
             class S1 : MachineState { }
 
-            void EntryS1()
+            async Task EntryS1()
             {
-                this.Send(RealMachine, new E2(100));
+                await this.Send(RealMachine, new E2(100));
             }
 
             [OnEntry(nameof(EntryS2))]
             class S2 : MachineState { }
 
-            void EntryS2()
+            async Task EntryS2()
             {
-                this.Send(RealMachine, new E4());
+                await this.Send(RealMachine, new E4());
             }
         }
 

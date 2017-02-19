@@ -49,23 +49,23 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventDoAction(typeof(E3), nameof(Action1))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                this.Send(this.Id, new E1());
+                await this.Send(this.Id, new E1());
             }
 
-            void ExitInit()
+            async Task ExitInit()
             {
-                this.Send(this.Id, new E2());
+                await this.Send(this.Id, new E2());
             }
 
             [OnEntry(nameof(EntryS1))]
             class S1 : MachineState { }
 
-            void EntryS1()
+            async Task EntryS1()
             {
                 test = true;
-                this.Send(this.Id, new E3());
+                await this.Send(this.Id, new E3());
                 // at this point, the queue is: E1; E3; Real1_S1 pops and Real1_Init is re-entered
             }
 

@@ -47,10 +47,10 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Raise(new Unit());
             }
 
-            void bar()
+            async Task bar()
             {
                 var e = this.ReceivedEvent as E2;
-                this.Send(e.mid, new E2(this.Id));
+                await this.Send(e.mid, new E2(this.Id));
             }
         }
 
@@ -63,9 +63,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 
             async Task InitOnEntry()
             {
-                var m = this.CreateMachine(typeof(A));
-                this.Send(m, new E1());
-                this.Send(m, new E2(this.Id));
+                var m = await this.CreateMachine(typeof(A));
+                await this.Send(m, new E1());
+                await this.Send(m, new E2(this.Id));
                 var e = await this.Receive(typeof(E2)) as E2;
                 //Console.WriteLine("Got Response from {0}", e.mid);
             }

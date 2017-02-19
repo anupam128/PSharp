@@ -90,12 +90,12 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Unit), typeof(BangaloreOffice))]
             class Init : MachineState { }
 
-            void EntryInit()
+            async Task EntryInit()
             {
-                TravelAgentMachine = this.CreateMachine(typeof(TravelAgent));
-                this.Send(TravelAgentMachine, new Config(this.Id));
-                CityCabMachine = this.CreateMachine(typeof(CityCab));
-                this.Send(CityCabMachine, new Config(this.Id));
+                TravelAgentMachine = await this.CreateMachine(typeof(TravelAgent));
+                await this.Send(TravelAgentMachine, new Config(this.Id));
+                CityCabMachine = await this.CreateMachine(typeof(CityCab));
+                await this.Send(CityCabMachine, new Config(this.Id));
                 RemoteCheckIn = false;
                 this.Raise(new Unit());
             }
@@ -113,21 +113,21 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Raise(new Unit());
             }
 
-            void ExitBangaloreOffice()
+            async Task ExitBangaloreOffice()
             {
                 if (this.ReceivedEvent.GetType() == typeof(FlightBooked))
                 {
-                    this.Send(TravelAgentMachine, new Thanks());
+                    await this.Send(TravelAgentMachine, new Thanks());
                 }
             }
 
             [OnEntry(nameof(EntrySBookFlight))]
             class SBookFlight : MachineState { }
 
-            void EntrySBookFlight()
+            async Task EntrySBookFlight()
             {
-                this.Send(TravelAgentMachine, new BookFlight());
-                this.Pop();
+                await this.Send(TravelAgentMachine, new BookFlight());
+                await this.Pop();
             }
 
             [OnEntry(nameof(EntrySBookCab))]
@@ -136,18 +136,18 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(CabBooked), typeof(TakeCab))]
             class SBookCab : MachineState { }
 
-            void EntrySBookCab()
+            async Task EntrySBookCab()
             {
-                this.Send(CityCabMachine, new BookCab());
+                await this.Send(CityCabMachine, new BookCab());
             }
 
-            void ExitSBookCab()
+            async Task ExitSBookCab()
             {
                 this.Assert(RemoteCheckIn == false);
                 RemoteCheckIn = true;
                 if (this.ReceivedEvent.GetType() != typeof(Default))
                 {
-                    this.Send(CityCabMachine, new Thanks());
+                    await this.Send(CityCabMachine, new Thanks());
                 }
             }
 
@@ -238,16 +238,16 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Thanks), typeof(Init))]
             class SBookFlight : MachineState { }
 
-            void EntrySBookFlight()
+            async Task EntrySBookFlight()
             {
                 if (this.Random())
                 {
-                    this.Send(EmployeeMachine, new TryAgain());
+                    await this.Send(EmployeeMachine, new TryAgain());
                     this.Raise(new Unit());
                 }
                 else
                 {
-                    this.Send(EmployeeMachine, new FlightBooked());
+                    await this.Send(EmployeeMachine, new FlightBooked());
                 }
             }
         }
@@ -275,7 +275,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(Thanks), typeof(Init))]
             class SBookCab : MachineState { }
 
-            void EntrySBookCab()
+            async Task EntrySBookCab()
             {
                 if (this.Random())
                 {
@@ -283,7 +283,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 }
                 else
                 {
-                    this.Send(EmployeeMachine, new CabBooked());
+                    await this.Send(EmployeeMachine, new CabBooked());
                 }
             }
         }

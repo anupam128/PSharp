@@ -46,11 +46,11 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Raise(new Success());
             }
 
-            void SuccessAction()
+            async Task SuccessAction()
             {
-                x = Func1(1, 1);
+                x = await Func1(1, 1);
                 this.Assert(x == 2);
-                y = Func2(x); // x == 2
+                y = await Func2(x); // x == 2
             }
 
             void PingAction()
@@ -61,7 +61,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             }
 
             // i: value passed; j: identifies caller (1: Success handler;  2: Func2)
-            int Func1(int i, int j)
+            async Task<int> Func1(int i, int j)
             {
                 if (j == 1)
                 {
@@ -73,18 +73,18 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                     this.Assert(i == 3);
                     i = i + 1;
                     this.Assert(i == 4);
-                    this.Send(this.Id, new Ping(i));
+                    await this.Send(this.Id, new Ping(i));
                     this.Assert(i == 4);
                 }
 
                 return i;
             }
 
-            int Func2(int v)
+            async Task<int> Func2(int v)
             {
                 v = v + 1;
                 this.Assert(v == 3);
-                x = Func1(v, 2);
+                x = await Func1(v, 2);
                 this.Assert(x == 4);
                 return v;
             }

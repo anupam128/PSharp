@@ -68,18 +68,18 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 this.Raise(new E2());
             }
 
-            void ExitInit()
+            async Task ExitInit()
             {
-                GhostMachine = this.CreateMachine(typeof(Ghost));
-                this.Send(GhostMachine, new Config(this.Id));
+                GhostMachine = await this.CreateMachine(typeof(Ghost));
+                await this.Send(GhostMachine, new Config(this.Id));
             }
 
             [OnEntry(nameof(EntryS1))]
             class S1 : MachineState { }
 
-            void EntryS1()
+            async Task EntryS1()
             {
-                this.Send(GhostMachine, new E1());
+                await this.Send(GhostMachine, new E1());
             }
         }
 

@@ -51,9 +51,9 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 
             void ExitInit() { }
 
-            void InitAction()
+            async Task InitAction()
             {
-                this.Send(this.Id, new E1());
+                await this.Send(this.Id, new E1());
             }
 
             [OnEntry(nameof(EntryS1))]

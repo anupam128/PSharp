@@ -65,7 +65,7 @@ class M : Machine
  {
   var letter = new Letter(""test"");
   letter.Text = ""changed"";
-  this.Target = this.CreateMachine(typeof(M), new eUnit(letter));
+  this.Target = await this.CreateMachine(typeof(M), new eUnit(letter));
  }
 }
 }";
@@ -134,7 +134,7 @@ class M : Machine
  void Foo(Letter letter)
  {
   letter.Text = ""changed"";
-  this.Target = this.CreateMachine(typeof(M), new eUnit(letter));
+  this.Target = await this.CreateMachine(typeof(M), new eUnit(letter));
  }
 }
 }";

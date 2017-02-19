@@ -44,19 +44,19 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             [OnEventGotoState(typeof(UserEvent), typeof(HandleEvent))]
             class WaitForUser : MachineState { }
 
-            void WaitForUserOnEntry()
+            async Task WaitForUserOnEntry()
             {
-                this.Monitor<WatchDog>(new Waiting());
-                this.Send(this.Id, new UserEvent());
+                await this.Monitor<WatchDog>(new Waiting());
+                await this.Send(this.Id, new UserEvent());
             }
 
             [OnEntry(nameof(HandleEventOnEntry))]
             [OnEventGotoState(typeof(Done), typeof(HandleEvent))]
             class HandleEvent : MachineState { }
 
-            void HandleEventOnEntry()
+            async Task HandleEventOnEntry()
             {
-                this.Monitor<WatchDog>(new Computing());
+                await this.Monitor<WatchDog>(new Computing());
             }
         }
 
