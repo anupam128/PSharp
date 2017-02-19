@@ -1240,7 +1240,11 @@ namespace Microsoft.PSharp
 		{
 			try
 			{
-				await (Task)action.Invoke(this, null);
+                object task = action.Invoke(this, null);
+                if (task != null)
+                {
+                    await (Task)task;
+                }
 			}
 			catch (Exception ex)
 			{
