@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChordFinger
+namespace ChordFingerBug
 {
     class StabilizeTimer : Machine
     {
@@ -50,7 +50,7 @@ namespace ChordFinger
         void Process()
         {
             Counter++;
-            if(Counter == 10)
+            if (Counter == 10)
             {
                 Counter = 0;
                 Send(Id, new Tick());

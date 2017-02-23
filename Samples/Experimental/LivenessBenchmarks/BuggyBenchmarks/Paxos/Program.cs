@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChordFinger
+namespace Paxos
 {
     class Program
     {
@@ -19,8 +19,7 @@ namespace ChordFinger
         [Microsoft.PSharp.Test]
         public static void Execute(PSharpRuntime runtime)
         {
-            runtime.RegisterMonitor(typeof(LivenessMonitor));
-            runtime.CreateMachine(typeof(ClusterManager));
+            runtime.CreateMachine(typeof(Environment));
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChordFinger
+namespace ChordFingerBug
 {
     class ClusterManager : Machine
     {

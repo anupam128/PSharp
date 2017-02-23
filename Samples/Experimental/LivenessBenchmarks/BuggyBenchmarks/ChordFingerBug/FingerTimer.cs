@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChordFinger
+namespace ChordFingerBug
 {
-    class StabilizeTimer : Machine
+    class FingerTimer : Machine
     {
         #region events
         public class Config : Event
@@ -50,7 +50,7 @@ namespace ChordFinger
         void Process()
         {
             Counter++;
-            if(Counter == 10)
+            if (Counter == 10)
             {
                 Counter = 0;
                 Send(Id, new Tick());
@@ -61,7 +61,7 @@ namespace ChordFinger
 
         void OnTick()
         {
-            Send(Target, new ChordNode.Stabilize());
+            Send(Target, new ChordNode.FixFingers());
             Raise(new Local());
         }
         #endregion

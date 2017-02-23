@@ -35,10 +35,12 @@ namespace ChordFinger
         {
             public int Id;
             public int Target;
-            public FindSuccessorFinger(int id, int target)
+            public int Next;
+            public FindSuccessorFinger(int id, int target, int next)
             {
                 this.Id = id;
                 this.Target = target;
+                this.Next = next;
             }
         }
         class FindSuccessorResp : Event
@@ -52,9 +54,11 @@ namespace ChordFinger
         class FindSuccessorFingerResp : Event
         {
             public int Succ;
-            public FindSuccessorFingerResp(int succ)
+            public int Next;
+            public FindSuccessorFingerResp(int succ, int next)
             {
                 this.Succ = succ;
+                this.Next = next;
             }
         }
         class FindSuccessorFwd : Event
@@ -71,14 +75,18 @@ namespace ChordFinger
         {
             public int Id;
             public int SuccFwd;
-            public FindSuccessorFingerFwd(int id, int succFwd)
+            public int Next;
+            public FindSuccessorFingerFwd(int id, int succFwd, int next)
             {
                 this.Id = id;
                 this.SuccFwd = succFwd;
+                this.Next = next;
             }
         }
         public class Create : Event { }
         class Local : Event{ }
+        class Fixing : Event { }
+        class Fixed : Event { }
         public class Join : Event
         {
             public int JoinToId;
@@ -120,7 +128,7 @@ namespace ChordFinger
         int Successor;
         int Predecessor;
         int ChordId;
-        Dictionary<int, int> Finger;
+        int[] Finger;
         int Next;
         #endregion
 
@@ -142,9 +150,26 @@ namespace ChordFinger
         [OnEventDoAction(typeof(PrintSuccessor), nameof(OnPrintSuccessor))]
         [OnEventDoAction(typeof(FixFingers), nameof(OnFixFingers))]
         [OnEventDoAction(typeof(FindSuccessorFinger), nameof(OnFindSuccessorFinger))]
+        [OnEventGotoState(typeof(Fixing), typeof(FixingInProgress))]
+        class Waiting : MachineState { }
+
+        [OnEventDoAction(typeof(FindSuccessorFinger), nameof(OnFindSuccessorFinger))]
         [OnEventDoAction(typeof(FindSuccessorFingerResp), nameof(OnFindSuccessorFingerResp))]
         [OnEventDoAction(typeof(FindSuccessorFingerFwd), nameof(OnFindSuccessorFingerFwd))]
-        class Waiting : MachineState { }
+        [OnEventGotoState(typeof(Fixed), typeof(Waiting))]
+
+        [OnEventDoAction(typeof(Notify), nameof(OnNotify))]
+        [OnEventDoAction(typeof(GetPredecessorResp), nameof(StabilizeCont))]
+        [OnEventDoAction(typeof(GetPredecessor), nameof(OnGetPredecessor))]
+        [OnEventDoAction(typeof(FindSuccessor), nameof(OnFindSuccessor))]
+        [OnEventDoAction(typeof(FindSuccessorResp), nameof(OnFindSuccessorResp))]
+        [OnEventDoAction(typeof(FindSuccessorFwd), nameof(OnFindSuccessorFwd))]
+        [OnEventDoAction(typeof(Join), nameof(OnJoin))]
+        [OnEventDoAction(typeof(Stabilize), nameof(OnStabilize))]
+        [OnEventDoAction(typeof(Create), nameof(OnCreate))]
+
+        [IgnoreEvents(typeof(FixFingers))]
+        class FixingInProgress : MachineState { }
         #endregion
 
         #region actions
@@ -155,16 +180,23 @@ namespace ChordFinger
 
             if (id > ChordId && id <= Successor)
                 Send(NodeIDs[target], new FindSuccessorResp(Successor));
-            else if(ChordId > Successor && id == Successor)
+            else if(ChordId > Successor && (!(id > Successor && id <= ChordId)))
                 Send(NodeIDs[target], new FindSuccessorResp(Successor));
             else if (ChordId == Successor)
                 Send(NodeIDs[target], new FindSuccessorResp(Successor));
             else
             {
-                int nPrime;
-                if (ChordId == id && Finger[1] != ChordId)
-                    nPrime = Finger[1];
-                else
+                int nPrime = -1;
+                for(int i  = 2; i >= 1; i--)
+                {
+                    if(Finger[i] > ChordId && Finger[i] < id || 
+                        (ChordId == id && Finger[i] != ChordId) ||
+                        (ChordId > id && !(Finger[i] >= id && Finger[i] <= ChordId)))
+                    {
+                        nPrime = Finger[i];
+                    }
+                }
+                if(nPrime == -1)
                     nPrime = ChordId;
                 Send(NodeIDs[target], new FindSuccessorFwd(id, nPrime));
             }
@@ -174,14 +206,23 @@ namespace ChordFinger
         {
             var e = (ReceivedEvent as FindSuccessorResp);
             this.Successor = e.Succ;
+            this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifySuccessor(ChordId, Successor));
             Console.WriteLine(">>>>> Successor : {0} ==> {1}", ChordId, Successor);
         }
 
         void OnFindSuccessorFingerResp()
         {
             var e = (ReceivedEvent as FindSuccessorFingerResp);
-            Finger[Next] = e.Succ;
+            Finger[e.Next] = e.Succ;
+            Console.WriteLine("finger successor: " + ChordId + " " + Next + "==> " + Finger[Next]);
             Console.WriteLine(">>>>> Successor : {0} ==> {1}", ChordId, Successor);
+
+            Console.WriteLine("<< Finger Table for {0}: ", ChordId);
+            for (int k = 1; k <= 2; k++)
+            {
+                Console.WriteLine("<{0}>", Finger[k]);
+            }
+            Raise(new Fixed());
         }
 
         void OnFindSuccessorFwd()
@@ -193,28 +234,43 @@ namespace ChordFinger
         void OnFindSuccessorFingerFwd()
         {
             var e = (ReceivedEvent as FindSuccessorFingerFwd);
-            Send(NodeIDs[e.SuccFwd], new FindSuccessorFinger(e.Id, ChordId));
+            Send(NodeIDs[e.SuccFwd], new FindSuccessorFinger(e.Id, ChordId, e.Next));
         }
 
         void OnFindSuccessorFinger()
         {
             var id = (ReceivedEvent as FindSuccessorFinger).Id;
             var target = (ReceivedEvent as FindSuccessorFinger).Target;
+            var nxt = (ReceivedEvent as FindSuccessorFinger).Next;
 
             if (id > ChordId && id <= Successor)
-                Send(NodeIDs[target], new FindSuccessorFingerResp(Successor));
-            else if (ChordId > Successor && id == Successor)
-                Send(NodeIDs[target], new FindSuccessorFingerResp(Successor));
+            {
+                Send(NodeIDs[target], new FindSuccessorFingerResp(Successor, nxt));
+            }
+            else if (ChordId > Successor && (!(id > Successor && id <= ChordId)))
+            {
+                Send(NodeIDs[target], new FindSuccessorFingerResp(Successor, nxt));
+            }
             else if (ChordId == Successor)
-                Send(NodeIDs[target], new FindSuccessorFingerResp(Successor));
+            {
+                Send(NodeIDs[target], new FindSuccessorFingerResp(Successor, nxt));
+            }
             else
             {
-                int nPrime;
-                if (ChordId == id && Finger[1] != ChordId)
-                    nPrime = Finger[1];
-                else
+                int nPrime = -1;
+                for (int i = 2; i >= 1; i--)
+                {
+                    if (Finger[i] > ChordId && Finger[i] < id ||
+                        (ChordId == id && Finger[i] != ChordId) ||
+                        (ChordId > id && !(Finger[i] >= id && Finger[i] <= ChordId)))
+                    {
+                        Console.WriteLine("CLOUDS");
+                        nPrime = Finger[i];
+                    }
+                }
+                if (nPrime == -1)
                     nPrime = ChordId;
-                Send(NodeIDs[target], new FindSuccessorFingerFwd(id, nPrime));
+                Send(NodeIDs[target], new FindSuccessorFingerFwd(id, nPrime, nxt));
             }
         }
 
@@ -222,6 +278,7 @@ namespace ChordFinger
         {
             Predecessor = -1;
             Successor = ChordId;
+            this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifySuccessor(ChordId, Successor));
             Console.WriteLine(">>>>> Successor : {0} ==> {1}", ChordId, Successor);
         }
 
@@ -232,9 +289,18 @@ namespace ChordFinger
             this.NodeIDs = e.NodeIds;
             this.Successor = -1;
             this.Predecessor = -1;
-            this.Finger = new Dictionary<int, int>();
-            Finger.Add(-1, -1);
+            this.Finger = new int[] { -1, -1, -1 };
             Next = 0;
+
+            this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifySuccessor(ChordId, Successor));
+            Console.WriteLine(">>>>> Successor : {0} ==> {1}", ChordId, Successor);
+
+            var Timer = CreateMachine(typeof(StabilizeTimer));
+            Send(Timer, new StabilizeTimer.Config(Id));
+
+            var FinTimer = CreateMachine(typeof(FingerTimer));
+            Send(FinTimer, new FingerTimer.Config(Id));
+
             Raise(new Local());
         }
 
@@ -247,7 +313,7 @@ namespace ChordFinger
 
         void OnStabilize()
         {
-            if(Successor > -1)
+            if (Successor > -1)
                 Send(NodeIDs[Successor], new GetPredecessor(ChordId));
         }
 
@@ -261,19 +327,23 @@ namespace ChordFinger
         {
             var e = (ReceivedEvent as GetPredecessorResp);
             var x = e.Pred;
-            if(x > ChordId && x < Successor || (ChordId == Successor && x != ChordId && x != -1))
+            if (x > ChordId && x < Successor || (ChordId == Successor && x != ChordId && x != -1) ||
+                (ChordId > Successor && !(x >= Successor && x <= ChordId) && x != -1))
             {
                 Successor = x;
+                this.Monitor<LivenessMonitor>(new LivenessMonitor.NotifySuccessor(ChordId, Successor));
                 Console.WriteLine(">>>>> Successor : {0} ==> {1}", ChordId, Successor);
             }
-            Send(NodeIDs[Successor], new Notify(ChordId));
+            if (Successor != -1)
+                Send(NodeIDs[Successor], new Notify(ChordId));
         }
 
         void OnNotify()
         {
             var nPrime = (ReceivedEvent as Notify).N;
-            if(Predecessor == -1 || 
-                (nPrime > Predecessor && nPrime < ChordId || (Predecessor == ChordId && nPrime != ChordId)))
+            if(Predecessor == -1 ||
+                (nPrime > Predecessor && nPrime < ChordId || (Predecessor == ChordId && nPrime != ChordId)) ||
+                (Predecessor > ChordId && !(nPrime >= ChordId && nPrime <= Predecessor)))
             {
                 Predecessor = nPrime;
                 Console.WriteLine(">>>>> Predecessor : {0} ==> {1}", ChordId, Predecessor);
@@ -289,9 +359,11 @@ namespace ChordFinger
         void OnFixFingers()
         {
             Next = Next + 1;
-            if (Next > 1)
+            if (Next > 2)
                 Next = 1;
-            Send(NodeIDs[ChordId], new FindSuccessorFinger(ChordId + (int)Math.Pow(2, Next - 1), ChordId));
+            Console.WriteLine("Fixing finger for {0}, {1}", ChordId, Next);
+            Send(NodeIDs[ChordId], new FindSuccessorFinger((ChordId + (int)Math.Pow(2, Next - 1)) % 4, ChordId, Next));
+            Raise(new Fixing());
         }
         #endregion
     }
