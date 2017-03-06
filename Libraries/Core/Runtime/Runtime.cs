@@ -349,7 +349,7 @@ namespace Microsoft.PSharp
                     IO.GetLine();
                 }
 
-                Environment.Exit(1);
+                throw new PSharpAssertionFailureException("Assertion failure.");
             }
         }
 
@@ -372,7 +372,7 @@ namespace Microsoft.PSharp
                     IO.GetLine();
                 }
 
-                Environment.Exit(1);
+                throw new PSharpAssertionFailureException(message);
             }
         }
 

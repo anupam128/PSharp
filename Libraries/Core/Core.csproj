@@ -55,6 +55,7 @@
     <Reference Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\PSharpAssertionFailureException.cs" />
     <Compile Include="Exceptions\PSharpIOException.cs" />
     <Compile Include="Library\Attributes\Cold.cs" />
     <Compile Include="Library\Attributes\IgnoreEvents.cs" />
