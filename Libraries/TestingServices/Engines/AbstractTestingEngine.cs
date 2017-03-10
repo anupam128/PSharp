@@ -366,7 +366,7 @@ namespace Microsoft.PSharp.TestingServices
                 task.Start();
                 task.Wait(this.CancellationTokenSource.Token);
             }
-            catch (OperationCanceledException)
+            catch (MachineCanceledException)
             {
                 if (this.CancellationTokenSource.IsCancellationRequested)
                 {

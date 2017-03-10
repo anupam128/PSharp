@@ -38,20 +38,25 @@ namespace Microsoft.PSharp.TestingServices
     {
         #region fields
 
-		/// <summary>
-        /// The P# bugfinding scheduler.
+        /// <summary>
+        /// The bug-finding scheduler.
         /// </summary>
         internal BugFindingScheduler BugFinder;
 
 		/// <summary>
-		/// The P# liveness checker.
+		/// The liveness checker.
 		/// </summary>
 		internal LivenessChecker LivenessChecker;
 
-		/// <summary>
-		/// The P# task scheduler.
+        /// <summary>
+        /// The bug-finding synchronization context.
+        /// </summary>
+        internal BugFindingSynchronizationContext SynchronizationContext;
+
+        /// <summary>
+		/// The bug-finding task scheduler.
 		/// </summary>
-		internal TaskScheduler TaskScheduler;
+		internal BugFindingTaskScheduler TaskScheduler;
 
         /// <summary>
         /// The P# program schedule trace.
@@ -73,11 +78,6 @@ namespace Microsoft.PSharp.TestingServices
 		/// The P# program state cache.
 		/// </summary>
 		internal StateCache StateCache;
-
-		/// <summary>
-		/// Collection of machine tasks.
-		/// </summary>
-		private ConcurrentBag<Task> MachineTasks;
 
         /// <summary>
         /// Map from task ids to machines.
@@ -108,12 +108,20 @@ namespace Microsoft.PSharp.TestingServices
             : base(configuration)
         {
             this.RootTaskId = Task.CurrentId;
-            
+
+            this.TaskMap = new ConcurrentDictionary<int, Machine>();
+            this.MachineActionTraceMap = new ConcurrentDictionary<MachineId, MachineActionTrace>();
+
+            //this.SynchronizationContext = new BugFindingSynchronizationContext(this, this.MachineTasks, this.TaskMap);
+            //System.Threading.SynchronizationContext.SetSynchronizationContext(this.SynchronizationContext);
+
+            this.TaskScheduler = new BugFindingTaskScheduler(this, this.TaskMap);
+
             if (this.Configuration.ScheduleIntraMachineConcurrency)
             {
-                this.TaskScheduler = new TaskWrapperScheduler(this, this.MachineTasks);
-                TaskMachineExtensions.TaskScheduler = this.TaskScheduler as TaskWrapperScheduler;
-                this.BugFinder = new TaskAwareBugFindingScheduler(this, strategy);
+                //this.TaskScheduler = new TaskWrapperScheduler(this, this.MachineTasks);
+                //TaskMachineExtensions.TaskScheduler = this.TaskScheduler as TaskWrapperScheduler;
+                //this.BugFinder = new TaskAwareBugFindingScheduler(this, strategy);
             }
             else
             {
@@ -126,10 +134,6 @@ namespace Microsoft.PSharp.TestingServices
             this.BugTrace = new BugTrace();
             this.StateCache = new StateCache(this);
             this.CoverageInfo = new CoverageInfo();
-
-			this.MachineTasks = new ConcurrentBag<Task>();
-            this.TaskMap = new ConcurrentDictionary<int, Machine>();
-            this.MachineActionTraceMap = new ConcurrentDictionary<MachineId, MachineActionTrace>();
         }
 
         /// <summary>
@@ -400,48 +404,48 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="userTask">Task</param>
         internal override void TryCreateTaskMachine(Task userTask)
         {
-            this.Assert(this.TaskScheduler is TaskWrapperScheduler, "Unable to wrap the " +
-                "task in a machine, because the task wrapper scheduler is not enabled.\n");
+            //this.Assert(this.TaskScheduler is TaskWrapperScheduler, "Unable to wrap the " +
+            //    "task in a machine, because the task wrapper scheduler is not enabled.\n");
 
-            MachineId mid = new MachineId(typeof(TaskMachine), null, this);
-            TaskMachine taskMachine = new TaskMachine(this.TaskScheduler as TaskWrapperScheduler,
-                userTask);
-            taskMachine.SetMachineId(mid);
+            //MachineId mid = new MachineId(typeof(TaskMachine), null, this);
+            //TaskMachine taskMachine = new TaskMachine(this.BugFindingTaskScheduler as TaskWrapperScheduler,
+            //    userTask);
+            //taskMachine.SetMachineId(mid);
 
-            if (Task.CurrentId != null && TaskMap.ContainsKey((int)Task.CurrentId) &&
-                this.Configuration.EnableDataRaceDetection)
-            {
-                // Traces machine actions, if data-race detection is enabled.
-                this.MachineActionTraceMap.Add(mid, new MachineActionTrace(mid));
-                var currentMachineId = this.GetCurrentMachineId();
-                this.Assert(currentMachineId != null, "Unable to find current machine Id");
-                this.MachineActionTraceMap[currentMachineId].AddTaskMachineCreationInfo(userTask.Id, mid);
-            }
+            //if (Task.CurrentId != null && TaskMap.ContainsKey((int)Task.CurrentId) &&
+            //    this.Configuration.EnableDataRaceDetection)
+            //{
+            //    // Traces machine actions, if data-race detection is enabled.
+            //    this.MachineActionTraceMap.Add(mid, new MachineActionTrace(mid));
+            //    var currentMachineId = this.GetCurrentMachineId();
+            //    this.Assert(currentMachineId != null, "Unable to find current machine Id");
+            //    this.MachineActionTraceMap[currentMachineId].AddTaskMachineCreationInfo(userTask.Id, mid);
+            //}
 
-            IO.Log($"<CreateLog> '{mid}' is created.");
+            //IO.Log($"<CreateLog> '{mid}' is created.");
 
-            Task task = new Task(() =>
-            {
-                this.BugFinder.NotifyTaskStarted();
-                taskMachine.Run();
-                this.BugFinder.NotifyTaskCompleted();
-            });
+            //Task task = new Task(() =>
+            //{
+            //    this.BugFinder.NotifyTaskStarted();
+            //    taskMachine.Run();
+            //    this.BugFinder.NotifyTaskCompleted();
+            //});
 
-            this.MachineTasks.Add(task);
+            //this.MachineTasks.Add(task);
 
-            this.BugFinder.NotifyNewTaskCreated(task.Id, taskMachine);
+            //this.BugFinder.NotifyNewTaskCreated(task.Id, taskMachine);
 
-            if (this.Configuration.ScheduleIntraMachineConcurrency)
-            {
-                task.Start(this.TaskScheduler);
-            }
-            else
-            {
-                task.Start();
-            }
+            //if (this.Configuration.ScheduleIntraMachineConcurrency)
+            //{
+            //    task.Start(this.TaskScheduler);
+            //}
+            //else
+            //{
+            //    task.Start();
+            //}
 
-            this.BugFinder.WaitForTaskToStart(task.Id);
-            this.BugFinder.Schedule();
+            //this.BugFinder.WaitForTaskToStart(task.Id);
+            //this.BugFinder.Schedule();
         }
 
         /// <summary>
@@ -845,7 +849,7 @@ namespace Microsoft.PSharp.TestingServices
             IO.Log($"<ReceiveLog> Machine '{machine.Id}' " +
                 $"is waiting on events:{events}.");
 
-            this.BugFinder.NotifyTaskBlockedOnEvent(Task.CurrentId);
+            this.BugFinder.NotifyTaskBlockedOnEvent(Task.CurrentId.Value);
             this.BugFinder.Schedule();
         }
 
@@ -891,11 +895,11 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="waitAll">Boolean</param>
         internal void ScheduleOnWait(IEnumerable<Task> blockingTasks, bool waitAll)
         {
-            this.Assert(this.BugFinder is TaskAwareBugFindingScheduler,
-                "Cannot schedule on wait without enabling the task-aware bug finding scheduler.");
-            (this.BugFinder as TaskAwareBugFindingScheduler).NotifyTaskBlocked(
-                Task.CurrentId, blockingTasks, waitAll);
-            this.BugFinder.Schedule();
+            //this.Assert(this.BugFinder is TaskAwareBugFindingScheduler,
+            //    "Cannot schedule on wait without enabling the task-aware bug finding scheduler.");
+            //(this.BugFinder as TaskAwareBugFindingScheduler).NotifyTaskBlocked(
+            //    Task.CurrentId, blockingTasks, waitAll);
+            //this.BugFinder.Schedule();
         }
 
         /// <summary>
@@ -929,31 +933,10 @@ namespace Microsoft.PSharp.TestingServices
 		/// <summary>
 		/// Waits until the bug-finding runtime has finished execution.
 		/// </summary>
-		internal async Task Wait()
+		internal void Wait()
 		{
-            Task[] taskArray = null;
-
-            while (true)
-            {
-                taskArray = this.MachineTasks.ToArray();
-
-                try
-                {
-                    await Task.WhenAll(taskArray);
-                }
-                catch (AggregateException)
-                {
-                    this.MachineTasks = new ConcurrentBag<Task>(
-                        this.MachineTasks.Where(val => !val.IsCompleted));
-
-                    continue;
-                }
-
-                if (taskArray.Length == this.MachineTasks.Count)
-                {
-                    break;
-                }
-            }
+            this.BugFinder.Wait();
+            Console.WriteLine("WAIT DONE");
         }
 
         #endregion
@@ -973,7 +956,7 @@ namespace Microsoft.PSharp.TestingServices
             {
                 try
                 {
-                    this.BugFinder.NotifyTaskStarted();
+                    this.BugFinder.NotifyTaskStarted(Task.CurrentId.Value);
 
                     if (isFresh)
                     {
@@ -982,20 +965,21 @@ namespace Microsoft.PSharp.TestingServices
 
                     await machine.RunEventHandler();
 
-                    this.BugFinder.NotifyTaskCompleted();
+                    Console.WriteLine("---- DONE ---" + Task.CurrentId.Value);
+                    this.BugFinder.NotifyTaskCompleted(Task.CurrentId.Value);
                 }
-                catch (OperationCanceledException)
+                catch (MachineCanceledException)
                 {
-                    IO.Debug("<Exception> OperationCanceledException was " +
+                    IO.Debug("<Exception> MachineCanceledException was " +
                         $"thrown from Machine '{machine.Id}'.");
                 }
                 finally
                 {
+                    Console.WriteLine("---- REMOVE ---" + Task.CurrentId.Value);
                     this.TaskMap.TryRemove(Task.CurrentId.Value, out machine);
                 }
             });
 
-            this.MachineTasks.Add(task);
             this.TaskMap.TryAdd(task.Id, machine);
 
             this.BugFinder.NotifyNewTaskCreated(task.Id, machine);
@@ -1006,7 +990,7 @@ namespace Microsoft.PSharp.TestingServices
             }
             else
             {
-                task.Start();
+                task.Start(this.TaskScheduler);
             }
 
             this.BugFinder.WaitForTaskToStart(task.Id);

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="TaskWrapperScheduler.cs">
+// <copyright file="BugFindingTaskScheduler.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
 //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -12,64 +12,44 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using Microsoft.PSharp.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PSharp.TestingServices.Threading
 {
     /// <summary>
-    /// Class implementing the P# task wrapper scheduler.
+    /// The P# bug-finding task scheduler.
     /// </summary>
-    internal sealed class TaskWrapperScheduler : TaskScheduler
+    internal sealed class BugFindingTaskScheduler : TaskScheduler
     {
         #region fields
 
         /// <summary>
-        /// The P# runtime.
+        /// The P# bug-finding runtime.
         /// </summary>
-        private Runtime Runtime;
+        private BugFindingRuntime Runtime;
 
         /// <summary>
-        /// The machine tasks.
+        /// Map from task ids to machines.
         /// </summary>
-        private ConcurrentBag<Task> MachineTasks;
-
-        /// <summary>
-        /// The wrapped in a machine user tasks.
-        /// </summary>
-        private ConcurrentBag<Task> WrappedTasks;
+        private ConcurrentDictionary<int, Machine> TaskMap;
 
         #endregion
 
-        #region internal methods
+        #region constructors
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">Runtime</param>
-        /// <param name="machineTasks">Machine tasks</param>
-        internal TaskWrapperScheduler(Runtime runtime, ConcurrentBag<Task> machineTasks)
+        /// <param name="runtime">BugFindingRuntime</param>
+        /// <param name="taskMap">Task map</param>
+        internal BugFindingTaskScheduler(BugFindingRuntime runtime, ConcurrentDictionary<int, Machine> taskMap)
         {
             this.Runtime = runtime;
-            this.MachineTasks = machineTasks;
-            this.WrappedTasks = new ConcurrentBag<Task>();
-        }
-
-        /// <summary>
-        /// Executes the given scheduled task.
-        /// </summary>
-        /// <param name="task">Task</param>
-        internal void Execute(Task task)
-        {
-            ThreadPool.UnsafeQueueUserWorkItem(_ =>
-            {
-                base.TryExecuteTask(task);
-            }, null);
+            this.TaskMap = taskMap;
         }
 
         #endregion
@@ -83,15 +63,29 @@ namespace Microsoft.PSharp.TestingServices.Threading
         /// <param name="task">Task</param>
         protected override void QueueTask(Task task)
         {
-            if (this.MachineTasks.Contains(task))
+            if (this.TaskMap.ContainsKey(task.Id))
             {
+                // If the task was already registered with the P# runtime, then
+                // execute it on the thread pool.
                 this.Execute(task);
             }
             else
             {
-                IO.Log("<ScheduleDebug> Wrapping task {0} in a machine.", task.Id);
-                this.WrappedTasks.Add(task);
-                this.Runtime.TryCreateTaskMachine(task);
+                // Else, the task was spawned by user-code (e.g. due to async/await). In
+                // this case, get the currently scheduled machine (this was the machine
+                // that spawned this task).
+                Machine machine = this.TaskMap[Runtime.BugFinder.ScheduledMachineInfo.Id];
+
+                this.TaskMap.TryRemove(Runtime.BugFinder.ScheduledMachineInfo.Id, out machine);
+                this.TaskMap.TryAdd(task.Id, machine);
+
+                // Notify the bug-finding scheduler about the new task, and then change
+                // the task previously associated with the machine, to the new task.
+                this.Runtime.BugFinder.NotifyNewTaskCreated(task.Id, machine);
+                this.Runtime.BugFinder.NotifyScheduledMachineTaskChanged(task.Id);
+
+                // Execute the new task.
+                this.Execute(task);
             }
         }
 
@@ -112,7 +106,24 @@ namespace Microsoft.PSharp.TestingServices.Threading
         /// <returns>Scheduled tasks</returns>
         protected override IEnumerable<Task> GetScheduledTasks()
         {
-            return this.WrappedTasks;
+            throw new InvalidOperationException("The BugFindingTaskScheduler does not provide access to the scheduled tasks.");
+        }
+
+        #endregion
+
+        #region private methods
+
+        /// <summary>
+        /// Executes the given scheduled task on the
+        /// thread pool.
+        /// </summary>
+        /// <param name="task">Task</param>
+        private void Execute(Task task)
+        {
+            ThreadPool.UnsafeQueueUserWorkItem(_ =>
+            {
+                base.TryExecuteTask(task);
+            }, null);
         }
 
         #endregion

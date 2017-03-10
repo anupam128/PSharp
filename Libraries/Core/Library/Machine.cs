@@ -1261,9 +1261,9 @@ namespace Microsoft.PSharp
 					innerException = innerException.InnerException;
 				}
 
-				if (innerException is OperationCanceledException)
+				if (innerException is MachineCanceledException)
 				{
-					IO.Debug("<Exception> OperationCanceledException was " +
+					IO.Debug("<Exception> MachineCanceledException was " +
 						$"thrown from Machine '{base.Id}'.");
 				}
 				else if (innerException is TaskSchedulerException)

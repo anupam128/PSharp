@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace Microsoft.PSharp.TestingServices.Scheduling
 {
     /// <summary>
-    /// Class implementing machine related information for scheduling purposes.
+    /// Machine related information for scheduling purposes.
     /// </summary>
     public sealed class MachineInfo
     {

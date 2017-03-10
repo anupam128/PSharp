@@ -284,7 +284,7 @@ namespace Microsoft.PSharp.TestingServices
                     }
 
                     // Wait for the test to terminate.
-                    runtime.Wait().Wait();
+                    runtime.Wait();
 
                     if (this.Configuration.EnableDataRaceDetection)
                     {

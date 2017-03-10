@@ -487,7 +487,7 @@ namespace Microsoft.PSharp
 			{
 				action.Invoke(this, null);
 			}
-			catch (OperationCanceledException ex)
+			catch (MachineCanceledException ex)
 			{
 				throw ex;
 			}

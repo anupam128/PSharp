@@ -25,37 +25,43 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
     /// <summary>
     /// Class implementing the basic P# bug-finding scheduler.
     /// </summary>
-    internal class BugFindingScheduler
+    internal sealed class BugFindingScheduler
     {
         #region fields
 
         /// <summary>
         /// The P# runtime.
         /// </summary>
-        protected BugFindingRuntime Runtime;
+        private readonly BugFindingRuntime Runtime;
 
         /// <summary>
         /// The scheduling strategy to be used for bug-finding.
         /// </summary>
-        protected ISchedulingStrategy Strategy;
+        private ISchedulingStrategy Strategy;
+
+        /// <summary>
+        /// The scheduler completion source.
+        /// </summary>
+        private readonly TaskCompletionSource<bool> CompletionSource;
 
         /// <summary>
         /// Map from task ids to machine infos.
         /// </summary>
-        protected ConcurrentDictionary<int, MachineInfo> TaskMap;
+        private ConcurrentDictionary<int, MachineInfo> TaskMap;
 
         /// <summary>
         /// Checks if the scheduler is running.
         /// </summary>
-        protected bool IsSchedulerRunning;
+        private bool IsSchedulerRunning;
+
+        #endregion
+
+        #region properties
 
         /// <summary>
-        /// True if a bug was found.
+        /// Info of the currently scheduled machine.
         /// </summary>
-        internal bool BugFound
-        {
-            get; private set;
-        }
+        internal MachineInfo ScheduledMachineInfo { get; private set; }
 
         /// <summary>
         /// Number of explored steps.
@@ -68,15 +74,17 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Checks if the schedule has been fully explored.
         /// </summary>
-        protected internal bool HasFullyExploredSchedule { get; protected set; }
+        internal bool HasFullyExploredSchedule { get; private set; }
+
+        /// <summary>
+        /// True if a bug was found.
+        /// </summary>
+        internal bool BugFound { get; private set; }
 
         /// <summary>
         /// Bug report.
         /// </summary>
-        internal string BugReport
-        {
-            get; private set;
-        }
+        internal string BugReport { get; private set; }
 
         #endregion
 
@@ -91,6 +99,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         {
             this.Runtime = runtime;
             this.Strategy = strategy;
+            this.CompletionSource = new TaskCompletionSource<bool>();
             this.TaskMap = new ConcurrentDictionary<int, MachineInfo>();
             this.IsSchedulerRunning = true;
             this.BugFound = false;
@@ -100,30 +109,30 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Schedules the next machine to execute.
         /// </summary>
-        internal virtual void Schedule()
+        internal void Schedule()
         {
-            int? id = Task.CurrentId;
+            int? taskId = Task.CurrentId;
 
             // If the caller is the root task, then return.
-            if (id != null && id == this.Runtime.RootTaskId)
+            if (taskId != null && taskId == this.Runtime.RootTaskId)
             {
                 return;
             }
 
             // Checks if synchronisation not controlled by P# was used.
-            if (id == null)
+            if (taskId == null)
             {
                 string message = IO.Format("Detected synchronization context " +
                     "that is not controlled by the P# runtime.");
-                this.Runtime.BugFinder.NotifyAssertionFailure(message, true);
+                this.NotifyAssertionFailure(message, true);
             }
 
-            //if (id == null || id == this.Runtime.RootTaskId)
+            //if (taskId == null || taskId == this.Runtime.RootTaskId)
             //{
             //    return;
             //}
 
-            if (this.BugFound || !this.IsSchedulerRunning)
+            if (!this.IsSchedulerRunning)
             {
                 this.Stop();
             }
@@ -132,9 +141,9 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
             this.CheckIfSchedulingStepsBoundIsReached(false);
 
             MachineInfo machineInfo = null;
-            if (!this.TaskMap.TryGetValue((int)id, out machineInfo))
+            if (!this.TaskMap.TryGetValue((int)taskId, out machineInfo))
             {
-                IO.Debug($"<ScheduleDebug> Unable to schedule task '{id}'.");
+                IO.Debug($"<ScheduleDebug> Unable to schedule task '{taskId}'.");
                 this.Stop();
             }
 
@@ -146,6 +155,8 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 this.HasFullyExploredSchedule = true;
                 this.Stop();
             }
+
+            this.ScheduledMachineInfo = next;
 
             this.Runtime.ScheduleTrace.AddSchedulingChoice(next.Machine.Id);
             next.Machine.ProgramCounter = 0;
@@ -167,7 +178,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 string message = IO.Format("Detected livelock. Machine " +
                     $"'{next.Machine.Id}' is waiting for an event, " +
                     "but no other machine is enabled.");
-                this.Runtime.BugFinder.NotifyAssertionFailure(message, true);
+                this.NotifyAssertionFailure(message, true);
             }
 
             if (machineInfo != next)
@@ -197,7 +208,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
                     if (!machineInfo.IsEnabled)
                     {
-                        throw new OperationCanceledException();
+                        throw new MachineCanceledException();
                     }
                 }
             }
@@ -219,8 +230,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
             if (!this.Strategy.GetNextBooleanChoice(maxValue, out choice))
             {
                 IO.Debug("<ScheduleDebug> Schedule explored.");
-                this.KillRemainingMachines();
-                throw new OperationCanceledException();
+                this.Stop();
             }
 
             if (uniqueId == null)
@@ -267,8 +277,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
             if (!this.Strategy.GetNextIntegerChoice(maxValue, out choice))
             {
                 IO.Debug("<ScheduleDebug> Schedule explored.");
-                this.KillRemainingMachines();
-                throw new OperationCanceledException();
+                this.Stop();
             }
 
             this.Runtime.ScheduleTrace.AddNondeterministicIntegerChoice(choice);
@@ -306,11 +315,11 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Notify that a new task has been created for the given machine.
         /// </summary>
-        /// <param name="id">TaskId</param>
+        /// <param name="taskId">Task id</param>
         /// <param name="machine">Machine</param>
-        internal virtual void NotifyNewTaskCreated(int id, AbstractMachine machine)
+        internal void NotifyNewTaskCreated(int taskId, AbstractMachine machine)
         {
-            MachineInfo machineInfo = new MachineInfo(id, machine);
+            MachineInfo machineInfo = new MachineInfo(taskId, machine);
 
             IO.Debug($"<ScheduleDebug> Created task '{machineInfo.Id}' for machine " +
                 $"'{machineInfo.Machine.Id}'.");
@@ -320,21 +329,16 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
                 machineInfo.IsActive = true;
             }
 
-            this.TaskMap.TryAdd(id, machineInfo);
+            this.TaskMap.TryAdd(taskId, machineInfo);
         }
 
         /// <summary>
         /// Notify that the task has started.
         /// </summary>
-        internal virtual void NotifyTaskStarted()
+        /// <param name="taskId">Task id</param>
+        internal void NotifyTaskStarted(int taskId)
         {
-            int? id = Task.CurrentId;
-            if (id == null)
-            {
-                return;
-            }
-
-            MachineInfo machineInfo = this.TaskMap[(int)id];
+            MachineInfo machineInfo = this.TaskMap[taskId];
 
             IO.Debug($"<ScheduleDebug> Started task '{machineInfo.Id}' of machine " +
                 $"'{machineInfo.Machine.Id}'.");
@@ -354,7 +358,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
                 if (!machineInfo.IsEnabled)
                 {
-                    throw new OperationCanceledException();
+                    throw new MachineCanceledException();
                 }
             }
         }
@@ -362,10 +366,10 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Notify that the task is waiting to receive an event.
         /// </summary>
-        /// <param name="id">TaskId</param>
-        internal void NotifyTaskBlockedOnEvent(int? id)
+        /// <param name="taskId">Task id</param>
+        internal void NotifyTaskBlockedOnEvent(int taskId)
         {
-            MachineInfo machineInfo = this.TaskMap[(int)id];
+            MachineInfo machineInfo = this.TaskMap[taskId];
             machineInfo.IsWaitingToReceive = true;
 
             IO.Debug($"<ScheduleDebug> Task '{machineInfo.Id}' of machine " +
@@ -386,17 +390,47 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         }
 
         /// <summary>
+        /// Notify that the task of the scheduled machine changed.
+        /// This can occur if a machine is using async/await.
+        /// </summary>
+        /// <param name="taskId">Task id</param>
+        internal void NotifyScheduledMachineTaskChanged(int taskId)
+        {
+            MachineInfo parentInfo = this.ScheduledMachineInfo;
+
+            Console.WriteLine(">>> NotifyScheduledMachineTaskChanged from " + parentInfo.Id + " to " + taskId);
+
+            parentInfo.IsEnabled = false;
+            parentInfo.IsCompleted = true;
+
+            this.TaskMap.TryRemove(parentInfo.Id, out parentInfo);
+
+            this.ScheduledMachineInfo = this.TaskMap[taskId];
+            this.ScheduledMachineInfo.HasStarted = true;
+
+            //MachineInfo machineInfo = this.TaskMap[(int)id];
+
+            //IO.Debug($"<ScheduleDebug> Completed task '{machineInfo.Id}' of machine " +
+            //    $"'{machineInfo.Machine.Id}'.");
+
+            //machineInfo.IsEnabled = false;
+            //machineInfo.IsCompleted = true;
+
+            //this.Schedule();
+
+            //IO.Debug($"<ScheduleDebug> Exit task '{machineInfo.Id}' of machine " +
+            //    $"'{machineInfo.Machine.Id}'.");
+
+            //this.TaskMap.TryRemove((int)id, out machineInfo);
+        }
+
+        /// <summary>
         /// Notify that the task has completed.
         /// </summary>
-        internal virtual void NotifyTaskCompleted()
+        /// <param name="taskId">Task id</param>
+        internal void NotifyTaskCompleted(int taskId)
         {
-            int? id = Task.CurrentId;
-            if (id == null)
-            {
-                return;
-            }
-
-            MachineInfo machineInfo = this.TaskMap[(int)id];
+            MachineInfo machineInfo = this.TaskMap[taskId];
 
             IO.Debug($"<ScheduleDebug> Completed task '{machineInfo.Id}' of machine " +
                 $"'{machineInfo.Machine.Id}'.");
@@ -409,16 +443,17 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
             IO.Debug($"<ScheduleDebug> Exit task '{machineInfo.Id}' of machine " +
                 $"'{machineInfo.Machine.Id}'.");
 
-            this.TaskMap.TryRemove((int)id, out machineInfo);
+            this.TaskMap.TryRemove(taskId, out machineInfo);
         }
 
         /// <summary>
         /// Wait for the task to start.
         /// </summary>
-        /// <param name="id">TaskId</param>
-        internal void WaitForTaskToStart(int id)
+        /// <param name="taskId">Task id</param>
+        internal void WaitForTaskToStart(int taskId)
         {
-            MachineInfo machineInfo = this.TaskMap[id];
+            Console.WriteLine("WaitForTaskToStart: " + taskId);
+            MachineInfo machineInfo = this.TaskMap[taskId];
             lock (machineInfo)
             {
                 while (!machineInfo.HasStarted)
@@ -493,8 +528,31 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         internal void Stop()
         {
             this.IsSchedulerRunning = false;
+            this.ScheduledMachineInfo = null;
             this.KillRemainingMachines();
-            throw new OperationCanceledException();
+
+            // Check if the completion source is completed. If not synchronize on
+            // it (as it can only be set once) and set its result.
+            if (!this.CompletionSource.Task.IsCompleted)
+            {
+                lock (this.CompletionSource)
+                {
+                    if (!this.CompletionSource.Task.IsCompleted)
+                    {
+                        this.CompletionSource.SetResult(true);
+                    }
+                }
+            }
+
+            throw new MachineCanceledException();
+        }
+
+        /// <summary>
+        /// Waits the scheduler to terminate.
+        /// </summary>
+        internal void Wait()
+        {
+            this.CompletionSource.Task.Wait();
         }
 
         /// <summary>
@@ -556,13 +614,13 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
         #endregion
 
-        #region protected methods
+        #region private methods
 
         /// <summary>
         /// Returns the number of available machines to schedule.
         /// </summary>
         /// <returns>Int</returns>
-        protected int NumberOfAvailableMachinesToSchedule()
+        private int NumberOfAvailableMachinesToSchedule()
         {
             var availableMachines = this.TaskMap.Values.Where(
                 m => m.IsEnabled && !m.IsBlocked && !m.IsWaitingToReceive).ToList();
@@ -575,7 +633,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// machines.
         /// </summary>
         /// <param name="isSchedulingDecision">Is a machine scheduling decision</param>
-        protected void CheckIfSchedulingStepsBoundIsReached(bool isSchedulingDecision)
+        private void CheckIfSchedulingStepsBoundIsReached(bool isSchedulingDecision)
         {
             if (this.Strategy.HasReachedMaxSchedulingSteps())
             {
@@ -591,13 +649,12 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
 
                 if (this.Runtime.Configuration.ConsiderDepthBoundHitAsBug)
                 {
-                    this.Runtime.BugFinder.NotifyAssertionFailure(msg, true);
+                    this.NotifyAssertionFailure(msg, true);
                 }
                 else
                 {
                     IO.Debug($"<ScheduleDebug> {msg}");
-                    this.KillRemainingMachines();
-                    throw new OperationCanceledException();
+                    this.Stop();
                 }
             }
         }
@@ -605,7 +662,7 @@ namespace Microsoft.PSharp.TestingServices.Scheduling
         /// <summary>
         /// Kills any remaining machines at the end of the schedule.
         /// </summary>
-        protected void KillRemainingMachines()
+        private void KillRemainingMachines()
         {
             foreach (MachineInfo machineInfo in this.TaskMap.Values)
             {
